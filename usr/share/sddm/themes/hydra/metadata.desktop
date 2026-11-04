@@ -1,0 +1,8 @@
+[SddmGreeterTheme]
+Name=Hydra
+Description=HYDRA Samo branded greeter
+Author=Hydra Labs
+License=MIT
+Type=sddm-theme
+ConfigFile=theme.conf
+Main=Main.qml

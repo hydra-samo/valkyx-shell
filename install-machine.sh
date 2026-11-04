@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 #===============================================================================
-# AXORA — Machine-to-Shell Installer
+# HYDRA — Machine-to-Shell Installer
 #===============================================================================
 # Prepares a bare Arch Linux machine (TTY-only or existing GUI) into a complete
-# Axora Hyprland shell: dependencies → Hyprland compositor → SDDM greeter →
-# Axora dotfiles shell → settings panel (Super+I) → fonts → input method →
+# Hydra Hyprland shell: dependencies → Hyprland compositor → SDDM greeter →
+# Hydra dotfiles shell → settings panel (Super+I) → fonts → input method →
 # services enabled.
 #
 # Runs as root (sudo). Prompts for the root password ONCE at start, then every-
 # thing is auto-approved — no further approvals needed.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/axorasamo/axora-dotfiles/master/install-machine.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/hydrasamo/hydra-dotfiles/master/install-machine.sh | sudo bash
 #   or: sudo ./install-machine.sh
 #
 # Idempotent: safe to re-run. Skips already-installed packages and services.
@@ -24,7 +24,7 @@ set -uo pipefail
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
-log()  { printf '%b%s%b\n' "$BLUE" "[axora]" "$NC$*"; }
+log()  { printf '%b%s%b\n' "$BLUE" "[hydra]" "$NC$*"; }
 ok()   { printf '%b%s%b\n' "$GREEN" "[  OK  ]" "$NC$*"; }
 warn() { printf '%b%s%b\n' "$YELLOW" "[ WARN ]" "$NC$*" >&2; }
 err()  { printf '%b%s%b\n' "$RED" "[ FAIL ]" "$NC$*" >&2; }
@@ -52,7 +52,7 @@ fi
 #-------------------------------------------------------------------------------
 # Target user
 #-------------------------------------------------------------------------------
-TARGET_USER="${TARGET_USER:-axorasamo}"
+TARGET_USER="${TARGET_USER:-hydrasamo}"
 log "Target user: $TARGET_USER"
 
 #-------------------------------------------------------------------------------
@@ -275,7 +275,7 @@ install_fonts() {
 # Phase 5: Deploy dotfiles
 #-------------------------------------------------------------------------------
 deploy_dotfiles() {
-    step "Phase 5 — Deploy Axora dotfiles"
+    step "Phase 5 — Deploy Hydra dotfiles"
 
     # Resolve repo dir from script location (works from any clone path)
     local script_dir
@@ -303,8 +303,8 @@ deploy_dotfiles() {
             if [ -e "$dest" ] || [ -L "$dest" ]; then
                 local ts
                 ts="$(date +%Y%m%d%H%M%S)"
-                mv "$dest" "${dest}.axora-bak-${ts}"
-                log "Backed up existing $dest -> ${dest}.axora-bak-${ts}"
+                mv "$dest" "${dest}.hydra-bak-${ts}"
+                log "Backed up existing $dest -> ${dest}.hydra-bak-${ts}"
             fi
             cp -r "$item" "$dest"
             chown -R "$TARGET_USER:$TARGET_USER" "$dest"
@@ -325,8 +325,8 @@ deploy_dotfiles() {
         log "Deploying /usr/share/sddm theme"
         cp -r "$repo_dir/usr/." /usr/
         # Fix permissions on SDDM theme
-        find /usr/share/sddm/themes/axora -type d -exec chmod 755 {} + 2>/dev/null
-        find /usr/share/sddm/themes/axora -type f -exec chmod 644 {} + 2>/dev/null
+        find /usr/share/sddm/themes/hydra -type d -exec chmod 755 {} + 2>/dev/null
+        find /usr/share/sddm/themes/hydra -type f -exec chmod 644 {} + 2>/dev/null
         ok "SDDM theme deployed"
     fi
 
@@ -348,16 +348,16 @@ configure_sddm() {
     # Ensure sddm.conf.d exists
     mkdir -p /etc/sddm.conf.d
 
-    # Point SDDM at the Axora theme if not already configured
-    if [ -f /etc/sddm.conf.d/axora.conf ]; then
-        ok "SDDM axora.conf already present"
+    # Point SDDM at the Hydra theme if not already configured
+    if [ -f /etc/sddm.conf.d/hydra.conf ]; then
+        ok "SDDM hydra.conf already present"
     else
-        log "Creating SDDM axora.conf..."
-        cat > /etc/sddm.conf.d/axora.conf <<'EOF'
+        log "Creating SDDM hydra.conf..."
+        cat > /etc/sddm.conf.d/hydra.conf <<'EOF'
 [Theme]
 CursorTheme=Maya-Green
 CursorSize=34
-Current=axora
+Current=hydra
 
 [Users]
 DefaultPath=/usr/local/bin:/usr/bin:/usr/sbin
@@ -366,7 +366,7 @@ RememberLastUser=true
 [General]
 Numlock=on
 EOF
-        ok "SDDM axora.conf created"
+        ok "SDDM hydra.conf created"
     fi
 }
 
@@ -377,25 +377,25 @@ final_summary() {
     step "Installation complete — summary"
 
     echo
-    printf '%b%s%b\n' "$BOLD$GREEN" "Axora shell install finished." "$NC"
+    printf '%b%s%b\n' "$BOLD$GREEN" "Hydra shell install finished." "$NC"
     echo
     echo "What was done:"
     echo "  1. System packages detected & installed (Hyprland, SDDM, Qt6, fonts, etc.)"
     echo "  2. User '$TARGET_USER' created/added to groups (video, audio, input, wheel)"
     echo "  3. System services enabled (sddm, NetworkManager, bluetooth, pipewire, etc.)"
     echo "  4. Fonts installed & cache rebuilt"
-    echo "  5. Axora dotfiles deployed (hypr, axora config, bin scripts, wallpapers)"
-    echo "  6. SDDM greeter configured to use the Axora theme"
+    echo "  5. Hydra dotfiles deployed (hypr, hydra config, bin scripts, wallpapers)"
+    echo "  6. SDDM greeter configured to use the Hydra theme"
     echo
     echo "Next steps (manual):"
     echo "  - Reboot the machine, or start SDDM:  systemctl start sddm"
     echo "  - Log in as $TARGET_USER at the SDDM greeter"
-    echo "  - Hyprland will launch with the Axora shell"
+    echo "  - Hyprland will launch with the Hydra shell"
     echo "  - Press Super+I to open the Settings panel"
     echo "  - Press Super+S to open the Sidebar"
     echo
-    echo "Dotfiles repo: /home/axorasamo/repos/axora-dotfiles"
-    echo "To push to GitHub: cd /home/axorasamo/repos/axora-dotfiles && git remote add origin <your-repo> && git push -u origin master"
+    echo "Dotfiles repo: /home/hydrasamo/repos/hydra-dotfiles"
+    echo "To push to GitHub: cd /home/hydrasamo/repos/hydra-dotfiles && git remote add origin <your-repo> && git push -u origin master"
     echo
 }
 
@@ -404,8 +404,8 @@ final_summary() {
 #===============================================================================
 echo
 printf '%b%s%b\n' "$BOLD$CYAN" "╔═════════════════════════════════════════════════════════╗" "$NC"
-printf '%b%s%b\n' "$BOLD$CYAN" "║  AXORA — Machine-to-Shell Installer                ║" "$NC"
-printf '%b%s%b\n' "$BOLD$CYAN" "║  Bare Arch → Axora Hyprland shell                        ║" "$NC"
+printf '%b%s%b\n' "$BOLD$CYAN" "║  HYDRA — Machine-to-Shell Installer                ║" "$NC"
+printf '%b%s%b\n' "$BOLD$CYAN" "║  Bare Arch → Hydra Hyprland shell                        ║" "$NC"
 printf '%b%s%b\n' "$BOLD$CYAN" "╚═════════════════════════════════════════════════════════╝" "$NC"
 echo
 

@@ -1,8 +1,0 @@
-[SddmGreeterTheme]
-Name=Axora
-Description=AXORA Samo branded greeter
-Author=Axora Labs
-License=MIT
-Type=sddm-theme
-ConfigFile=theme.conf
-Main=Main.qml

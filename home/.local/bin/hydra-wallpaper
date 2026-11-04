@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# hydra-wallpaper [FILE|next|prev|random|current] — wallpaper engine over the backgrounds dir
+set -uo pipefail
+dir="$HOME/.local/share/backgrounds"
+idx="$HOME/.cache/hydra-wallpaper.idx"
+cur_default="hydra-wallpaper.svg"
+
+mapfile -t imgs < <(find "$dir" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -printf '%f\n' | sort)
+[ "${#imgs[@]}" = "0" ] && { echo "no wallpapers in $dir" >&2; exit 66; }
+
+cur=$(cat "$idx" 2>/dev/null || echo "$cur_default")
+# validate current exists, else default
+found=0
+for f in "${imgs[@]}"; do [ "$f" = "$cur" ] && found=1 && break; done
+[ "$found" = "0" ] && cur="$cur_default"
+
+apply() {
+  awww img --transition-type fade --transition-step 30 --transition-fps 60 "$dir/$1" >/dev/null 2>&1 || sleep 1
+  echo "$1" > "$idx"
+  echo "wallpaper: $1"
+}
+
+arg="${1:-current}"
+case "$arg" in
+  current) apply "$cur" ;;
+  set) shift; [ -f "${1:-}" ] && apply "$(basename "$1")" || { echo "file not found" >&2; exit 66; } ;;
+  next|prev|random)
+    n=${#imgs[@]}
+    i=0; for k in "${!imgs[@]}"; do [ "${imgs[$k]}" = "$cur" ] && i=$k && break; done
+    case "$arg" in
+      next) i=$(( (i+1) % n )) ;;
+      prev) i=$(( (i+n-1) % n )) ;;
+      random) [ "$n" -gt 1 ] && { r=$i; while [ "$r" = "$i" ]; do r=$(( RANDOM % n )); done; i=$r; } ;;
+    esac
+    apply "${imgs[$i]}"
+    ;;
+  *) apply "$(basename "$arg")" ;;
+esac

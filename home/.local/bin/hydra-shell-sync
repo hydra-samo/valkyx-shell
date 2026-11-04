@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# hydra-shell-sync — sync config between LIVE and SANDBOX (direction required).
+# Live is a REAL dir at ~/.config/quickshell/hydra (permanent since Sep 13);
+# the sandbox is the git-backed copy. State: live uses state.json, sandbox uses
+# state.dev.json (the path lives inside HydraState.qml, so each direction
+# re-asserts its own persist path) — state.json files are excluded from rsync.
+# Usage:
+#   hydra-shell-sync to-sandbox   # live → sandbox (re-baseline experiments on fresh live state)
+#   hydra-shell-sync to-live      # sandbox → live (promote verified experiments)
+set -euo pipefail
+
+LIVE=$HOME/.config/quickshell/hydra
+SBOX=$HOME/hydra-sandbox/shell
+DIR="${1:-}"
+
+case "$DIR" in
+  to-sandbox)
+    rsync -a --delete --exclude='.git/' --exclude='state.json' --exclude='state.dev.json' "$LIVE/" "$SBOX/"
+    sed -i 's#_persistPath: "$HOME/.config/hydra/state.json"#_persistPath: "$HOME/.config/hydra/state.dev.json"#' "$SBOX/core/HydraState.qml"
+    echo "live → sandbox synced (state isolation re-applied)."
+    ;;
+  to-live)
+    rsync -a --delete --exclude='.git/' --exclude='state.json' --exclude='state.dev.json' "$SBOX/" "$LIVE/"
+    sed -i 's#_persistPath: "$HOME/.config/hydra/state.dev.json"#_persistPath: "$HOME/.config/hydra/state.json"#' "$LIVE/core/HydraState.qml"
+    echo "sandbox → live synced (persist path re-asserted to state.json)."
+    echo "reload: hydra-shell-reload   (do NOT hand-roll this: a bare pkill is SIGTERM, which orphans the PanelWindows as pid: -1 surfaces that hold the seat's input grab)"
+    ;;
+  *)
+    echo "usage: $0 to-sandbox|to-live" >&2; exit 1;;
+esac

@@ -1,0 +1,224 @@
+#!/usr/bin/env bash
+# hydra-doctor — is this shell actually correct right now?
+#
+# The gap this fills: `hydra-diagnose` reads the journal ("what did the system
+# say"). It cannot tell you "your config is wrong". chezmoi ships `doctor`,
+# `diff`, `verify` and `update`; Stow ships `chkstow`; npm/Homebrew ship
+# `doctor`. Nothing in the Quickshell/Hyprland ecosystem does — the closest is
+# `qs --private-check-compat`, which checks exactly one thing.
+#
+# So: probe, never assume. Every check either passes, warns, or errors, and the
+# exit code is 1 if anything is worse than info. Run it after any config edit
+# and before reporting a bug — most of the "the keybind doesn't work" reports
+# on this box are one of the checks below.
+#
+#   hydra-doctor          full report
+#   hydra-doctor -q       only warnings and errors (for scripts and CI)
+# Exit: 0 clean · 1 something is wrong
+
+set -uo pipefail
+
+QUIET=false
+case "${1:-}" in
+-q) QUIET=true ;;
+esac
+
+WARN=0
+ERR=0
+ok() { $QUIET && return 0; printf '  \033[32mok\033[0m    %-22s %s\n' "$1" "${2:-}"; }
+info() { $QUIET || printf '  \033[36minfo\033[0m   %-22s %s\n' "$1" "${2:-}"; }
+warn() {
+	printf '  \033[33mwarn\033[0m   %-22s %s\n' "$1" "${2:-}"
+	WARN=$((WARN + 1))
+}
+err() {
+	printf '  \033[31merror\033[0m  %-22s %s\n' "$1" "${2:-}"
+	ERR=$((ERR + 1))
+}
+head_() { $QUIET && return 0; printf '\n\033[1m%s\033[0m\n' "$1"; }
+
+# Wordmark, in the live accent. Skipped under -q so quiet output stays
+# machine-parseable for scripts and CI.
+$QUIET || "$HOME/.local/bin/hydra-figlet" hydra doctor
+$QUIET || printf '\n'
+
+CFG=${HYPR_CFG:-$HOME/.config/hypr/hyprland.lua}
+QS_DIR=${HYDRASHELL:-$HOME/.config/quickshell/hydra}
+
+# ── compositor ────────────────────────────────────────────────────────────────
+head_ "compositor"
+if pgrep -x Hyprland >/dev/null; then
+	ok hyprland "pid $(pgrep -x Hyprland | tr '\n' ' ')"
+else
+	err hyprland "not running — the session has no compositor"
+fi
+
+# A config-less Hyprland means the compositor ABORTED and the start-hyprland
+# watchdog relaunched with --safe-mode, which silently skips the Lua config.
+# This has happened on this box (iGPU hybrid-GPU launch, SIGABRT in Mesa's
+# dri_create_fence_fd). Check the wrapper log, not the symptom.
+if [ -e /tmp/hyprland-safe-mode ] || pgrep -af '^/usr/bin/env .*start-hyprland|start-hyprland .*--safe-mode' 2>/dev/null | grep -q -- '--safe-mode'; then
+	err safe-mode "compositor started with --safe-mode: the Lua config was NOT loaded"
+elif [ -r "$CFG" ]; then
+	ok config "$CFG ($(grep -c '^' "$CFG") lines)"
+else
+	err config "missing or unreadable: $CFG"
+fi
+
+nb=$($(command -v hyprctl) binds 2>/dev/null | grep -c '^[[:space:]]*key:')
+if [ "${nb:-0}" -lt 50 ]; then
+	err binds "only $nb binds registered — the config did not fully load"
+else
+	ok binds "$nb registered"
+fi
+
+# Orphaned layershell surfaces keep the seat's input grab: invisible, unclickable
+# desktop. Only a compositor restart clears them.
+orph=$(hyprctl layers 2>/dev/null | grep -c 'pid: -1')
+[ "${orph:-0}" -gt 0 ] && warn orphan-layers "$orph surface(s) with pid: -1 — restart the compositor to clear" \
+	|| ok orphan-layers "none"
+
+# ── shell ─────────────────────────────────────────────────────────────────────
+head_ "shell"
+nqs=$(pgrep -c -f '^qs -c hydra$' 2>/dev/null || echo 0)
+case "$nqs" in
+1) ok quickshell "1 instance" ;;
+0) err quickshell "no shell running — start with hydra-shell-reload" ;;
+*) err quickshell "$nqs instances running (double taskbars); exactly 1 expected" ;;
+esac
+
+d=$QS_DIR
+[ -d "$d" ] && [ ! -L "$d" ] && ok config-dir "real directory (not a symlink)" \
+	|| err config-dir "$d must be a real directory, never a symlink"
+[ -f "$d/shell.qml" ] || err shell-root "missing $d/shell.qml"
+head -1 "$d/shell.qml" 2>/dev/null | grep -q 'UseQApplication' \
+	&& ok qapplication "//@ pragma present" \
+	|| warn qapplication "shell.qml:1 lacks '//@ pragma UseQApplication' — tray menus silently no-op"
+grep -q '^ShellRoot' "$d/shell.qml" 2>/dev/null \
+	&& ok shellroot "ShellRoot" || warn shellroot "shell.qml root is not ShellRoot — a plain Item spawns a white window"
+
+# quickshell built against a different Qt than the system now has → crashes.
+# This is the single highest-value Quickshell check in existence; upstream wires
+# it to a pacman post-transaction hook on qt6-base/qt6-wayland. Worth doing here.
+if command -v quickshell >/dev/null; then
+	compat=$(quickshell --private-check-compat 2>&1)
+	case $? in
+	0) ok qt-compat "$(quickshell -V 2>/dev/null | head -1)" ;;
+	*) err qt-compat "runtime Qt != build Qt: $compat" ;;
+	esac
+else
+	err qt-compat "quickshell binary not found"
+fi
+
+# ── dispatchers: the silent-failure class ────────────────────────────────────
+head_ "dispatchers (Hyprland 0.56.2 silent no-ops)"
+# VERIFIED on 0.56.2, do not re-flag these as dead:
+#   focus({direction})        works, given a tiled layout
+#   window.move/resize/center works, but FLOATING windows only
+#   window.pin()              refuses tiled windows ("does not qualify"); also
+#                             refuses fullscreen ones, which is why PiP/pin look
+#                             broken on a maximised window
+# group.next()/group.prev() are the genuine article: they return ok and change
+# nothing even with three tiled windows. ALT+Tab is routed to hydra-alt-tab
+# instead, which computes the MRU order from focusHistoryID.
+DEAD_RE='group\.(next|prev)\('
+dead=$(grep -nE "$DEAD_RE" "$CFG" 2>/dev/null)
+if [ -n "$dead" ]; then
+	warn dead-dispatchers "$(printf '%s\n' "$dead" | wc -l) bind(s) target a no-op dispatcher:"
+	printf '%s\n' "$dead" | sed 's/^/         /'
+else
+	ok dead-dispatchers "no binds target a known no-op dispatcher"
+fi
+
+# `hyprctl dispatch <name>` is rejected outright, and `hyprctl eval "hl.dsp.x"`
+# no-ops. Anything still calling either is dead.
+left=$(grep -rn 'hyprctl dispatch' "$HOME/.local/bin" "$HOME/.config/hypr" \
+	"$QS_DIR/core" 2>/dev/null \
+	| grep -v hydra-dispatch \
+	| grep -v 'hydra-doctor:' \
+	| grep -vE ':[0-9]+:[[:space:]]*(#|--)')
+[ -n "$left" ] && warn dead-dispatch-calls "$left" || ok dead-dispatch-calls "none"
+
+# ── helpers ───────────────────────────────────────────────────────────────────
+head_ "helpers"
+bin=$HOME/.local/bin
+missing=0
+for t in $(grep -rhoE "exec_cmd\(\"(hydra-[a-z-]+)" "$CFG" 2>/dev/null | sed 's/.*"//' | sort -u); do
+	[ -x "$bin/$t" ] || { err "helper:$t" "bound in hyprland.lua but not executable in ~/.local/bin"; missing=1; }
+done
+[ "$missing" = 0 ] && ok helper-targets "every hyprland.lua exec target exists and is executable"
+
+# PATH for compositor execs is /usr/local/bin:/usr/bin only, so a bare-name
+# script bind fails silently unless ~/.local/bin is in the environment block.
+grep -qE 'hl\.env\("PATH", *"$HOME/\.local/bin' "$CFG" \
+	&& ok exec-path "~/.local/bin is in the compositor PATH" \
+	|| err exec-path "PATH env block does not include $HOME/.local/bin — every barename script bind fails"
+
+# ── input ─────────────────────────────────────────────────────────────────────
+head_ "input"
+kb=$(hyprctl getoption input:kb_layout 2>/dev/null | sed -n 's/^str: //p')
+case "$kb" in
+us | ara) ok kb_layout "$kb" ;;
+*) warn kb_layout "unexpected: '${kb:-unset}'" ;;
+esac
+[ -r "$HOME/.cache/hydra-im-state" ] && ok im-state "cached: $(cat "$HOME/.cache/hydra-im-state")" \
+	|| warn im-state "no ~/.cache/hydra-im-state — the first config reload will snap the layout to us"
+pgrep -x fcitx5 >/dev/null 2>&1 \
+	&& warn fcitx5 "running — its virtual keyboard takes the seat's main keyboard and the xkb layout stops changing" \
+	|| ok fcitx5 "stopped (correct: Arabic is a plain xkb layout here)"
+
+# ── hardware assumptions this box depends on ──────────────────────────────────
+head_ "hardware"
+# GPU 0 = Intel Iris Xe, GPU 1 = NVIDIA MX450. Anything GPU-indexed (MangoHud
+# gpu_list, PRIME) must use 1.
+if command -v lspci >/dev/null; then
+	ig=$(lspci 2>/dev/null | grep -ciE '(VGA|3D|Display).*Intel')
+	nv=$(lspci 2>/dev/null | grep -ciE '(VGA|3D|Display).*NVIDIA')
+	if [ "$ig" -ge 1 ] && [ "$nv" -ge 1 ]; then
+		ok gpu "hybrid Intel+NVIDIA present (GPU-indexed config must use 1)"
+	else
+		warn gpu "expected Intel + NVIDIA; found Intel=$ig NVIDIA=$nv"
+	fi
+fi
+sink=$(pactl get-default-sink 2>/dev/null)
+case "$sink" in
+*Speaker*) ok audio "default sink: Speaker (correct)" ;;
+*Headphones*)
+	warn audio "default sink is Headphones — Speaker and Headphones are mutually exclusive ACP profile slots here and Speaker is the intended default. Fix: hydra-audio set-sink NEED_Speaker" ;;
+"") warn audio "no default sink — hydra-audio set-sink NEED_Speaker" ;;
+*) info audio "default sink: $sink" ;;
+esac
+
+dfk=$(df -Pk "$HOME" 2>/dev/null | awk 'NR==2 {print $4}')
+[ -n "${dfk:-}" ] && ok disk "$((dfk / 1024 / 1024)) GB free" || warn disk "could not read free space"
+
+# ── drift ─────────────────────────────────────────────────────────────────────
+head_ "drift"
+# A single deny-all whitelist repo at $HOME covers all four trees, so ask git
+# for the toplevel rather than looking for a per-directory .git.
+top=$(git -C "$HOME/.config/hypr" rev-parse --show-toplevel 2>/dev/null)
+if [ -n "$top" ]; then
+	ok version-control "repo at $top ($(git -C "$top" rev-list --count HEAD 2>/dev/null) commit(s))"
+	n=$(git -C "$top" status --porcelain 2>/dev/null | wc -l)
+	[ "$n" -gt 0 ] && warn drift "$n uncommitted change(s) — 'git -C $top diff' to review" \
+		|| ok drift "working tree clean"
+else
+	for d in "$QS_DIR" "$HOME/.config/hypr" "$HOME/.config/hydra" "$bin"; do
+		warn "git:$d" "not version controlled — no diff, no verify, no rollback"
+	done
+fi
+nb2=$(ls "$HOME/backups/hydra" 2>/dev/null | wc -l)
+[ "${nb2:-0}" -gt 0 ] && info backups "$nb2 tarball(s) in ~/backups/hydra" \
+	|| warn backups "no backups in ~/backups/hydra — run hydra-backup"
+
+# ── summary ───────────────────────────────────────────────────────────────────
+printf '\n\033[1m%s\033[0m\n' "────────────────────────────────────────────────────────"
+if [ "$ERR" -gt 0 ]; then
+	printf '  \033[31m%d error(s)\033[0m · \033[33m%d warning(s)\033[0m — not healthy\n' "$ERR" "$WARN"
+	exit 1
+elif [ "$WARN" -gt 0 ]; then
+	printf '  \033[33m%d warning(s)\033[0m — degraded, see above\n' "$WARN"
+	exit 1
+fi
+printf '  \033[32mhealthy\033[0m\n'
+exit 0

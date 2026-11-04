@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# hydra-logout — end this Hyprland session and get back to the SDDM greeter.
+#
+# This script only *dispatches* the work. It cannot do the work itself: the
+# session it is ending contains the Quickshell process that exec'd it, so
+# anything it did after terminating the session would be killed mid-flight.
+# hydra-logout-watchdog runs the ladder, outside the session cgroup.
+set -u
+
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/hydra-power.log"
+mkdir -p "$(dirname "$LOG")"
+note() { printf '%s logout    %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
+
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+# The session to end is the one that OWNS THE COMPOSITOR, resolved from
+# Hyprland's cgroup. Never trust the inherited XDG_SESSION_ID: a shell started
+# from a tty (or from an agent) carries that tty's id, so terminating it kills
+# the terminal and leaves the desktop running. That happened once already — it
+# reported success and logged out the wrong thing.
+sid=""
+hpid=$(pgrep -x Hyprland 2>/dev/null | head -1)
+if [ -n "$hpid" ]; then
+    sid=$(sed -n 's#.*session-\([0-9][0-9]*\)\.scope.*#\1#p' "/proc/$hpid/cgroup" 2>/dev/null | head -1)
+fi
+
+if [ -z "$sid" ]; then
+    note "FAILED: no Hyprland session found (pgrep Hyprland / cgroup unreadable) — refusing to guess"
+    exit 1
+fi
+
+owner=$(loginctl show-session "$sid" -p Name --value 2>/dev/null)
+tty=$(loginctl show-session "$sid" -p TTY --value 2>/dev/null)
+case "$owner/$tty" in
+    "$(id -un)"/tty*) : ;;
+    *)
+        note "FAILED: session $sid is owner='$owner' tty='$tty', not a tty login session of $(id -un) — refusing"
+        exit 1
+        ;;
+esac
+
+note "dispatching logout watchdog for session $sid (owner=$owner tty=$tty)"
+
+# A second click must be a no-op, not a second watchdog racing the first. The
+# previous attempt lost this race and logged a bogus FAILED.
+if pgrep -f 'hydra-logout-watchdog' >/dev/null 2>&1; then
+    note "a logout is already in progress — ignoring"
+    exit 0
+fi
+
+# --user puts the unit under user@1000.service/app.slice/, which is a SIBLING of
+# session-N.scope — so the watchdog outlives the session it terminates. A plain
+# `&` or `setsid` would die with it, which is the whole bug. The unit name is
+# stamped per-run because --collect has not always garbage-collected the old one
+# in time, and a fixed name then fails with "already loaded".
+if ! systemd-run --user --quiet --unit="hydra-logout-$(date +%s)" --collect \
+        $HOME/.local/bin/hydra-logout-watchdog "$sid" 2>>"$LOG"; then
+    note "FAILED: could not start hydra-logout-watchdog — session $sid left running"
+    exit 1
+fi
+note "watchdog running; watch ~/.local/state/hydra-power.log"
+exit 0

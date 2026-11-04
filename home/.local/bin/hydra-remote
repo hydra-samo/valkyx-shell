@@ -1,0 +1,228 @@
+#!/usr/bin/env bash
+# hydra-remote — phone-side shell control over the tailnet.
+#
+# A WHITELIST, not a shell. Every verb maps to one fixed `qs -c hydra ipc call`
+# or one existing hydra-* helper. User input NEVER reaches an IPC string:
+# `password open "<label>|<path>"` writes a file, so that verb is not exposed here.
+#
+#   hydra-remote list                 show every verb
+#   hydra-remote <verb> [arg]         run one
+#
+# Reachable from the phone as: hydra-remote is invoked by the served page at
+# :8444 (see hydra-remote-web). Tailscale identity is the only auth.
+set -uo pipefail
+export PATH="$PATH:/usr/local/bin:/usr/bin:$HOME/.local/bin"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+# Shorthand for a shell IPC call. Each argument is quoted separately by exec, so
+# nothing is concatenated into a single string; $2+ must be a fixed literal here.
+ipc() { local t="$1" f="$2"; shift 2; qs -c hydra ipc call "$t" "$f" "$@" >/dev/null 2>&1; }
+
+usage() { sed -n '3,8p' "$0" | sed 's/^# \{0,1\}//'; }
+
+# Default it. `set -u` plus an unset $2 killed every verb that reads it, and the
+# failure reads as "unbound variable" rather than "you passed no argument".
+arg="${2:-}"
+
+# One guard for every coordinate, because the phone is the untrusted side of this
+# script and ydotool will happily be handed "12; rm -rf" shaped nonsense. Bound the
+# value AND the range: a relative move of 999999 is not a gesture, it is a bug.
+num() {
+  local v="${1:-}" lo="$2" hi="$3"
+  case "$v" in ''|*[!0-9-]*) echo "not a number: $v" >&2; return 1 ;; esac
+  if [ "$v" -lt "$lo" ] || [ "$v" -gt "$hi" ]; then
+    echo "out of range ($lo..$hi): $v" >&2; return 1
+  fi
+  printf '%s' "$v"
+}
+
+case "${1:-list}" in
+  list|help|-h|--help) usage; exit 0 ;;
+
+  # ── panels ────────────────────────────────────────────────────────────────
+  launcher)        ipc launcher toggle ;;
+  launcher:app)    ipc launcher open app ;;
+  launcher:game)   ipc launcher open game ;;
+  launcher:cmd)    ipc launcher open cmd ;;
+  panel)           ipc panel toggle ;;
+  panel:open)      ipc panel open ;;
+  panel:close)     ipc panel close ;;
+  settings)        ipc settings toggle ;;
+  power)           ipc power open ;;
+  power:close)     ipc power close ;;
+  theme)           ipc theme cycle ;;
+  wallpaper)       ipc wallpaper toggle ;;
+  welcome)         ipc welcome toggle ;;
+  launcher:win)    ipc launcher open win ;;
+  launcher:dir)    ipc launcher open dir ;;
+  launcher:ws)     ipc launcher open ws ;;
+  launcher:clip)   ipc launcher open clip ;;
+  launcher:emoji)  ipc launcher open emoji ;;
+
+  # ── audio / power (ACP slots are mutually exclusive on this laptop) ─────────
+  # wpctl on this box takes fractional steps (0.05+), not '+5%'.
+  vol:up)          wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ ;;
+  vol:down)        wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05- ;;
+  vol:mute)        wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+  mic:mute)        wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle ;;
+  # Speaker/Headphones are one ACP profile slot; this is the documented one-command
+  # fix for the silent-after-timeout state. Note the helper takes the NEED_ prefix:
+  # the profile must be switched before the sink node exists, which is the whole point.
+  audio:sink)      if hydra-audio set-sink NEED_Speaker; then echo "sink=Speaker"; else echo "sink switch failed"; exit 1; fi ;;
+
+  # ── input language (compositor xkb, not fcitx) ─────────────────────────────
+  im:toggle)       hydra-im toggle ;;
+  im:en)           hydra-im set us ;;
+  im:ar)           hydra-im set ara ;;
+
+  # ── diagnostics ───────────────────────────────────────────────────────────
+  doctor)          hydra-doctor ;;
+  jobs)            hydra-jobs all ;;
+  queue:list)      q="$HOME/.local/state/hydra/queue"; { ls -1 "$q"/*.blocked 2>/dev/null | xargs -r -n1 basename | sed 's/^/STALLED  /'; ls -1t "$q" 2>/dev/null | head -20; } ;;
+
+  # ── remote desktop ───────────────────────────────────────────────────────────
+  # The phone drives the real session: grim shows it, ydotool types at it.
+  # ydotool needs no window focus from the phone — it is a uinput device, so the
+  # keystrokes land on whatever has focus on the desk, which is the point.
+  click) dx=$(num "${arg%% *}" 0 10000) && dy=$(num "${arg##* }" 0 10000) || exit 1
+         ydotool mousemove -a -x "$dx" -y "$dy"; ydotool click 0xC0 ;;
+  move)  dx=$(num "${arg%% *}" 0 10000) && dy=$(num "${arg##* }" 0 10000) || exit 1
+         ydotool mousemove -a -x "$dx" -y "$dy" ;;
+  # Relative move, for Touchpad mode: a drag on the phone walks the real cursor.
+  # The POSITIONAL form is the only safe one. `mousemove -- -x 40 -y -20` parses
+  # the negative value as an option and dies with "stack smashing detected", and
+  # ydotool still exits 0 on several malformed forms, so a green test proves
+  # nothing here -- hence the cursor-position check in the docs.
+  move:rel) dx=$(num "${arg%% *}" -4000 4000) && dy=$(num "${arg##* }" -4000 4000) || exit 1
+         ydotool mousemove -- "$dx" "$dy" ;;
+  # Where the desktop pointer is right now. Touchpad mode needs this because a tap
+  # there means "click wherever the pointer already is" -- without asking the
+  # desktop, the phone would be guessing and would click the wrong window.
+  cursor) hyprctl cursorpos 2>/dev/null | awk '{print $1, $2}' ;;
+  # Wheel. ydotool's own -w/--wheel is unusable here: getopt parses the notches as
+  # options ("mousemove: invalid option -- '3'") and several of its broken forms
+  # still exit 0, so a passing test proves nothing. REL_WHEEL on the ydotool uinput
+  # node is the only honest path -- the device is one the seat already trusts.
+  # One argument = wheel notches, positive is up.
+  scroll) n=$(num "$arg" -30 30) || exit 1
+         python3 - "$n" <<'PY'
+import sys
+try:
+    import evdev
+    from evdev import ecodes
+except ImportError:
+    sys.exit("python-evdev is required for scroll")
+n = int(sys.argv[1])
+dev = None
+for path in evdev.list_devices():
+    try:
+        d = evdev.InputDevice(path)
+    except Exception:
+        continue
+    if "ydotool" in (d.name or "").lower():
+        dev = d
+        break
+if dev is None:
+    sys.exit("ydotool uinput device not found (is ydotool running?)")
+dev.write(ecodes.EV_REL, ecodes.REL_WHEEL, n)
+dev.syn()
+PY
+         ;;
+  type)  ydotool type -- "$arg" ;;
+  # A named key, not a raw keycode: "ctrl+alt+t", "enter", "super+1", "f5".
+  # The client can only pick names from this table, which is what keeps a
+  # keystroke-injection verb from being an arbitrary-input hole.
+  key)
+    kcode() {
+      local t="ctrl:29 alt:56 shift:42 super:125 esc:1 enter:28 tab:15 bsp:14 \
+del:111 space:57 up:103 down:108 left:105 right:106 home:102 end:107 \
+pgup:104 pgdn:109 f1:59 f2:60 f3:61 f4:62 f5:63 f6:64 f7:65 \
+f8:66 f9:67 f10:68 f11:87 f12:88 \
+a:30 b:48 c:46 d:32 e:18 f:33 g:34 h:35 i:23 j:36 k:37 l:38 m:50 n:49 \
+o:24 p:25 q:16 r:19 s:31 t:20 u:22 v:47 w:17 x:45 y:21 z:44 \
+0:11 1:2 2:3 3:4 4:5 5:6 6:7 7:8 8:9 9:10 grave:41 comma:51 period:52 minus:12 equal:13 slash:53" p out=
+      for p in $t; do [ "${p%%:*}" = "${1,,}" ] && out=${p##*:}; done
+      echo "$out"
+    }
+    seq=""
+    rel=""
+    IFS=+ read -ra parts <<< "$arg"
+    for p in "${parts[@]}"; do
+      c=$(kcode "$p")
+      [ -z "$c" ] && { echo "unknown key: $p"; exit 1; }
+      seq+="$c:1 "; rel="$c:0 $rel"
+    done
+    ydotool key -d 15 $seq $rel ;;
+  # The six workspaces are NAMED, not numbered — memory says match by name, and
+  # that active ids can go negative.
+  ws:[1-6]) i=${arg#ws:}
+           nm=(studio create code research personal game); k=$((i-1))
+           hyprctl eval "hl.dispatch(hl.dsp.focus({workspace=\"name:0${i} ${nm[$k]}\"}))" ;;
+  win:close) hyprctl eval 'hl.dispatch(hl.dsp.window.close())' ;;
+  wins)  hyprctl clients | sed -n "s/.*at \([0-9]*,[0-9]*\).*/\1/p" | tr '\n' ' '; echo;
+         hyprctl clients | awk '/Window/{print} /^0x/{print $2, $5}' | head -20 ;;
+  procs) ps -eo comm= --sort=-%cpu | head -12 | tr '\n' ' '; echo;
+         uptime ; free -m | head -2 ; df -h / | tail -1 ;;
+  # ── channel hub ─────────────────────────────────────────────────────────────
+  # One place that lists every tailnet service and whether it answers right now.
+  # Probed over loopback (the only place the two backends are bound), tab
+  # separated: name <TAB> public url <TAB> up|down.
+  channels)
+    # Links are RELATIVE (root-anchored) on purpose: the phone is known to reach
+    # port 443 and nothing else, so every channel must ride the one origin it has.
+    # opencode is deliberately ABSENT: its PWA requests /assets/* absolutely, so it
+    # cannot ride a sub-path, and every extra port was killed. It stays reachable on
+    # the desktop at 127.0.0.1:17171. A row here that the phone cannot open is worse
+    # than no row.
+    # The probe address is NOT the link address: the link is root-relative (the
+    # phone only reaches :443), but Vite binds the tailnet IP ONLY -- its second
+    # --host wins, so there is no 127.0.0.1 listener and probing loopback reported
+    # console "down" for the whole session.
+    for spec in \
+      "console|/dashboard|http://100.71.210.6:1717/dashboard" \
+      "shell|/shell/|http://127.0.0.1:8444/"
+    do
+      name=${spec%%|*}; rest=${spec#*|}
+      url=${rest%%|*};    probe=${rest#*|}
+      curl -fsS --max-time 3 -o /dev/null "$probe" 2>/dev/null && s=up || s=down
+      printf '%s\t%s\t%s\n' "$name" "$url" "$s"
+    done
+    ;;
+
+  # ── agent queue ─────────────────────────────────────────────────────────────
+  # queue:add is the ONLY verb taking free text, and that text becomes the prompt
+  # of an unattended `opencode run` with build's permissions in $HOME. It is
+  # therefore REMOTE CODE EXECUTION. The tailnet + this token are the boundary.
+  queue:add)
+    text="${2-}"
+    [ -n "$text" ] || { echo "usage: queue:add <task text>"; exit 2; }
+    q="$HOME/.local/state/hydra/queue"; mkdir -p "$q"
+    pending=$(find "$q" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)
+    [ "$pending" -lt 20 ] || { echo "queue full ($pending pending)"; exit 1; }
+    # Filename is a strict [a-z0-9-] slug, so the path can never traverse. The
+    # text itself is never touched again; only the name is derived from it.
+    slug=$(printf '%s' "$text" | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | cut -c1-40 | sed 's/-$//')
+    [ -n "$slug" ] || { echo "task text has no usable characters"; exit 2; }
+    f="$q/$slug-$(date +%H%M%S).md"
+    printf '%s\n' "$text" > "$f" || exit 1
+    echo "queued: $(basename "$f")"
+    # The phone must not wait up to the 20-min timer tick to get started.
+    systemctl --user start --no-block hydra-agent-queue.service 2>/dev/null \
+      || echo "note: could not wake the drain unit, it runs on the next timer tick"
+    ;;
+  # No argument on purpose: the newest transcript is the only one a phone needs,
+  # so there is no filename for a hostile argument to traverse into.
+  queue:tail)
+    q="$HOME/.local/state/hydra/queue"
+    newest=$(ls -1t "$q"/*.out 2>/dev/null | head -1)
+    [ -n "$newest" ] || { echo "no transcripts yet"; exit 1; }
+    echo "== $(basename "$newest") =="
+    tail -n 30 "$newest"
+    ;;
+  layers)          hyprctl layers | grep -c quickshell ;;
+
+  *)
+    echo "hydra-remote: unknown verb '$1'" >&2
+    echo "run 'hydra-remote list' for the whitelist" >&2
+    exit 2 ;;
+esac

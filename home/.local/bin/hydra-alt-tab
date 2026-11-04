@@ -1,0 +1,53 @@
+#!/bin/bash
+# hydra-alt-tab — MRU window cycling, the one thing Hyprland 0.56.2 cannot do.
+#
+# Why this exists: hl.dsp.group.next()/group.prev() are silent no-ops on 0.56.2,
+# and the stock `hyprctl dispatch focuswindow last` string form is rejected
+# outright. But `hl.dsp.focus({ window = "address:0x..." })` DOES work, and
+# `hyprctl clients -j` exposes `focusHistoryID` where 0 = most recently focused.
+# So the MRU order is computable in a script. That is the whole trick.
+#
+# NOTE the `address:` prefix — a bare "0x..." is "window not found".
+#
+# Usage: hydra-alt-tab [next|prev]      (default: next)
+
+set -uo pipefail
+dir="${1:-next}"
+
+ws=$(hyprctl activeworkspace -j 2>/dev/null \
+	| python3 -c 'import json,sys
+try: print(json.load(sys.stdin)["name"])
+except Exception: print("")' 2>/dev/null)
+[ -n "$ws" ] || exit 0
+
+me=$(hyprctl activewindow -j 2>/dev/null \
+	| python3 -c 'import json,sys
+try: print(json.load(sys.stdin)["address"])
+except Exception: print("")' 2>/dev/null)
+
+# Same workspace, not minimized, most-recently-focused first. Layer surfaces
+# (topbar, dock) are not clients so they never show up here.
+cands=$(hyprctl clients -j 2>/dev/null | WS="$ws" ME="$me" python3 -c '
+import json, os, sys
+ws, me = os.environ["WS"], os.environ["ME"]
+try:
+    cl = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+rows = [c for c in cl
+        if c["workspace"]["name"] == ws
+        and not c.get("hidden")
+        and c.get("address") != me]
+rows.sort(key=lambda c: c.get("focusHistoryID", 1 << 30))
+print("\n".join(c["address"] for c in rows))
+')
+[ -n "$cands" ] || exit 0
+
+# forward = next most-recent; reverse = the oldest (wrap back).
+case "$dir" in
+prev) pick=$(printf '%s\n' "$cands" | tail -1) ;;
+*) pick=$(printf '%s\n' "$cands" | head -1) ;;
+esac
+[ -n "$pick" ] || exit 0
+
+hyprctl eval "hl.dispatch(hl.dsp.focus({ window = \"address:$pick\" }))" >/dev/null 2>&1

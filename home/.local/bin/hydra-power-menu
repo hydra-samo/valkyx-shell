@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# hydra-power-menu — open the shell's power menu.
+#
+# This used to be a second, independent implementation: it piped its own
+# lock/logout/reboot/shutdown list into fuzzel and had its own `case`. That
+# drifted from the real menu (it never gained Suspend) and is the same class of
+# bug that made Logout a silent no-op — two lists, only one maintained.
+# HydraPowerMenu.qml is the real menu and dispatches through hydra-power-action.
+set -uo pipefail
+
+if ! qs -c hydra ipc call power toggle >/dev/null 2>&1; then
+    printf 'hydra-power-menu: shell not running — start it with hydra-shell-reload\n' >&2
+    exit 1
+fi

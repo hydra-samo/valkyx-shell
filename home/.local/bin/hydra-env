@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# hydra-env — STATUS/RESTORE ONLY. The live shell is PERMANENT.
+# The sandbox swap was removed (user decision Sep 13): flipping the live shell
+# out was a leak that could destroy it. Live configs are the real dirs under
+# ~/.config (the pristine copies live in ~/.config/.env-live/ as a last-resort
+# roster). The sandbox shell at ~/hydra-sandbox/shell is a git-backed,
+# standalone config (qs -c hydra-dev) for poking ONLY — it never swaps live.
+#
+# Modes:  status | live
+#   status    show which mode the shell/hypr/gtk/mako configs are in
+#   live      (re)assert every live config, reload the shell + compositor
+#   sandbox   DISABLED — removed Sep 13
+#   toggle    DISABLED — removed Sep 13
+set -euo pipefail
+
+BASE=$HOME/hydra-sandbox
+SYS="$BASE/system"
+STASH="$HOME/.config/.env-live"
+SHELL_SRC="$BASE/shell"
+
+# the list of config trees we flip: cfg(relative-to-config) : sandbox target
+flip_specs() {
+  printf '%s\n' "quickshell/hydra|$SHELL_SRC"
+  printf '%s\n' "hypr|$SYS/hypr"
+  printf '%s\n' "gtk-3.0|$SYS/gtk-3.0"
+  printf '%s\n' "gtk-4.0|$SYS/gtk-4.0"
+  printf '%s\n' "mako|$SYS/mako"
+}
+
+enabled() { [ -L "$HOME/.config/hypr" ] && [ "$(readlink "$HOME/.config/hypr")" = "$SYS/hypr" ]; }
+
+reload_all() {
+  export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+  export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}"
+  local HIS
+  HIS=$(ls -dt /run/user/1000/hypr/*/ 2>/dev/null | head -1 | xargs basename)
+  [ -n "$HIS" ] && export HYPRLAND_INSTANCE_SIGNATURE="$HIS"
+  pkill -f 'qs -c hydr[a]' 2>/dev/null || true
+  for _ in {1..20}; do pgrep -f 'qs -c hydr[a]' >/dev/null || break; sleep 0.1; done
+  pkill -9 -f 'qs -c hydr[a]' 2>/dev/null || true
+  rm -f /run/user/1000/quickshell/by-id/*/instance.lock 2>/dev/null || true
+  setsid -f sh -c 'qs -c hydra > /tmp/qs.log 2>&1 < /dev/null &'
+  hyprctl reload >/dev/null 2>&1 || true
+  makoctl reload >/dev/null 2>&1 || true
+  sleep 2
+}
+
+# $1 = cfg(relative), $2 = sandbox target
+flip_cfg() {
+  local cfg="$1" sandx="$2"
+  local live="$HOME/.config/$cfg" stash="$STASH/$cfg"
+  if [ -L "$live" ]; then echo "  $cfg already flipped"; return 0; fi
+  [ -e "$live" ] || { echo "  $cfg: nothing to flip (missing)"; return 0; }
+  mkdir -p "$STASH/$(dirname "$cfg")"
+  if ! [ -e "$sandx" ]; then
+    echo "  seeding sandbox $cfg from live"
+    cp -a "$live" "$sandx"
+  fi
+  mv "$live" "$stash"
+  ln -s "$sandx" "$live"
+  echo "  flipped $cfg -> sandbox"
+}
+
+flip_back_cfg() { # $1 = cfg(relative), $2 = sandbox target
+  local cfg="$1" sandx="$2"
+  local live="$HOME/.config/$cfg" stash="$STASH/$cfg"
+  if ! [ -L "$live" ]; then echo "  $cfg already live"; return 0; fi
+  rm "$live"
+  if [ -e "$stash" ]; then mv "$stash" "$live"
+  elif [ -e "$sandx" ]; then echo "  WARN: no live stash for $cfg; copying sandbox back"
+    cp -a "$sandx" "$live"
+  else echo "  ERROR: no live copy for $cfg — leaving a fresh dir"; mkdir -p "$live"; fi
+  echo "  restored $cfg -> live"
+}
+
+do_sandbox() {
+  echo "=== ENTER SANDBOX ==="
+  while IFS='|' read -r cfg sandx; do flip_cfg "$cfg" "$sandx"; done < <(flip_specs)
+  # keep the state-isolation patch on the sandbox shell copy (sync may overwrite it)
+  if [ -f "$SHELL_SRC/core/HydraState.qml" ]; then
+    sed -i 's#_persistPath: "$HOME/.config/hydra/state.json"#_persistPath: "$HOME/.config/hydra/state.dev.json"#' "$SHELL_SRC/core/HydraState.qml"
+  fi
+  reload_all
+  echo "sandbox: shell + hypr + gtk + mako now from ~/hydra-sandbox. State -> state.dev.json."
+}
+
+do_live() {
+  echo "=== EXIT SANDBOX ==="
+  while IFS='|' read -r cfg sandx; do flip_back_cfg "$cfg" "$sandx"; done < <(flip_specs | tac)
+  reload_all
+  echo "live: all configs restored from ~/.config/.env-live."
+}
+
+do_status() {
+  if enabled; then echo "MODE: SANDBOX (hypr -> $SYS/hypr)"
+  else echo "MODE: LIVE"; fi
+  while IFS='|' read -r cfg sandx; do
+    local live="$HOME/.config/$cfg"
+    if [ -L "$live" ]; then printf '  %-22s symlink -> %s\n' "$cfg" "$(readlink "$live")"
+    else printf '  %-22s real dir (live)\n' "$cfg"; fi
+  done < <(flip_specs)
+}
+
+case "${1:-}" in
+  status) do_status ;;
+  live) do_live ;;
+  sandbox|toggle)
+    echo "DISABLED: the live<->sandbox swap was removed (Sep 13). The live shell" >&2
+    echo "is permanent. Sandbox shell is a standalone config: qs -c hydra-dev" >&2
+    echo "(runs alongside live with state.dev.json; never replaces it)." >&2
+    exit 1
+    ;;
+  *) echo "usage: $0 status|live" >&2; exit 1 ;;
+esac

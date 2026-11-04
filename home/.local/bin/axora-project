@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# axora-project — open the shell launcher pre-filtered to projects (accent-reactive)
-exec qs -c axora ipc call launcher open dir

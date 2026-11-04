@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# axora-shell-dev — DISABLED (removed Sep 13). Entering the sandbox used to flip
-# the whole live shell out — a leak. The sandbox shell still exists for
-# standalone poking (state.dev.json, never replaces live):
-#   qs -c axora-dev
-exit 1

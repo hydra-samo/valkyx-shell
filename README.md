@@ -1,24 +1,24 @@
-# Axora Labs — Hyprland Dotfiles
+# Hydra Labs — Hyprland Dotfiles
 
-Single source of truth for the Axora Hyprland shell, in the style of
+Single source of truth for the Hydra Hyprland shell, in the style of
 [ilyamiro/serpentium](https://github.com/ilyamiro/serpentium) and
 [caelestia](https://github.com/ilyamiro/caelestia). The repo is maintained;
 the install script deploys it to any machine (this host or the `machy` VM).
 Nothing on the host is deleted — overwritten files are backed up with a
-`.axora-bak-<timestamp>` suffix.
+`.hydra-bak-<timestamp>` suffix.
 
 ## Layout (mirrors install targets)
 
 | Repo path | Installs to |
 |-----------|-------------|
 | `home/.config/hypr/` | `$HOME/.config/hypr/` |
-| `home/.config/axora/` | `$HOME/.config/axora/` |
+| `home/.config/hydra/` | `$HOME/.config/hydra/` |
 | `home/.local/bin/` | `$HOME/.local/bin/` |
 | `home/.local/share/` | `$HOME/.local/share/` |
 | `home/Pictures/Wallpapers/` | `$HOME/Pictures/Wallpapers/` |
 | `home/.bashrc .zshrc .profile` | `$HOME/` |
-| `etc/sddm.conf.d/axora.conf` | `/etc/sddm.conf.d/axora.conf` (sudo) |
-| `usr/share/sddm/themes/axora/` | `/usr/share/sddm/themes/axora/` (sudo) |
+| `etc/sddm.conf.d/hydra.conf` | `/etc/sddm.conf.d/hydra.conf` (sudo) |
+| `usr/share/sddm/themes/hydra/` | `/usr/share/sddm/themes/hydra/` (sudo) |
 
 ## Install
 
@@ -27,9 +27,9 @@ Nothing on the host is deleted — overwritten files are backed up with a
 ./install.sh
 ```
 Run as a normal user. Deploys dotfiles to `$HOME` and `/etc`/`/usr/share` (via
-`sudo` internally). Backs up existing files with `.axora-bak-<timestamp>`.
+`sudo` internally). Backs up existing files with `.hydra-bak-<timestamp>`.
 
-### Option 2 — Full machine preparation (bare Arch → Axora shell)
+### Option 2 — Full machine preparation (bare Arch → Hydra shell)
 ```bash
 sudo ./install-machine.sh
 ```
@@ -45,12 +45,12 @@ The repo contains **only brand and config data — no personal data**.
 | Excluded | Reason |
 |----------|--------|
 | `avatar-circle.png` | Your personal profile photo — replaced with `avatar-placeholder.svg` |
-| `axora-wallpaper.png` | Your personal wallpaper — replaced with `axora-wallpaper.svg` placeholder |
+| `hydra-wallpaper.png` | Your personal wallpaper — replaced with `hydra-wallpaper.svg` placeholder |
 | `state.json`, `state.dev.json` | Personal usage state (greetOnce, fontScale, etc.) |
 | `power-profile` | Your saved CPU power profile |
 | `remote.json` | Personal remote connection config |
 | `.env*`, `*secret*`, `*token*`, `*credential*` | Secrets and API keys — never committed |
-| `axora-assistant`, `axora-automata` | Kept on the host, not in this repo |
+| `hydra-assistant`, `hydra-automata` | Kept on the host, not in this repo |
 
 ### Avatar (Super+I settings panel / greetings)
 
@@ -58,33 +58,33 @@ The settings panel avatar falls back to `avatar-placeholder.svg` if you don't
 provide your own. To use your profile picture:
 
 ```bash
-cp your-photo.png ~/.config/axora/avatar-circle.png
+cp your-photo.png ~/.config/hydra/avatar-circle.png
 ```
 
 ### Wallpaper
 
-The lock screen and shell fall back to `axora-wallpaper.svg` placeholder.
+The lock screen and shell fall back to `hydra-wallpaper.svg` placeholder.
 To use your own wallpaper:
 
 ```bash
-cp your-wallpaper.png ~/.local/share/backgrounds/axora-wallpaper.png
+cp your-wallpaper.png ~/.local/share/backgrounds/hydra-wallpaper.png
 ```
 
 ## What's excluded
 
-- `axora-assistant` and `axora-automata` — kept on the host, not in this repo
-- Giant AppImage/binaries in `$HOME/.local/bin` (e.g. `axora.AppImage`, `llama`,
+- `hydra-assistant` and `hydra-automata` — kept on the host, not in this repo
+- Giant AppImage/binaries in `$HOME/.local/bin` (e.g. `hydra.AppImage`, `llama`,
   `LM-Studio`) — not part of the shell config; install separately if needed
-- TTS model binaries (`.piper`) — kept on the host; `axora-assistant` needs them
+- TTS model binaries (`.piper`) — kept on the host; `hydra-assistant` needs them
 - systemd unit files — not part of the portable dotfiles deploy
 - Personal data (see Privacy & security above)
 
 ## Notes
 
-- All paths use `$HOME` — nothing is hardcoded to `/home/axorasamo`, so it works
+- All paths use `$HOME` — nothing is hardcoded to `/home/hydrasamo`, so it works
   on any user/machine (including root on `machy`, after adjusting `$HOME`).
-- Shell rc files (`.bashrc`, `.zshrc`, `.profile`) have `/home/axorasamo`
+- Shell rc files (`.bashrc`, `.zshrc`, `.profile`) have `/home/hydrasamo`
   replaced with `$HOME` for portability.
 - QML files use `StandardPaths.writableLocation(StandardPaths.HomeLocation)`
   instead of hardcoded paths.
-- `usr/share/sddm/themes/axora/` and `/etc/sddm.conf.d/` require `sudo`.
+- `usr/share/sddm/themes/hydra/` and `/etc/sddm.conf.d/` require `sudo`.

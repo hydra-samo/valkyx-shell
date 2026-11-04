@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=HYDRA Welcome Report
+GenericName=Shell report
+Comment=Terminal report: wordmark, system facts and shell health
+Exec=kitty --hold -e $HOME/.local/bin/hydra-welcome
+Icon=hydra
+Terminal=false
+Categories=System;
+Keywords=hydra;welcome;report;system;
+NoDisplay=false
+StartupNotify=true

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Restore services recorded in the gamesession marker, if any.
+set -uo pipefail
+MARKER="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hydra-gamesession.suspended"
+[ -f "$MARKER" ] || exit 0
+while IFS= read -r unit; do
+    [ -z "$unit" ] && continue
+    systemctl --user start "$unit" 2>/dev/null
+done < "$MARKER"
+rm -f "$MARKER"

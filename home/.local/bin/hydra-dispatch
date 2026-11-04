@@ -1,0 +1,74 @@
+#!/bin/sh
+# hydra-dispatch — a working replacement for `hyprctl dispatch <name>`.
+#
+# WHY: Hyprland 0.56.2 has TWO silent-failure paths, both of which return
+# success while doing nothing.
+#
+#   1. `hyprctl dispatch <name>` hands the name to hl.dispatch(), which only
+#      accepts a dispatcher *object*. Every string dispatcher is rejected:
+#      "hl.dispatch: expected a dispatcher". Broken for all 8 names this config
+#      used (cyclenext, bringactivetotop, dpms, exit, focuswindow, workspace,
+#      movetoworkspace) and for `hyprctl setdpms`, which no longer exists.
+#
+#   2. `hyprctl eval "hl.dsp.…(…)"` returns ok and changes nothing — for
+#      EVERY dispatcher. Verified: window.close, window.float, window.pin,
+#      focus({window=}), focus({last}) all no-op through eval, yet the same
+#      dispatchers work when called from inside a bind.
+#
+# So the only script→compositor channel that works is synthesising a keypress
+# for a bind the compositor already handles. The binds are Super+1..6
+# (semantic workspaces) and Super+Shift+1..6 (carry the window). Everything
+# else has no working path and says so instead of pretending.
+#
+# Fail loudly: unknown/unreachable dispatchers exit 2 with a reason. A silent
+# no-op is what let 7 features die unnoticed.
+#
+#   hydra-dispatch workspace    <name>   Super+<n>       focus a semantic workspace
+#   hydra-dispatch movetoworkspace <name> Super+Shift+<n> carry the window there
+#   hydra-dispatch                       list what is reachable
+
+set -u
+
+case "${1:-}" in
+"")
+	cat <<'EOF'
+hydra-dispatch <name> [args]
+
+  workspace       name:0N label    focus a semantic workspace   (Super+N)
+  movetoworkspace name:0N label    carry the window there       (Super+Shift+N)
+
+Every other dispatcher is unreachable on 0.56.2 and exits 2 with a reason.
+EOF
+	exit 2
+	;;
+esac
+
+# "name:05 personal" -> 5. Leading digit, because that is where the number is.
+n() { printf '%s' "$1" | sed -nE 's/^[^0-9]*0*([1-6]).*/\1/p'; }
+
+unreachable() {
+	echo "hydra-dispatch: no working path to '$*' on Hyprland 0.56.2." >&2
+	echo "  \`hyprctl dispatch\` and \`hyprctl eval\` both return success and do nothing." >&2
+	echo "  Bind it in hyprland.lua and call that bind instead (hl.dsp.* works from a bind)." >&2
+	exit 2
+}
+
+cmd=$1
+shift
+
+case "$cmd" in
+workspace | focusworkspace | movetoworkspace)
+	[ $# -ge 1 ] || { echo "usage: hydra-dispatch $cmd <name:0N label>" >&2; exit 2; }
+	k=$(n "$1")
+	[ -n "$k" ] || unreachable "$1"
+	kc=$((k + 1)) # evdev: KEY_1=2 .. KEY_6=7
+	if [ "$cmd" = movetoworkspace ]; then
+		ydotool key 125:1 42:1 "$kc":1 "$kc":0 42:0 125:0
+	else
+		ydotool key 125:1 "$kc":1 "$kc":0 125:0
+	fi
+	;;
+*)
+	unreachable "$cmd"
+	;;
+esac

@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+import evdev, select, subprocess, time
+
+DIV = ('wireless controller', 'dualshock', 'sony interactive')
+PS = evdev.ecodes.BTN_MODE
+PS_SHORT = 0.35
+TV = {
+    evdev.ecodes.BTN_DPAD_UP: 19,
+    evdev.ecodes.BTN_DPAD_DOWN: 20,
+    evdev.ecodes.BTN_DPAD_LEFT: 21,
+    evdev.ecodes.BTN_DPAD_RIGHT: 22,
+    evdev.ecodes.BTN_SOUTH: 23,
+    evdev.ecodes.BTN_EAST: 4,
+    evdev.ecodes.BTN_NORTH: 3,
+    evdev.ecodes.BTN_WEST: 82,
+    evdev.ecodes.BTN_TR: 24,
+    evdev.ecodes.BTN_TL: 25,
+    evdev.ecodes.BTN_TR2: 85,
+}
+
+def gamepads(existing=None):
+    existing = existing or {}
+    found = {}
+    for p in evdev.list_devices():
+        try:
+            d = evdev.InputDevice(p)
+        except OSError:
+            continue
+        cap = d.capabilities(absinfo=False).get(evdev.ecodes.EV_KEY, [])
+        if PS in cap and any(k in d.name.lower() for k in DIV):
+            if p in existing:
+                d.close()
+                found[p] = existing[p]
+            else:
+                found[p] = d
+        else:
+            d.close()
+    return found
+
+def active():
+    try:
+        out = subprocess.run(['systemctl', 'is-active', 'waydroid-container'],
+                             capture_output=True, timeout=5).stdout
+        return out.strip() == b'active'
+    except Exception:
+        return False
+
+def key(code):
+    subprocess.Popen(['sudo', '-n', 'waydroid', 'shell', 'input', 'keyevent', str(code)],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    with open('/tmp/hydra-ds4-tv.log', 'a') as f:
+        f.write('%s keyevent %s\n' % (time.strftime('%H:%M:%S'), code))
+
+def main():
+    devs = gamepads()
+    down = {}
+    while True:
+        if not devs:
+            time.sleep(1.5)
+            devs = gamepads()
+            continue
+        try:
+            r, _, _ = select.select(list(devs.values()), [], [], 5.0)
+        except OSError:
+            devs = gamepads(devs)
+            continue
+        for dev in r:
+            try:
+                for e in dev.read():
+                    if e.type != evdev.ecodes.EV_KEY:
+                        continue
+                    if e.value == 1:
+                        down[e.code] = time.time()
+                    elif e.value == 0 and e.code in down:
+                        held = time.time() - down.pop(e.code)
+                        if e.code == PS:
+                            if held < PS_SHORT and active():
+                                key(3)
+                            continue
+                        if not active():
+                            continue
+                        code = TV.get(e.code)
+                        if code is not None:
+                            key(code)
+            except OSError:
+                dev.close()
+                del devs[dev.path]
+        devs = gamepads(devs)
+
+if __name__ == '__main__':
+    main()

@@ -1,2 +1,0 @@
-#!/bin/sh
-exec $HOME/.venvs/axora-memory/bin/python $HOME/repos/axora-memory/axora_memory.py "$@"

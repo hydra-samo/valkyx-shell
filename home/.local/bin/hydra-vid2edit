@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# hydra-vid2edit - make H.264/H.265 footage edit-native for DaVinci Resolve FREE.
+#
+# Why: Linux free Resolve has no hardware decode for H.264/H.265 long-GOP
+# (Studio-only), which causes lag/stutter. DNxHR decodes trivially and is
+# fully native in the free version -> smooth playback, GPU free for color/FX.
+#
+# Usage:
+#   hydra-vid2edit [-q lb|sq] <file-or-folder> [more...]
+#     -q sq   higher quality (color grading) - default: lb (proxy-grade)
+# Output: <input_dir>/_EDIT/<name>_edit.mov  (DNxHR + PCM audio)
+set -euo pipefail
+
+Q=lb
+[ "${1:-}" = "-q" ] && { Q=sq; shift; }
+PROFILE="dnxhr_${Q}"
+OUTCODEC_ARGS=(-c:v dnxhd -profile:v "$PROFILE" -pix_fmt yuv422p)
+
+have() { command -v "$1" >/dev/null 2>&1; }
+need() { have "$1" || { echo "missing: $1" >&2; exit 1; }; }
+need ffprobe; need ffmpeg
+
+collect() {
+    local p=$1
+    if [ -d "$p" ]; then
+        find "$p" -maxdepth 1 -type f \( -iname '*.mp4' -o -iname '*.mov' -o -iname '*.mkv' -o -iname '*.m4v' -o -iname '*.webm' \) ! -path '*_EDIT*'
+    elif [ -f "$p" ]; then echo "$p"; fi
+}
+
+vcodec() { ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "$1" 2>/dev/null || true; }
+
+hw_decode_args() {
+    # Intel Iris Xe QSV decode (verified working on this box); NVDEC/cuvid
+    # fails pixfmt negotiation vs dnxhd on ffmpeg 9 -> not used.
+    local c; c=$(vcodec "$1")
+    case "$c" in
+        h264) echo "-hwaccel qsv -c:v h264_qsv" ;;
+        hevc) echo "-hwaccel qsv -c:v hevc_qsv" ;;
+        *)    echo "" ;;
+    esac
+}
+
+TOTAL_IN=0; TOTAL_OUT=0; N=0; FAILED=0
+
+transcode_one() {
+    local src=$1 base dir out hw vf t0
+    dir=$(dirname "$src"); mkdir -p "$dir/_EDIT"
+    base=$(basename "$src"); base="${base%.*}"
+    out="$dir/_EDIT/${base}_edit.mov"
+    if [ -s "$out" ]; then echo "SKIP (exists): $out"; return 0; fi
+    hw=$(hw_decode_args "$src")
+    if [ -n "$hw" ]; then
+        vf="hwdownload,format=nv12,scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv422p"
+        echo ">> $base  [Intel-QSV decode + CPU DNxHR] -> $out"
+    else
+        vf="scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv422p"
+        echo ">> $base  [CPU] -> $out"
+    fi
+    t0=$SECONDS
+    encode() {
+        # shellcheck disable=SC2086
+        ffmpeg -y -hide_banner -loglevel error $1 -i "$src" \
+            "${OUTCODEC_ARGS[@]}" \
+            -vf "$2" \
+            -c:a pcm_s16le -map_metadata 0 -movflags +faststart \
+            "$out"
+    }
+    if [ -n "$hw" ]; then
+        if ! encode "$hw" "$vf"; then
+            echo "   QSV failed, retrying CPU decode..."
+            rm -f "$out"
+            encode "" "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv422p" || return 1
+        fi
+    else
+        encode "" "$vf" || return 1
+    fi
+    printf '   done in %ds  (%s -> %s)\n' "$((SECONDS-t0))" \
+        "$(du -h "$src" | cut -f1)" "$(du -h "$out" | cut -f1)"
+    return 0
+}
+
+for arg in "$@"; do
+    while IFS= read -r f; do
+        [ -z "$f" ] && continue
+        sz_in=$(stat -Lc%s "$f" 2>/dev/null || echo 0)
+        if transcode_one "$f"; then
+            dir=$(dirname "$f"); b=$(basename "$f"); b="${b%.*}"
+            o="$dir/_EDIT/${b}_edit.mov"
+            sz_out=$(stat -Lc%s "$o" 2>/dev/null || echo 0)
+            TOTAL_IN=$((TOTAL_IN+sz_in)); TOTAL_OUT=$((TOTAL_OUT+sz_out)); N=$((N+1))
+        else
+            FAILED=$((FAILED+1)); echo "FAILED: $f" >&2
+        fi
+    done < <(collect "$arg")
+done
+
+echo
+echo "Converted: $N files, failed: $FAILED"
+[ "$N" -gt 0 ] && printf 'Size: %.1fMB -> %.1fMB\n' "$(bc <<<"scale=1;$TOTAL_IN/1048576")" "$(bc <<<"scale=1;$TOTAL_OUT/1048576")"
+echo "Import the *_EDIT.mov files into Resolve (they are the edit-native copies)."
