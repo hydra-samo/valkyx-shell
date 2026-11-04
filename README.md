@@ -22,12 +22,23 @@ Nothing on the host is deleted — overwritten files are backed up with a
 
 ## Install
 
+### Option 1 — Dotfiles deploy only (this host / machy VM)
 ```bash
 ./install.sh
 ```
+Run as a normal user. Deploys dotfiles to `$HOME` and `/etc`/`/usr/share` (via
+`sudo` internally). Backs up existing files with `.hydra-bak-<timestamp>`.
 
-Run as a normal user — the script uses `sudo` internally for `/etc` and
-`/usr/share` locations. It does **not** run as root.
+### Option 2 — Full machine preparation (bare Arch → Hydra shell)
+```bash
+sudo ./install-machine.sh
+```
+Run as root. Prompts for the root password ONCE, then everything is
+auto-approved. Detects installed vs missing packages, installs what's needed,
+creates the user, enables services, installs fonts, deploys dotfiles, and
+configures SDDM. Idempotent — safe to re-run.
+
+## What's excluded
 
 ## What's excluded
 
