@@ -1,4 +1,4 @@
-# Valkyx Labs — Hyprland Dotfiles
+# Valkyx — Hyprland Dotfiles
 
 Single source of truth for the Valkyx Hyprland shell, in the style of
 [ilyamiro/serpentium](https://github.com/ilyamiro/serpentium) and
