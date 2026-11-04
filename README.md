@@ -13,13 +13,11 @@ Nothing on the host is deleted — overwritten files are backed up with a
 |-----------|-------------|
 | `home/.config/hypr/` | `$HOME/.config/hypr/` |
 | `home/.config/hydra/` | `$HOME/.config/hydra/` |
-| `home/.config/systemd/user/` | `$HOME/.config/systemd/user/` |
 | `home/.local/bin/` | `$HOME/.local/bin/` |
 | `home/.local/share/` | `$HOME/.local/share/` |
 | `home/Pictures/Wallpapers/` | `$HOME/Pictures/Wallpapers/` |
 | `home/.bashrc .zshrc .profile` | `$HOME/` |
 | `etc/sddm.conf.d/hydra.conf` | `/etc/sddm.conf.d/hydra.conf` (sudo) |
-| `etc/systemd/system/hydra-*` | `/etc/systemd/system/` (sudo) |
 | `usr/share/sddm/themes/hydra/` | `/usr/share/sddm/themes/hydra/` (sudo) |
 
 ## Install
@@ -37,11 +35,12 @@ Run as a normal user — the script uses `sudo` internally for `/etc` and
 - Giant AppImage/binaries in `$HOME/.local/bin` (e.g. `hydra.AppImage`, `llama`,
   `LM-Studio`) — not part of the shell config; install separately if needed
 - TTS model binaries (`.piper`) — kept on the host; `hydra-assistant` needs them
+- systemd unit files — not part of the portable dotfiles deploy
 
 ## Notes
 
-- All paths use `$HOME` — nothing is hardcoded to `$HOME`, so it works
+- All paths use `$HOME` — nothing is hardcoded to `/home/hydrasamo`, so it works
   on any user/machine (including root on `machy`, after adjusting `$HOME`).
-- Shell rc files (`.bashrc`, `.zshrc`, `.profile`) have `$HOME`
+- Shell rc files (`.bashrc`, `.zshrc`, `.profile`) have `/home/hydrasamo`
   replaced with `$HOME` for portability.
-- `usr/share/sddm/themes/hydra/` and `/etc/systemd/system/` require `sudo`.
+- `usr/share/sddm/themes/hydra/` and `/etc/sddm.conf.d/` require `sudo`.

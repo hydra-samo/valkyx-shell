@@ -89,35 +89,13 @@ if need_sudo; then
 fi
 
 # ============================================================
-# 4. System systemd units -> /etc/systemd/system/  (sudo)
-# ============================================================
-info "installing system systemd units to /etc/systemd/system/"
-if need_sudo; then
-  sudo mkdir -p /etc/systemd/system
-  for item in "$REPO/etc/systemd/system"/*; do
-    [ -e "$item" ] || continue
-    name="$(basename "$item")"
-    if [ -e "/etc/systemd/system/$name" ] || [ -L "/etc/systemd/system/$name" ]; then
-      ts="$(date +%Y%m%d%H%M%S)"
-      sudo mv "/etc/systemd/system/$name" "/etc/systemd/system/$name.hydra-bak-${ts}"
-    fi
-    if [ -d "$item" ]; then
-      sudo cp -r "$item" "/etc/systemd/system/$name"
-    else
-      sudo cp "$item" "/etc/systemd/system/$name"
-    fi
-  done
-  info "system units installed (run 'sudo systemctl daemon-reload' to activate)"
-fi
-
-# ============================================================
-# 5. Done
+# 4. Done
 # ============================================================
 info "installation complete"
 echo
 echo "Next steps:"
 echo "  - Restart Hyprland / log out and back in for shell changes to apply."
 echo "  - For SDDM: select the 'Hydra' greeter in sddm.conf.d, then restart sddm."
-echo "  - For system units: sudo systemctl daemon-reload  (then enable desired services)"
+
 echo "  - The script did not delete anything on your host; overwritten files are"
 echo "    saved with a .hydra-bak-<timestamp> suffix."

@@ -1,6 +1,0 @@
-[Unit]
-Description=Mirror the hydra remote token into the automata vault for Syncthing
-
-[Service]
-Type=oneshot
-ExecStart=/bin/sh -c 'mkdir -p "%h/automata/vault/needed files" && cp "%h/.local/state/hydra/remote-token" "%h/automata/vault/needed files/hydra-remote-token.txt" && chmod 600 "%h/automata/vault/needed files/hydra-remote-token.txt"'
