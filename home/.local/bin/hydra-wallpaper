@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# hydra-wallpaper [FILE|next|prev|random|current] — wallpaper engine over the backgrounds dir
+# valkyx-wallpaper [FILE|next|prev|random|current] — wallpaper engine over the backgrounds dir
 set -uo pipefail
 dir="$HOME/.local/share/backgrounds"
-idx="$HOME/.cache/hydra-wallpaper.idx"
-cur_default="hydra-wallpaper.svg"
+idx="$HOME/.cache/valkyx-wallpaper.idx"
+cur_default="valkyx-wallpaper.svg"
 
 mapfile -t imgs < <(find "$dir" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) -printf '%f\n' | sort)
 [ "${#imgs[@]}" = "0" ] && { echo "no wallpapers in $dir" >&2; exit 66; }

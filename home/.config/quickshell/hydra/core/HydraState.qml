@@ -1,5 +1,5 @@
 pragma Singleton
-// HYDRA STATE — single reactive source of truth.
+// VALKYX STATE — single reactive source of truth.
 // Compositor state from Hyprland event socket (no polling).
 // Hardware values encapsulated; UI never shells out directly.
 import QtQuick
@@ -29,8 +29,8 @@ QtObject {
       property string passwordLabel: ""
       property string passwordText: ""
     property bool wallpaperOpen: false      // Super+W wallpaper/media selector
-    property color accent: "#00A86B"        // persisted; shell.qml propagates to HydraTheme
-    property string themeName: "Hydra"      // persisted; applies full theme (accent + bg family)
+    property color accent: "#00A86B"        // persisted; shell.qml propagates to ValkyxTheme
+    property string themeName: "Valkyx"      // persisted; applies full theme (accent + bg family)
     property string cursorTheme: "Maya-Green" // persisted; xcursor theme matching an accent
     property int cursorSize: 34             // persisted; fixed default (mid-big, visible on all themes)
 
@@ -44,10 +44,10 @@ QtObject {
         if (motionPref === "full") return false
         return _desktopReduced
     }
-    // Pushed, not read back: HydraState already imports HydraMotion, so reading
+    // Pushed, not read back: ValkyxState already imports ValkyxMotion, so reading
     // the other way round would be a circular singleton dependency.
     property bool _desktopReduced: false
-    onReducedMotionChanged: HydraMotion.motionScale = reducedMotion ? 0 : 1
+    onReducedMotionChanged: ValkyxMotion.motionScale = reducedMotion ? 0 : 1
     // NOTE: deliberately no Component.onCompleted here — a QtObject honours only
     // the LAST one, and the real poller-start handler lives further down this
     // file. The reduced-motion seed is merged into it; a second handler here
@@ -58,52 +58,52 @@ QtObject {
             onStreamFinished: state._desktopReduced = text.trim() === "false"
         }
     }
-    // accent theme -> matching xcursor theme (Maya Serie + Hydra recolors)
+    // accent theme -> matching xcursor theme (Maya Serie + Valkyx recolors)
     property var themeToCursor: {
-        "Hydra": "Maya-Green", "Violet": "Hydra-Violet", "Ocean": "Maya-Blue24",
-        "Ember": "Maya-Red24", "Amber": "Maya-Orange", "Cyan": "Hydra-Cyan"
+        "Valkyx": "Maya-Green", "Violet": "Valkyx-Violet", "Ocean": "Maya-Blue24",
+        "Ember": "Maya-Red24", "Amber": "Maya-Orange", "Cyan": "Valkyx-Cyan"
     }
     function cursorForTheme(name) { return themeToCursor[name] ? themeToCursor[name] : cursorTheme }
 
-    // Full theme catalog: hydra's 6 brand presets + the imported omarchy themes
-    // (scraped into ~/.config/hydra/theming, indexed by hydra-gen-theme). The
+    // Full theme catalog: valkyx's 6 brand presets + the imported omarchy themes
+    // (scraped into ~/.config/valkyx/theming, indexed by valkyx-gen-theme). The
     // picker + resolver read this; the keybind cycle stays on the 6 presets so
-    // hydra behavior is unchanged.
+    // valkyx behavior is unchanged.
     property var catalogThemes: []
-    readonly property var allThemes: HydraTheme.themes.concat(catalogThemes)
+    readonly property var allThemes: ValkyxTheme.themes.concat(catalogThemes)
 
     // The name to KEY icon/glyph theming by. When auto (wallpaper-derived accent),
-    // presets are keyed resources (cursor + hydra-icons) — resolve to the nearest
+    // presets are keyed resources (cursor + valkyx-icons) — resolve to the nearest
     // preset hue so cached glyphs + cursor still match. Real preset or catalog
     // theme = itself.
     readonly property string themedName: {
-        for (const t of HydraTheme.themes) if (t.name === themeName) return themeName
+        for (const t of ValkyxTheme.themes) if (t.name === themeName) return themeName
         for (const t of catalogThemes) if (t.name === themeName) return themeName
         return nearestTheme(accent.toString())
     }
 
     // ==================== PERSISTENCE ====================
-    readonly property string _persistPath: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/hydra/state.json"
+    readonly property string _persistPath: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/valkyx/state.json"
 
     function applyTheme(name) {
         themeName = name
         let entry = null
-        for (const t of HydraTheme.themes) if (t.name === name) { entry = t; break }
+        for (const t of ValkyxTheme.themes) if (t.name === name) { entry = t; break }
         if (!entry) for (const t of catalogThemes) if (t.name === name) { entry = t; break }
         if (entry) {
-            HydraTheme.applyEntry(entry)
+            ValkyxTheme.applyEntry(entry)
             accent = entry.accent
         } else {
-            HydraTheme.applyTheme(name)
+            ValkyxTheme.applyTheme(name)
         }
         // cursor follows the accent: presets map by name, catalog themes by accent hue.
         cursorTheme = cursorForTheme(themeToCursor[name] ? name : nearestTheme(entry ? entry.accent : accent))
         // Chain cursor + icons into ONE exec so the _runner never drops either.
         // gen-icons is cosmetic (dock/launcher glyphs): run it with `;` so a
         // flaky render never kills the horizontal theme fan-out that follows.
-        // hydra-gen-theme is the omarchy-style single entry point: it re-tints
+        // valkyx-gen-theme is the omarchy-style single entry point: it re-tints
         // kitty/btop/code-oss + gtk icons + cursor from the one palette.
-        exec("hydra-cursor '" + cursorTheme + "' " + cursorSize + " && " + borderEvalCmd() + "; hydra-gen-icons '" + name + "' ; hydra-gen-theme '" + themedName + "'")
+        exec("valkyx-cursor '" + cursorTheme + "' " + cursorSize + " && " + borderEvalCmd() + "; valkyx-gen-icons '" + name + "' ; valkyx-gen-theme '" + themedName + "'")
         // catalog themes carry their own wallpaper AND their own palette: apply the
         // image but do NOT re-derive the accent (deriveAccent=false) — the theme wins.
         if (entry && entry.wallpaper) setWallpaper(entry.wallpaper, false)
@@ -113,7 +113,7 @@ QtObject {
     // Advance to the next theme (Super+Shift+T). Uses the same theme list as the
     // settings appearance picker so accent + cursor + all pickers stay in sync.
     function cycleTheme() {
-        const list = HydraTheme.themes.map(t => t.name)
+        const list = ValkyxTheme.themes.map(t => t.name)
         let idx = list.indexOf(themeName)
         idx = (idx + 1) % list.length
         applyTheme(list[idx])
@@ -122,14 +122,14 @@ QtObject {
 
     // Apply cursor + accent border + GTK ICON theme system-wide in ONE exec (the
     // serialized _runner drops back-to-back execs, so everything is chained in one
-    // sh -c). hydra-cursor seds hyprland.lua which auto-hot-reloads the config and
+    // sh -c). valkyx-cursor seds hyprland.lua which auto-hot-reloads the config and
     // re-reads the static border from 40-windows.conf — the accent border and the
     // icon theme (Thunar + all GTK apps) are chained AFTER it so they always win.
     // Multiple callers for the same reasons: boot restore, wallpaper palette apply,
     // theme pick, setCursor. themedName resolves "Auto" to the nearest preset so the
     // icon override always maps to a real MacTahoe-<Theme>-dark theme.
     function applyCursor() {
-        exec("hydra-cursor '" + cursorTheme + "' " + cursorSize + " && " + borderEvalCmd() + "; hydra-gen-theme '" + themedName + "'")
+        exec("valkyx-cursor '" + cursorTheme + "' " + cursorSize + " && " + borderEvalCmd() + "; valkyx-gen-theme '" + themedName + "'")
     }
     function setCursor(name, size) {
         cursorTheme = name
@@ -177,7 +177,7 @@ QtObject {
         // to "Welcome" forever. The guard is here, in the shared writer, rather
         // than on each handler, so no future field can reintroduce it.
         if (restoring) return
-        const d = { themeName: themeName, accent: accent.toString(), blurEnabled: blurEnabled, greetingEnabled: greetingEnabled, greetedOnce: greetedOnce, fontScale: fontScale, cursorTheme: cursorTheme, cursorSize: cursorSize, motionPref: motionPref, bg: HydraTheme.bg.toString(), surface: HydraTheme.surface.toString(), field: HydraTheme.field.toString(), line: HydraTheme.line.toString(), light: HydraTheme.lightMode }
+        const d = { themeName: themeName, accent: accent.toString(), blurEnabled: blurEnabled, greetingEnabled: greetingEnabled, greetedOnce: greetedOnce, fontScale: fontScale, cursorTheme: cursorTheme, cursorSize: cursorSize, motionPref: motionPref, bg: ValkyxTheme.bg.toString(), surface: ValkyxTheme.surface.toString(), field: ValkyxTheme.field.toString(), line: ValkyxTheme.line.toString(), light: ValkyxTheme.lightMode }
         _persistWriter.command = ["sh", "-c", "mkdir -p $(dirname " + _persistPath + ") && echo '" + JSON.stringify(d) + "' > " + _persistPath]
         _persistWriter.running = true
     }
@@ -188,15 +188,15 @@ QtObject {
                 restoring = true
                 try {
                     const d = JSON.parse(text.trim())
-                    if (d.themeName) { themeName = d.themeName; HydraTheme.applyTheme(d.themeName) }
+                    if (d.themeName) { themeName = d.themeName; ValkyxTheme.applyTheme(d.themeName) }
                     if (d.accent) accent = d.accent
                     // Auto (wallpaper) theme persists its full surface family; presets
                     // carry theirs via applyTheme above. Restore whichever applied.
-                    if (d.bg) HydraTheme.bg = d.bg
-                    if (d.surface) HydraTheme.surface = d.surface
-                    if (d.field) HydraTheme.field = d.field
-                    if (d.line) HydraTheme.line = d.line
-                    if (d.light !== undefined) HydraTheme.lightMode = d.light
+                    if (d.bg) ValkyxTheme.bg = d.bg
+                    if (d.surface) ValkyxTheme.surface = d.surface
+                    if (d.field) ValkyxTheme.field = d.field
+                    if (d.line) ValkyxTheme.line = d.line
+                    if (d.light !== undefined) ValkyxTheme.lightMode = d.light
                     if (d.blurEnabled !== undefined) blurEnabled = d.blurEnabled
                     // `=== false` matters, not `!== undefined`: a plain truthiness
                     // test would drop a saved "greet me" = false and greet anyway.
@@ -204,7 +204,7 @@ QtObject {
                     if (d.greetedOnce !== undefined) greetedOnce = d.greetedOnce
                     if (d.fontScale) fontScale = d.fontScale
                     // boot: restore cursor to the saved accent cursor + apply live.
-                    // applyCursor() chains the accent border eval AFTER hydra-cursor's
+                    // applyCursor() chains the accent border eval AFTER valkyx-cursor's
                     // config-sed hot-reload, so boot cursor+accent+border all land.
                     cursorTheme = d.cursorTheme ? d.cursorTheme : cursorForTheme(themeName)
                     if (d.cursorSize) cursorSize = d.cursorSize
@@ -224,11 +224,11 @@ QtObject {
     }
     property Process _persistWriter: Process {}
 
-    // Omarchy catalog reader: hydra-gen-theme writes one normalized entry per
-    // theme (6 hydra presets + scraped omarchy themes) so the appearance picker
+    // Omarchy catalog reader: valkyx-gen-theme writes one normalized entry per
+    // theme (6 valkyx presets + scraped omarchy themes) so the appearance picker
     // can offer the whole catalog from one place.
     property Process catalogReader: Process {
-        command: ["cat", StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/hydra/theming/catalog-full.json"]
+        command: ["cat", StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/valkyx/theming/catalog-full.json"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try { state.catalogThemes = JSON.parse(text.trim()).themes } catch (e) { state.catalogThemes = [] }
@@ -242,7 +242,7 @@ QtObject {
     property string activeMediaPath: ""
     property Process mediaScan: Process {
         command: ["sh", "-c",
-            "cat ~/.cache/hydra-wallpaper.kind 2>/dev/null || echo image; echo '---P---'; cat ~/.cache/hydra-wallpaper.path 2>/dev/null || echo ''"]
+            "cat ~/.cache/valkyx-wallpaper.kind 2>/dev/null || echo image; echo '---P---'; cat ~/.cache/valkyx-wallpaper.path 2>/dev/null || echo ''"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const parts = text.split("---P---")
@@ -252,7 +252,7 @@ QtObject {
         }
     }
 
-    Component.onCompleted: { loadPersisted(); stateGet.running = true; sysGet.running = true; wpScan.running = true; lumScan.running = true; caffeineGet.running = true; mediaScan.running = true; audioScan.running = true; audioWatch.running = true; monitorScan.running = true; weatherScan.running = true; catalogReader.running = true; _prefReader.running = true; HydraMotion.motionScale = reducedMotion ? 0 : 1 }
+    Component.onCompleted: { loadPersisted(); stateGet.running = true; sysGet.running = true; wpScan.running = true; lumScan.running = true; caffeineGet.running = true; mediaScan.running = true; audioScan.running = true; audioWatch.running = true; monitorScan.running = true; weatherScan.running = true; catalogReader.running = true; _prefReader.running = true; ValkyxMotion.motionScale = reducedMotion ? 0 : 1 }
 
     // Dashboard (left sidebar) pollers run ONLY while the panel is open — they
     // feed no always-visible UI, so polling 24/7 burns CPU for nothing.
@@ -273,14 +273,14 @@ QtObject {
         if (deriveAccent === undefined) deriveAccent = true
         const base = path.split("/").pop()
         const kind = WallpaperStore.kindOf(path)
-        const dest = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/backgrounds/hydra-wallpaper.svg"
+        const dest = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/backgrounds/valkyx-wallpaper.svg"
         if (kind === "image") {
             // apply + persist a copy + record idx + re-derive the accent palette (matugen),
             // and yield any video layer + write the kind cache so boot restores the still.
             // deriveAccent=false (catalog theme apply): the theme palette is authoritative,
             // so skip matugen + the palette timer that would flip themeName to "Auto".
-            const pal = deriveAccent ? " && hydra-palette '" + path + "' >/dev/null" : ""
-            exec("pkill -x mpvpaper 2>/dev/null || true; printf image > ~/.cache/hydra-wallpaper.kind; printf '%s' '" + path + "' > ~/.cache/hydra-wallpaper.path && awww img --transition-type none '" + path + "' && cp '" + path + "' '" + dest + "' && echo '" + base + "' > ~/.cache/hydra-wallpaper.idx" + pal)
+            const pal = deriveAccent ? " && valkyx-palette '" + path + "' >/dev/null" : ""
+            exec("pkill -x mpvpaper 2>/dev/null || true; printf image > ~/.cache/valkyx-wallpaper.kind; printf '%s' '" + path + "' > ~/.cache/valkyx-wallpaper.path && awww img --transition-type none '" + path + "' && cp '" + path + "' '" + dest + "' && echo '" + base + "' > ~/.cache/valkyx-wallpaper.idx" + pal)
             // update highlight immediately (don't wait for the 20s wpScan timer)
             for (let i = 0; i < wallpaperList.length; i++) {
                 if (wallpaperList[i].split("/").pop() === base) { currentWallpaperIdx = i; break }
@@ -291,7 +291,7 @@ QtObject {
             // video/gif: stop any old video layer, BLANK the awww still underneath
             // (so the previous still never peeks under the video or flashes on
             // switch-back), start mpvpaper on the chosen file, persist kind+path.
-            exec("pkill -x mpvpaper 2>/dev/null || true; awww clear 2>/dev/null; (mpvpaper -o 'loop=inf no-audio no-osc' eDP-1 '" + path + "' >/dev/null 2>&1 &); printf " + kind + " > ~/.cache/hydra-wallpaper.kind; printf '%s' '" + path + "' > ~/.cache/hydra-wallpaper.path")
+            exec("pkill -x mpvpaper 2>/dev/null || true; awww clear 2>/dev/null; (mpvpaper -o 'loop=inf no-audio no-osc' eDP-1 '" + path + "' >/dev/null 2>&1 &); printf " + kind + " > ~/.cache/valkyx-wallpaper.kind; printf '%s' '" + path + "' > ~/.cache/valkyx-wallpaper.path")
             activeMediaPath = path
         }
     }
@@ -347,7 +347,7 @@ QtObject {
     property Timer _paletteTimer: Timer {
         interval: 1400; repeat: false
         onTriggered: {
-            _paletteReader.command = ["sh", "-c", "cat ~/.cache/hydra-palette.json 2>/dev/null || echo '{}'"]
+            _paletteReader.command = ["sh", "-c", "cat ~/.cache/valkyx-palette.json 2>/dev/null || echo '{}'"]
             _paletteReader.running = true
         }
     }
@@ -392,13 +392,13 @@ QtObject {
 
     // Nearest of the 6 named presets FOR CURSOR + GLYPH ICON theming. Match the
     // COLOR FAMILY by hue (circular), never raw RGB distance — otherwise a blue or
-    // muted wallpaper accent can snap to Hydra green and drag the cursor + icons
-    // off-family. Achromatic accents fall back to Hydra (the neutral brand default).
+    // muted wallpaper accent can snap to Valkyx green and drag the cursor + icons
+    // off-family. Achromatic accents fall back to Valkyx (the neutral brand default).
     function nearestTheme(hex) {
         const h = hueOf(hex)
-        if (h < 0) return "Hydra"
-        let best = "Hydra", bestD = Infinity
-        for (const t of HydraTheme.themes) {
+        if (h < 0) return "Valkyx"
+        let best = "Valkyx", bestD = Infinity
+        for (const t of ValkyxTheme.themes) {
             const th = hueOf(t.accent)
             if (th < 0) continue
             const d = hueDist(h, th)
@@ -414,15 +414,15 @@ QtObject {
     function applyWallpaperPalette(pal) {
         const n = nearestTheme(pal.dominant || pal.accent)
         themeName = "Auto"
-        for (const t of HydraTheme.themes) if (t.name === n) { accent = t.accent; break }
-        HydraTheme.accent = accent
-        HydraTheme.bg = pal.bg
-        HydraTheme.surface = pal.surface
-        HydraTheme.field = pal.field
-        HydraTheme.line = pal.line
+        for (const t of ValkyxTheme.themes) if (t.name === n) { accent = t.accent; break }
+        ValkyxTheme.accent = accent
+        ValkyxTheme.bg = pal.bg
+        ValkyxTheme.surface = pal.surface
+        ValkyxTheme.field = pal.field
+        ValkyxTheme.line = pal.line
         cursorTheme = cursorForTheme(n)   // cursor + glyphs follow nearest preset hue
         applyCursor()                      // chains the gradient border (uses fresh accent)
-        exec("hydra-gen-icons '" + n + "'")
+        exec("valkyx-gen-icons '" + n + "'")
         savePersisted()
     }
 
@@ -471,17 +471,17 @@ QtObject {
         // applying: the NEED slot stays the active row while the profile switch
         // is in flight (0.6-4.8s retry); a real sink replaces it on the rescan.
         audioSinks = audioSinks.map(s => Object.assign({}, s, { default: s.id === id }))
-        _audioRunner.todo = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-audio set-sink '" + id + "'"
+        _audioRunner.todo = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-audio set-sink '" + id + "'"
         audioRefreshFast.restart()
     }
     function setAudioInput(id) {
         audioSources = audioSources.map(s => Object.assign({}, s, { default: s.id === id }))
-        _audioRunner.todo = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-audio set-source '" + id + "'"
+        _audioRunner.todo = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-audio set-source '" + id + "'"
         audioRefreshFast.restart()
     }
     property Timer audioRefreshFast: Timer { interval: 300; onTriggered: state.audioScan.running = true }
     property Process audioScan: Process {
-        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-audio", "list"]
+        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-audio", "list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -538,7 +538,7 @@ QtObject {
     property real netUpKbs: 0
     property real netDownKbs: 0
 
-    // ==================== DASHBOARD (hydra-dash / hydra-weather) ====================
+    // ==================== DASHBOARD (valkyx-dash / valkyx-weather) ====================
     property var coreLoads: []           // per-core util %
     property real swapPct: 0
     property var diskMounts: []          // [{mount, pct}]
@@ -555,18 +555,18 @@ QtObject {
     property string mediaArt: ""         // file://… cover path (empty if none)
     property var clipList: []            // [{name, run}] recent clipboard entries
     property Process clipScan: Process {
-        command: ["sh", "-c", "hydra-launch --list-json \"" + HydraState.themedName + "\" clip 2>/dev/null"]
+        command: ["sh", "-c", "valkyx-launch --list-json \"" + ValkyxState.themedName + "\" clip 2>/dev/null"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try { state.clipList = JSON.parse(text) } catch (e) { /* keep last */ }
             }
         }
     }
-    property Timer clipTimer: Timer { interval: 10000; running: HydraState.panelLeftOpen; repeat: true; onTriggered: clipScan.running = true }
-    function copyClip(run) { exec("hydra-launch --run \"" + run + "\"") }
+    property Timer clipTimer: Timer { interval: 10000; running: ValkyxState.panelLeftOpen; repeat: true; onTriggered: clipScan.running = true }
+    function copyClip(run) { exec("valkyx-launch --run \"" + run + "\"") }
 
     property Process monitorScan: Process {
-        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-dash"]
+        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-dash"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -596,10 +596,10 @@ QtObject {
             }
         }
     }
-    property Timer monitorTimer: Timer { interval: 2000; running: HydraState.panelLeftOpen; repeat: true; onTriggered: monitorScan.running = true }
+    property Timer monitorTimer: Timer { interval: 2000; running: ValkyxState.panelLeftOpen; repeat: true; onTriggered: monitorScan.running = true }
 
     property Process weatherScan: Process {
-        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-weather"]
+        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-weather"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -618,7 +618,7 @@ QtObject {
             }
         }
     }
-    property Timer weatherTimer: Timer { interval: 1800000; running: HydraState.panelLeftOpen; repeat: true; onTriggered: weatherScan.running = true }
+    property Timer weatherTimer: Timer { interval: 1800000; running: ValkyxState.panelLeftOpen; repeat: true; onTriggered: weatherScan.running = true }
 
     // ==================== QUICK TOGGLES ====================
     readonly property var toggles: [
@@ -631,7 +631,7 @@ QtObject {
         { key: "night", glyph: "󰖨",
           on: "setsid gammastep -O 3500K >/dev/null 2>&1 &", off: "pkill -x gammastep" },
         { key: "caffeine", glyph: "󰅶",
-          on: "hydra-caffeine on", off: "hydra-caffeine off" }
+          on: "valkyx-caffeine on", off: "valkyx-caffeine off" }
     ]
 
     property var states: ({})
@@ -658,8 +658,8 @@ QtObject {
         if (_prevVol < 0) { _prevVol = volPct; return }
         if (Math.abs(volPct - _prevVol) >= 1 && !panelOpen) {
             osdMode = "vol"; osdValue = volPct; osdHide.restart()
-            HydraEvents.volumeChanged(volPct)
-            HydraEvents.osdShown("vol", volPct)
+            ValkyxEvents.volumeChanged(volPct)
+            ValkyxEvents.osdShown("vol", volPct)
         }
         _prevVol = volPct
     }
@@ -667,20 +667,20 @@ QtObject {
         if (_prevBri < 0) { _prevBri = briPct; return }
         if (Math.abs(briPct - _prevBri) >= 1 && !panelOpen) {
             osdMode = "bri"; osdValue = briPct; osdHide.restart()
-            HydraEvents.brightnessChanged(briPct)
-            HydraEvents.osdShown("bri", briPct)
+            ValkyxEvents.brightnessChanged(briPct)
+            ValkyxEvents.osdShown("bri", briPct)
         }
         _prevBri = briPct
     }
     onMicMutedChanged: {
-        HydraEvents.micMuteChanged(micMuted)
+        ValkyxEvents.micMuteChanged(micMuted)
         osdMode = "mic"; osdValue = micMuted ? 0 : 1; osdHide.restart()
     }
-    onMediaTitleChanged: if (mediaTitle) HydraEvents.mediaChanged(mediaTitle)
+    onMediaTitleChanged: if (mediaTitle) ValkyxEvents.mediaChanged(mediaTitle)
 
     property Timer osdHide: Timer {
-        interval: HydraMotion.osdHold
-        onTriggered: { state.osdMode = ""; HydraEvents.osdHidden() }
+        interval: ValkyxMotion.osdHold
+        onTriggered: { state.osdMode = ""; ValkyxEvents.osdHidden() }
     }
 
     // ==================== COMMAND RUNNER ====================
@@ -702,10 +702,10 @@ QtObject {
     // Runs on the serialized _runner (see applyAccentBorder/borderEvalCmd above).
     // NOT hooked to onAccentChanged: accent is only ever set inside applyTheme() and
     // loadPersisted(), both of which follow up with applyCursor() (which chains the
-    // border eval AFTER hydra-cursor) — an auto-handler here would double-exec and
+    // border eval AFTER valkyx-cursor) — an auto-handler here would double-exec and
     // race within _runner, dropping the final border. DON'T re-add it.
 
-    // hydra-dispatch is broken on this box (Lua wrapper mangles args) —
+    // valkyx-dispatch is broken on this box (Lua wrapper mangles args) —
     // go through the IPC socket directly with Lua dispatcher syntax.
     function dispatch(cmd) { Hyprland.dispatch(cmd) }
 
@@ -781,7 +781,7 @@ QtObject {
     // The keybind table on the welcome card. Hand-written, and that is the point:
     // it is the *curated* set (what a new user actually needs), not a dump of all
     // 92 binds. Transcribed from hyprland.lua — Super+ALT+Tab, not Super+Tab,
-    // and the language keys are Scroll_Lock / CTRL+Space. `hydra-welcome` prints
+    // and the language keys are Scroll_Lock / CTRL+Space. `valkyx-welcome` prints
     // the same list so the two can be diffed after any keybind change.
     property var keybindList: [
         { keys: "Super+Return",       what: "new terminal" },
@@ -818,10 +818,10 @@ QtObject {
     property Timer volTrail: Timer { interval: 60; repeat: false; onTriggered: { if (_volTodo.length) { exec(_volTodo); _volTodo = "" } } }
     property Timer briTrail: Timer { interval: 60; repeat: false; onTriggered: { if (_briTodo.length) { exec(_briTodo); _briTodo = "" } } }
     function setPowerProfile(p) {
-        // Don't set powerProfile optimistically: if "hydra-power set" fails the
+        // Don't set powerProfile optimistically: if "valkyx-power set" fails the
         // panel would show the choice that was never applied. The 1s state poller
         // reads it back from the saved file and updates once the write landed.
-        exec("hydra-power set " + p)
+        exec("valkyx-power set " + p)
         refreshStates()
     }
     function toggleMic() { exec("pamixer --default-source -t"); refreshPanelValues() }
@@ -830,7 +830,7 @@ QtObject {
     function mediaPrev() { exec("playerctl previous"); mediaRePoll.start() }
     function mediaSeek(pct) { if (mediaLen > 0) { exec("playerctl position " + (mediaLen * pct / 100)); mediaRePoll.start() } }
     function rescanWifi() { exec("nmcli dev wifi rescan"); refreshSoon2.restart() }
-    function clearNotifs() { exec("pkill -x mako; setsid mako >/dev/null 2>&1 &"); HydraEvents.notificationsCleared(); refreshSoon2.restart() }
+    function clearNotifs() { exec("pkill -x mako; setsid mako >/dev/null 2>&1 &"); ValkyxEvents.notificationsCleared(); refreshSoon2.restart() }
     function launch(cmd) { exec("setsid " + cmd + " >/dev/null 2>&1 &") }
 
     // notification row click → jump to the dir a path in the text points at,
@@ -945,7 +945,7 @@ QtObject {
         return ""
     }
 
-    // close/quit every window of an app class. hydra-dispatch is broken under
+    // close/quit every window of an app class. valkyx-dispatch is broken under
     // the Lua config — hyprctl eval runs the loop as raw Lua instead.
     // Escapes Lua pattern magic so the class string matches literally.
     function _clsPat(cls) {
@@ -980,16 +980,16 @@ QtObject {
         function onRawEvent(e) {
             if (e.name === "fullscreen") {
                 state.fullscreen = (e.data === "1")
-                HydraEvents.fullscreenChanged(state.fullscreen)
+                ValkyxEvents.fullscreenChanged(state.fullscreen)
             } else if (e.name === "workspace") {
                 state.fullscreen = false
                 const nm = e.data && e.data.indexOf("name:") === 0 ? e.data.slice(5) : e.data
                 state.states = Object.assign({}, state.states, { wsname: nm })
-                HydraEvents.workspaceChanged(nm)
+                ValkyxEvents.workspaceChanged(nm)
             } else if (e.name === "activewindow") {
                 state.fullscreen = false
                 const clsMatch = e.data && e.data.match(/class:\s*(\S+)/)
-                if (clsMatch) HydraEvents.windowFocused(clsMatch[1], state.activeTitle)
+                if (clsMatch) ValkyxEvents.windowFocused(clsMatch[1], state.activeTitle)
             } else if (e.name === "openwindow" || e.name === "closewindow") {
                 // event-driven dock + ws-pill refresh (instant, no poll lag)
                 stateGet.running = true
@@ -998,14 +998,14 @@ QtObject {
         }
     }
     onContextChanged: {
-        HydraEvents.contextChanged(context)
+        ValkyxEvents.contextChanged(context)
         applyBlur()
     }
     onFullscreenChanged: {
-        HydraEvents.fullscreenChanged(fullscreen)
+        ValkyxEvents.fullscreenChanged(fullscreen)
         applyBlur()
     }
-    onWsNameChanged: HydraEvents.workspaceChanged(wsName)
+    onWsNameChanged: ValkyxEvents.workspaceChanged(wsName)
 
     property bool blurEnabled: true
 
@@ -1028,7 +1028,7 @@ QtObject {
     // reaches for twice.
     function setMotion(on: bool) {
         motionPref = on ? "reduced" : "auto"
-        HydraMotion.motionScale = reducedMotion ? 0 : 1
+        ValkyxMotion.motionScale = reducedMotion ? 0 : 1
         savePersisted()
     }
 
@@ -1050,26 +1050,26 @@ QtObject {
             "echo dnd:$(makoctl mode 2>/dev/null | grep -q dnd && echo enabled || echo disabled)" + "\n" +
             "echo night:$(pgrep -x gammastep >/dev/null && echo enabled || echo disabled)" + "\n" +
             "echo caffeine:$(pgrep -x hypridle >/dev/null && echo disabled || echo enabled)" + "\n" +
-            "echo caffeinemin:$(cat ~/.cache/hydra-caffeine.min 2>/dev/null || echo 0)" + "\n" +
+            "echo caffeinemin:$(cat ~/.cache/valkyx-caffeine.min 2>/dev/null || echo 0)" + "\n" +
             "echo wsname:$(hyprctl activeworkspace 2>/dev/null | grep -oE '\\([0-9]+[a-z ]*\\)' | tr -d '()')" + "\n" +
             // powerProfile = the user's SAVED choice (what the buttons highlight).
             // powerProfileLive = the profile the daemon is ACTUALLY applying right now.
-            // These differ on battery: hydra-power forces the "battery" pseudo-profile
+            // These differ on battery: valkyx-power forces the "battery" pseudo-profile
             // (EPP=balance_power, turbo off, 20/30W) regardless of the saved value, so
             // reading only the file made the panel claim e.g. "balanced" while the CPU
             // was running the battery profile. Derive the live one from the kernel.
-            "echo profile:$(cat " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/hydra/power-profile 2>/dev/null || echo performance)" + "\n" +
+            "echo profile:$(cat " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/valkyx/power-profile 2>/dev/null || echo performance)" + "\n" +
             "ac=$(cat /sys/class/power_supply/ACAD/online 2>/dev/null); epp=$(cat /sys/devices/system/cpu/cpufreq/policy0/energy_performance_preference 2>/dev/null); nt=$(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null); if [ \"$ac\" = 0 ]; then echo proflive:battery; else case \"$epp/$nt\" in performance/0) echo proflive:performance ;; balance_power/0|balance_performance/0) echo proflive:balanced ;; power/1) echo proflive:power-saver ;; *) echo proflive:unknown ;; esac; fi" + "\n" +
             "echo acsrc:$([ \"$ac\" = 0 ] && echo battery || echo ac)" + "\n" +
             "cls=$(hyprctl clients -j 2>/dev/null)" + "\n" +
             "echo dock_terminal:$(echo \"$cls\" | grep -qE 'kitty' && echo on || echo off)" + "\n" +
             "echo dock_web:$(echo \"$cls\" | grep -qE 'helium|chrome-' && echo on || echo off)" + "\n" +
             "echo dock_files:$(echo \"$cls\" | grep -q 'thunar' && echo on || echo off)" + "\n" +
-            "echo dock_sandbox:$(echo \"$cls\" | grep -q 'HydraSandbox' && echo on || echo off)" + "\n" +
+            "echo dock_sandbox:$(echo \"$cls\" | grep -q 'ValkyxSandbox' && echo on || echo off)" + "\n" +
             "echo dock_blender:$(echo \"$cls\" | grep -q 'blender' && echo on || echo off)" + "\n" +
             "echo dock_resolve:$(echo \"$cls\" | grep -q 'resolve' && echo on || echo off)" + "\n" +
             "echo windows:$(echo \"$cls\" | grep -oE '\"class\": \"[^\"]*\"' | sed 's/\"class\": \"//;s/\"//' | sort -u | tr '\\n' ',' | sed 's/,$//')" + "\n" +
-            "echo ws_windows:$( " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-ws-windows)"]
+            "echo ws_windows:$( " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-ws-windows)"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const patch = {}
@@ -1118,7 +1118,7 @@ QtObject {
     // refresh, not per tile — avoids spawning a shell per dock item).
     property Process classIconsGet: Process {
         command: ["sh", "-c",
-            "hyprctl clients -j 2>/dev/null | grep -oE '\"class\": \"[^\"]*\"' | sed 's/\"class\": \"//;s/\"//' | sort -u | while IFS= read -r c; do [ -n \"$c\" ] && echo \"$c=$(" + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-class-icon \\\"$c\\\")\"; done"]
+            "hyprctl clients -j 2>/dev/null | grep -oE '\"class\": \"[^\"]*\"' | sed 's/\"class\": \"//;s/\"//' | sort -u | while IFS= read -r c; do [ -n \"$c\" ] && echo \"$c=$(" + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-class-icon \\\"$c\\\")\"; done"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
@@ -1141,7 +1141,7 @@ QtObject {
     }
     property Timer classIconsTimer: Timer {
         interval: 1200; running: true; repeat: true
-        onTriggered: { if (HydraState.runningWindows.length) classIconsGet.running = true }
+        onTriggered: { if (ValkyxState.runningWindows.length) classIconsGet.running = true }
     }
 
     // consolidated vol+bri+mic poller (2s) — replaces 3 separate timers
@@ -1175,13 +1175,13 @@ QtObject {
     // hyprctl IPC round-trip, ~5 polls/sec for 0.3% of a core instead of 3%.
     property string imLayout: "us"
     property Process imGet: Process {
-        command: ["sh", "-c", "cat " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.cache/hydra-im-state 2>/dev/null"]
+        command: ["sh", "-c", "cat " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.cache/valkyx-im-state 2>/dev/null"]
         stdout: StdioCollector {
             onStreamFinished: { const v = text.trim(); if (v) state.imLayout = v }
         }
     }
     property Process imToggle: Process {
-        command: ["sh", "-c", StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-im toggle"]
+        command: ["sh", "-c", StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-im toggle"]
         stdout: StdioCollector {
             onStreamFinished: { const v = text.trim(); if (v) state.imLayout = v }
         }
@@ -1205,7 +1205,7 @@ QtObject {
                     state._lastArtUrl = art
                     if (art.indexOf("http") === 0) {
                         const home = StandardPaths.writableLocation(StandardPaths.HomeLocation)
-                    state._artGet.command = ["sh", "-c", "curl -sL --max-time 8 '" + art + "' -o " + home + "/.cache/hydra-media-art 2>/dev/null && grep -q . " + home + "/.cache/hydra-media-art && echo ok || rm -f " + home + "/.cache/hydra-media-art"]
+                    state._artGet.command = ["sh", "-c", "curl -sL --max-time 8 '" + art + "' -o " + home + "/.cache/valkyx-media-art 2>/dev/null && grep -q . " + home + "/.cache/valkyx-media-art && echo ok || rm -f " + home + "/.cache/valkyx-media-art"]
                         state._artGet.running = true
                     } else if (art.indexOf("file://") === 0) {
                         state.mediaArt = art
@@ -1221,7 +1221,7 @@ QtObject {
         stdout: StdioCollector {
             onStreamFinished: {
                 if (text.trim().indexOf("ok") === 0)
-                    state.mediaArt = "file://" + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.cache/hydra-media-art"
+                    state.mediaArt = "file://" + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.cache/valkyx-media-art"
                 else
                     state.mediaArt = ""
             }
@@ -1258,13 +1258,13 @@ QtObject {
     }
     property Timer netTimer: Timer { interval: 10000; running: true; repeat: true; onTriggered: netGet.running = true }
 
-    // tailscale mesh status (hydra-tailscale-status, 10s poll)
+    // tailscale mesh status (valkyx-tailscale-status, 10s poll)
     property bool tsUp: false
     property string tsSelfName: ""
     property string tsSelfIp: ""
     property var tsPeers: []
     property Process tsGet: Process {
-        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-tailscale-status"]
+        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-tailscale-status"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = text.trim().split("\n")
@@ -1299,7 +1299,7 @@ QtObject {
             }
         }
     }
-    property Timer netBandTimer: Timer { interval: 2000; running: HydraState.panelLeftOpen; repeat: true; onTriggered: netBandGet.running = true }
+    property Timer netBandTimer: Timer { interval: 2000; running: ValkyxState.panelLeftOpen; repeat: true; onTriggered: netBandGet.running = true }
 
     property Process wifiScan: Process {
         command: ["sh", "-c", "nmcli -t -f in-use,ssid,signal,security dev wifi list 2>/dev/null"]
@@ -1356,11 +1356,11 @@ QtObject {
     // from the cache so the drawer shows the live state without double-counting.
     property int caffeineMin: 0
     function setCaffeine(min) {
-        exec("hydra-caffeine " + min)
+        exec("valkyx-caffeine " + min)
         caffeineMin = min
     }
     property Process caffeineGet: Process {
-        command: ["sh", "-c", "cat ~/.cache/hydra-caffeine.min 2>/dev/null || echo 0"]
+        command: ["sh", "-c", "cat ~/.cache/valkyx-caffeine.min 2>/dev/null || echo 0"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const v = parseInt(text.trim())
@@ -1370,7 +1370,7 @@ QtObject {
     }
 
     property bool gameModeOn: false
-    function toggleGameMode() { exec("hydra-gamemode"); gameModeGet.running = true }
+    function toggleGameMode() { exec("valkyx-gamemode"); gameModeGet.running = true }
     property Process gameModeGet: Process {
         command: ["sh", "-c", "pgrep -f 'gamemoded -[r]' >/dev/null && echo on || echo off"]
         stdout: StdioCollector {
@@ -1405,7 +1405,7 @@ QtObject {
                     })
                 })
                 if (out.length > 0 && state._lastNotifKey !== "" && out[0].summary !== state._lastNotifKey) {
-                        HydraEvents.notificationReceived(out[0].summary)
+                        ValkyxEvents.notificationReceived(out[0].summary)
                         state.toastApp = out[0].app
                         state.toastSummary = out[0].summary
                         state.toastGlyph = "\uDB80\uDED9"
@@ -1468,7 +1468,7 @@ QtObject {
     property Process wpScan: Process {
         command: ["sh", "-c",
             "ls ~/Pictures/Wallpapers/*.{png,jpg,jpeg,webp} 2>/dev/null" +
-            " || true; echo '---IDX---'; cat ~/.cache/hydra-wallpaper.idx 2>/dev/null || echo ''"]
+            " || true; echo '---IDX---'; cat ~/.cache/valkyx-wallpaper.idx 2>/dev/null || echo ''"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const parts = text.split("---IDX---")
@@ -1484,9 +1484,9 @@ QtObject {
                         }
                     }
                 }
-                // fallback: try hydra-wallpaper
+                // fallback: try valkyx-wallpaper
                 for (let i = 0; i < list.length; i++) {
-                    if (list[i].indexOf("hydra-wallpaper") >= 0) {
+                    if (list[i].indexOf("valkyx-wallpaper") >= 0) {
                         state.currentWallpaperIdx = i
                         break
                     }
@@ -1503,14 +1503,14 @@ QtObject {
             "python3 - <<'PY'\n" +
             "from PIL import Image\n" +
             "import os\n" +
-            "p = os.path.expanduser('~/.local/share/backgrounds/hydra-wallpaper.svg')\n" +
+            "p = os.path.expanduser('~/.local/share/backgrounds/valkyx-wallpaper.svg')\n" +
             "im = Image.open(p).convert('L').resize((1,1))\n" +
             "print('BRIGHT' if int(im.getpixel((0,0))) >= 140 else 'DARK')\n" +
             "PY"]
         stdout: StdioCollector {
             onStreamFinished: {
                 state.wallpaperBright = text.trim().toUpperCase().indexOf("BRIGHT") >= 0
-                HydraTheme.lightMode = state.wallpaperBright
+                ValkyxTheme.lightMode = state.wallpaperBright
             }
         }
     }

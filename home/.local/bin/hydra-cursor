@@ -1,5 +1,5 @@
 #!/bin/bash
-# hydra-cursor [theme] [size] — set cursor theme+size system-wide (GTK/gsettings/xcursor).
+# valkyx-cursor [theme] [size] — set cursor theme+size system-wide (GTK/gsettings/xcursor).
 theme="${1:-Maya-Green}"; size="${2:-24}"
 gsettings set org.gnome.desktop.interface cursor-theme "$theme" 2>/dev/null
 gsettings set org.gnome.desktop.interface cursor-size "$size" 2>/dev/null
@@ -42,7 +42,7 @@ if [ -f "$HYPR_LUA" ]; then
 fi
 
 # Persist for the SDDM greeter (cursor would otherwise fall back to default black).
-SDDM_CONF="/etc/sddm.conf.d/hydra.conf"
+SDDM_CONF="/etc/sddm.conf.d/valkyx.conf"
 if [ -w "$SDDM_CONF" ] || sudo -n true 2>/dev/null; then
     SUDO=""; [ -w "$SDDM_CONF" ] || SUDO="sudo"
     # ensure [Theme] section exists

@@ -1,10 +1,10 @@
 #!/bin/bash
-# HYDRA emoji picker — hands off to the Hydra launcher's EMOJI section,
+# VALKYX emoji picker — hands off to the Valkyx launcher's EMOJI section,
 # which lists the same curated set and copies/typess the pick. The picker used to
 # be its own `fuzzel --dmenu` window: a second, unaccented list for the same job.
-# Usage: hydra-emoji [search-term]
+# Usage: valkyx-emoji [search-term]
 
-LIST="$HOME/.local/share/hydra-emoji.txt"
+LIST="$HOME/.local/share/valkyx-emoji.txt"
 
 # Generate list on first run (curated common emojis)
 if [ ! -f "$LIST" ]; then
@@ -179,6 +179,6 @@ if [ ! -f "$LIST" ]; then
 EOF
 fi
 
-# Pick via the Hydra launcher. hydra-launch --list-json <theme> emoji renders this
+# Pick via the Valkyx launcher. valkyx-launch --list-json <theme> emoji renders this
 # same file and --run 'emoji|<glyph>' does the copy+type, so there is one list.
-qs -c hydra ipc call launcher open emoji
+qs -c valkyx ipc call launcher open emoji

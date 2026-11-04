@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# hydra-diagnose — Comprehensive system + codebase error collector
-# Produces structured JSON report for hydra-fix to consume
-# Usage: hydra-diagnose [--system|--codebase <dir>|--all] [--quiet]
+# valkyx-diagnose — Comprehensive system + codebase error collector
+# Produces structured JSON report for valkyx-fix to consume
+# Usage: valkyx-diagnose [--system|--codebase <dir>|--all] [--quiet]
 set -euo pipefail
 
-STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/hydra-diagnose"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/valkyx-diagnose"
 REPORT="$STATE_DIR/last-report.json"
 PREV_REPORT="$STATE_DIR/prev-report.json"
 # Suppressed categories/signatures — one per line, "#" comments allowed.
@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
         --codebase) MODE="--codebase"; CODEBASE_DIR="${2:-.}"; shift 2 ;;
         --all)     MODE="--all"; shift ;;
         --quiet)   QUIET=true; shift ;;
-        --help|-h) echo "Usage: hydra-diagnose [--system|--codebase <dir>|--all] [--quiet]"; exit 0 ;;
+        --help|-h) echo "Usage: valkyx-diagnose [--system|--codebase <dir>|--all] [--quiet]"; exit 0 ;;
         *)         echo "Unknown arg: $1"; exit 1 ;;
     esac
 done
@@ -392,10 +392,10 @@ scan_lock() {
     fi
 
     # A revoked grant leaves hyprlock alive but drawing nothing. Its own stderr
-    # carries the signature; hydra-lock writes it next to the power log.
-    local llog="${XDG_STATE_HOME:-$HOME/.local/state}/hydra-power.log"
+    # carries the signature; valkyx-lock writes it next to the power log.
+    local llog="${XDG_STATE_HOME:-$HOME/.local/state}/valkyx-power.log"
     if [[ -f "$llog" ]] && grep -q "yeeten" "$llog" 2>/dev/null; then
-        add_issue "warning" "lock" "hydra-power.log" \
+        add_issue "warning" "lock" "valkyx-power.log" \
             "A session-lock grant was revoked (hyprlock 'yeeten') — the wake/idle lock is racing the resume transition" \
             "$(grep -m2 yeeten "$llog")" \
             "lock_grant_revoked"
@@ -614,7 +614,7 @@ mkdir -p "$STATE_DIR"
 if ! $QUIET; then
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  HYDRA DIAGNOSE — $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "  VALKYX DIAGNOSE — $(date '+%Y-%m-%d %H:%M:%S')"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     if [[ $STATS_critical -gt 0 ]]; then

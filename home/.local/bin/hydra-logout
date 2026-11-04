@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# hydra-logout — end this Hyprland session and get back to the SDDM greeter.
+# valkyx-logout — end this Hyprland session and get back to the SDDM greeter.
 #
 # This script only *dispatches* the work. It cannot do the work itself: the
 # session it is ending contains the Quickshell process that exec'd it, so
 # anything it did after terminating the session would be killed mid-flight.
-# hydra-logout-watchdog runs the ladder, outside the session cgroup.
+# valkyx-logout-watchdog runs the ladder, outside the session cgroup.
 set -u
 
-LOG="${XDG_STATE_HOME:-$HOME/.local/state}/hydra-power.log"
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/valkyx-power.log"
 mkdir -p "$(dirname "$LOG")"
 note() { printf '%s logout    %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
 
@@ -43,7 +43,7 @@ note "dispatching logout watchdog for session $sid (owner=$owner tty=$tty)"
 
 # A second click must be a no-op, not a second watchdog racing the first. The
 # previous attempt lost this race and logged a bogus FAILED.
-if pgrep -f 'hydra-logout-watchdog' >/dev/null 2>&1; then
+if pgrep -f 'valkyx-logout-watchdog' >/dev/null 2>&1; then
     note "a logout is already in progress — ignoring"
     exit 0
 fi
@@ -53,10 +53,10 @@ fi
 # `&` or `setsid` would die with it, which is the whole bug. The unit name is
 # stamped per-run because --collect has not always garbage-collected the old one
 # in time, and a fixed name then fails with "already loaded".
-if ! systemd-run --user --quiet --unit="hydra-logout-$(date +%s)" --collect \
-        $HOME/.local/bin/hydra-logout-watchdog "$sid" 2>>"$LOG"; then
-    note "FAILED: could not start hydra-logout-watchdog — session $sid left running"
+if ! systemd-run --user --quiet --unit="valkyx-logout-$(date +%s)" --collect \
+        $HOME/.local/bin/valkyx-logout-watchdog "$sid" 2>>"$LOG"; then
+    note "FAILED: could not start valkyx-logout-watchdog — session $sid left running"
     exit 1
 fi
-note "watchdog running; watch ~/.local/state/hydra-power.log"
+note "watchdog running; watch ~/.local/state/valkyx-power.log"
 exit 0

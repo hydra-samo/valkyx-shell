@@ -1,32 +1,32 @@
 #!/bin/bash
-# HYDRA backup/restore — snapshot all HYDRA configs to a dated tarball
-# Usage: hydra-backup [restore FILE]
+# VALKYX backup/restore — snapshot all VALKYX configs to a dated tarball
+# Usage: valkyx-backup [restore FILE]
 
-BACKUP_DIR="$HOME/backups/hydra"
+BACKUP_DIR="$HOME/backups/valkyx"
 STAMP=$(date +%Y%m%d-%H%M%S)
 
 if [ "$1" = "restore" ]; then
     FILE="${2:-}"
     if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then
-        echo "usage: hydra-backup restore <backup.tar.gz>"
+        echo "usage: valkyx-backup restore <backup.tar.gz>"
         exit 1
     fi
     # Restore: extract over live configs (backup current state first)
     PRE="$BACKUP_DIR/pre-restore-$STAMP.tar.gz"
     mkdir -p "$BACKUP_DIR"
     tar czf "$PRE" -C "$HOME" \
-        .config/hypr .config/quickshell/hydra .config/mako \
-        .config/hydra .local/bin/hydra-* 2>/dev/null
+        .config/hypr .config/quickshell/valkyx .config/mako \
+        .config/valkyx .local/bin/valkyx-* 2>/dev/null
     tar xzf "$FILE" -C "$HOME"
     echo "restored $FILE (pre-restore state: $PRE)"
     exit 0
 fi
 
 mkdir -p "$BACKUP_DIR"
-OUT="$BACKUP_DIR/hydra-$STAMP.tar.gz"
+OUT="$BACKUP_DIR/valkyx-$STAMP.tar.gz"
 tar czf "$OUT" -C "$HOME" \
-    .config/hypr .config/quickshell/hydra .config/mako \
-    .config/hydra .local/bin/hydra-* 2>/dev/null
+    .config/hypr .config/quickshell/valkyx .config/mako \
+    .config/valkyx .local/bin/valkyx-* 2>/dev/null
 echo "backup: $OUT"
 # Keep last 10
-ls -t "$BACKUP_DIR"/hydra-*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm -f
+ls -t "$BACKUP_DIR"/valkyx-*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm -f

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""hydra-weather — fetch wttr.in, cache JSON. Prints key=value lines:
+"""valkyx-weather — fetch wttr.in, cache JSON. Prints key=value lines:
    temp, feels, desc, code, hum, wind
    Falls back to cache on network failure."""
 import json, os, sys, urllib.request, urllib.error
 
-CACHE = os.path.expanduser("~/.cache/hydra-weather.json")
-LOC = os.path.expanduser("~/.config/hydra/weather-location")
+CACHE = os.path.expanduser("~/.cache/valkyx-weather.json")
+LOC = os.path.expanduser("~/.config/valkyx/weather-location")
 URL = "https://wttr.in/?format=j1"
 
 def fetch():

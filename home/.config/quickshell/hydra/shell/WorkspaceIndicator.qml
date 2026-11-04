@@ -1,4 +1,4 @@
-// HYDRA WorkspaceIndicator — polished transition animation.
+// VALKYX WorkspaceIndicator — polished transition animation.
 // Centered flash with context-aware color and smooth enter/exit.
 import Quickshell
 import QtQuick
@@ -27,7 +27,7 @@ PanelWindow {
     }
 
     Connections {
-        target: HydraEvents
+        target: ValkyxEvents
         function onWorkspaceChanged(name) { if (name) ind.show(name) }
     }
 
@@ -37,42 +37,42 @@ PanelWindow {
         id: slideAnim
         target: ind; property: "slideX"
         from: -20; to: 0
-        duration: HydraMotion.base
+        duration: ValkyxMotion.base
         easing.type: Easing.OutCubic
     }
     NumberAnimation {
         id: exitAnim
         target: ind; property: "slideX"
         from: 0; to: 20
-        duration: HydraMotion.fast
-            easing.type: HydraMotion.curveIn
+        duration: ValkyxMotion.fast
+            easing.type: ValkyxMotion.curveIn
         onFinished: ind.shown = false
     }
 
     Rectangle {
         anchors.fill: parent
-        radius: HydraMetrics.rPanel
-        color: HydraMaterials.osdGlass
-        border.color: HydraMaterials.border
+        radius: ValkyxMetrics.rPanel
+        color: ValkyxMaterials.osdGlass
+        border.color: ValkyxMaterials.border
         border.width: 1
 
         opacity: ind.shown ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: HydraMotion.fast } }
+        Behavior on opacity { NumberAnimation { duration: ValkyxMotion.fast } }
 
         transform: Translate { x: ind.slideX }
 
         Row {
             id: flashRow
             anchors.centerIn: parent
-            spacing: HydraMetrics.m
+            spacing: ValkyxMetrics.m
 
             // workspace number — accent
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: ind.label.split(" ")[0] || ""
-                color: HydraTheme.accent
-                font.family: HydraTheme.fontUI
-                font.pixelSize: Math.round(16 * HydraState.fontScale)
+                color: ValkyxTheme.accent
+                font.family: ValkyxTheme.fontUI
+                font.pixelSize: Math.round(16 * ValkyxState.fontScale)
                 font.bold: true
             }
 
@@ -80,22 +80,22 @@ PanelWindow {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: ind.label.split(" ").slice(1).join(" ")
-                color: HydraTheme.text
-                font.family: HydraTheme.fontUI
-                font.pixelSize: Math.round(12 * HydraState.fontScale)
+                color: ValkyxTheme.text
+                font.family: ValkyxTheme.fontUI
+                font.pixelSize: Math.round(12 * ValkyxState.fontScale)
                 font.letterSpacing: 3
             }
 
             // context icon — shows when context is active
             Text {
-                visible: HydraState.context !== "normal"
+                visible: ValkyxState.context !== "normal"
                 anchors.verticalCenter: parent.verticalCenter
-                text: HydraState.context === "gaming" ? "\uDB80\uDE96" :
-                      HydraState.context === "creative" ? "\uDB81\uDD67" :
-                      HydraState.context === "fullscreen" ? "\uDB81\uDD02" : ""
-                color: HydraTheme.accent
-                font.family: HydraTheme.fontMono
-                font.pixelSize: Math.round(11 * HydraState.fontScale)
+                text: ValkyxState.context === "gaming" ? "\uDB80\uDE96" :
+                      ValkyxState.context === "creative" ? "\uDB81\uDD67" :
+                      ValkyxState.context === "fullscreen" ? "\uDB81\uDD02" : ""
+                color: ValkyxTheme.accent
+                font.family: ValkyxTheme.fontMono
+                font.pixelSize: Math.round(11 * ValkyxState.fontScale)
             }
         }
     }

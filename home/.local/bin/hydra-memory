@@ -1,2 +1,2 @@
 #!/bin/sh
-exec $HOME/.venvs/hydra-memory/bin/python $HOME/repos/hydra-memory/hydra_memory.py "$@"
+exec $HOME/.venvs/valkyx-memory/bin/python $HOME/repos/valkyx-memory/valkyx_memory.py "$@"

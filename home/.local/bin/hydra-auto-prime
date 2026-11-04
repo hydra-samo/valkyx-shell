@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 #
-# hydra-auto-prime — run a demanding app on the NVIDIA MX450 automatically.
+# valkyx-auto-prime — run a demanding app on the NVIDIA MX450 automatically.
 #
 # Invoked through symlinks named after the target app inside ~/.local/bin
-# (e.g. ~/.local/bin/blender -> hydra-auto-prime). Because ~/.local/bin is
+# (e.g. ~/.local/bin/blender -> valkyx-auto-prime). Because ~/.local/bin is
 # first in PATH, launching `blender` from a terminal, rofi, or .desktop entry
 # automatically uses PRIME render offload (NVIDIA). Everything else keeps
 # using the Intel Iris Xe as the default GPU.
 #
 # Safe by design:
 #   * Intel stays the system GPU — nothing is ever globally switched.
-#   * Only whitelisted app names are wrapped (see hydra-gpu auto).
-#   * Fully reversible: `hydra-gpu auto off` removes every wrapper.
+#   * Only whitelisted app names are wrapped (see valkyx-gpu auto).
+#   * Fully reversible: `valkyx-gpu auto off` removes every wrapper.
 #   * If the real app is not installed, this prints a clear error and exits
 #     non-zero instead of silently failing.
 #
@@ -41,8 +41,8 @@ if [ -z "$real" ] && [ -x "/opt/$APP/bin/$APP" ]; then
 fi
 
 if [ -z "$real" ]; then
-    echo "hydra-auto-prime: '$APP' is not installed." >&2
-    echo "  Install it, or launch manually with: hydra-gpu run $APP" >&2
+    echo "valkyx-auto-prime: '$APP' is not installed." >&2
+    echo "  Install it, or launch manually with: valkyx-gpu run $APP" >&2
     exit 1
 fi
 

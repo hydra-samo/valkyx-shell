@@ -2,7 +2,7 @@
   "themes": [
     {
       "name": "Amber",
-      "source": "hydra",
+      "source": "valkyx",
       "light": false,
       "accent": "#FF9800",
       "bg": "#14100a",
@@ -13,7 +13,7 @@
     },
     {
       "name": "Cyan",
-      "source": "hydra",
+      "source": "valkyx",
       "light": false,
       "accent": "#00BCD4",
       "bg": "#0a1214",
@@ -24,7 +24,7 @@
     },
     {
       "name": "Ember",
-      "source": "hydra",
+      "source": "valkyx",
       "light": false,
       "accent": "#FF5252",
       "bg": "#140a0a",
@@ -34,8 +34,8 @@
       "wallpaper": null
     },
     {
-      "name": "Hydra",
-      "source": "hydra",
+      "name": "Valkyx",
+      "source": "valkyx",
       "light": false,
       "accent": "#00A86B",
       "bg": "#0a1210",
@@ -46,7 +46,7 @@
     },
     {
       "name": "Ocean",
-      "source": "hydra",
+      "source": "valkyx",
       "light": false,
       "accent": "#2196F3",
       "bg": "#0a1016",
@@ -57,7 +57,7 @@
     },
     {
       "name": "Violet",
-      "source": "hydra",
+      "source": "valkyx",
       "light": false,
       "accent": "#7C4DFF",
       "bg": "#0d0a14",

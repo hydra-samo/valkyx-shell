@@ -1,8 +1,8 @@
 //@ pragma UseQApplication
 // ============================================================
-// HYDRA SHELL v2 — settings · notifications · wifi · osd · dock
+// VALKYX SHELL v2 — settings · notifications · wifi · osd · dock
 // Brand: #00A86B on near-black green · Space Grotesk · quiet
-// Toggle panel: Super+S  (qs -c hydra ipc call panel toggle)
+// Toggle panel: Super+S  (qs -c valkyx ipc call panel toggle)
 // ============================================================
 import Quickshell
 import Quickshell.Io
@@ -249,7 +249,7 @@ ShellRoot {
                     Text {
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "HYDRA"
+                        text: "VALKYX"
                         color: root.accent
                         font.family: root.fontName
                         font.pixelSize: 15
@@ -496,7 +496,7 @@ ShellRoot {
                                 }
                                 MouseArea {
                                     id: wifiMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.exec("hydra-wifi-connect '" + modelData.ssid.replace(/'/g, "") + "' '" + modelData.sec + "'")
+                                    onClicked: root.exec("valkyx-wifi-connect '" + modelData.ssid.replace(/'/g, "") + "' '" + modelData.sec + "'")
                                 }
                             }
                         }
@@ -513,9 +513,9 @@ ShellRoot {
                         Repeater {
                             model: [
                                 { label: "Lock", cmd: "hyprlock" },
-                                { label: "Shot", cmd: "hydra-screenshot region" },
+                                { label: "Shot", cmd: "valkyx-screenshot region" },
                                 { label: "Settings", cmd: "gnome-control-center" },
-                                { label: "Power", cmd: "hydra-power-menu" }
+                                { label: "Power", cmd: "valkyx-power-menu" }
                             ]
                             delegate: Rectangle {
                                 required property var modelData

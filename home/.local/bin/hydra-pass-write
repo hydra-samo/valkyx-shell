@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-pass-write <file> <secret> — hand one secret to a waiting script.
+# valkyx-pass-write <file> <secret> — hand one secret to a waiting script.
 #
 # The secret arrives as ARGV rather than inside a command string: interpolating a
 # password into `sh -c` breaks on quotes and exposes it in `ps` for the lifetime of

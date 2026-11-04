@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# HYDRA wallhues — per-image dominant colors for the wallpaper selector's
+# VALKYX wallhues — per-image dominant colors for the wallpaper selector's
 # hue-dot filters. Prints one JSON array per arg to stdout; caches to
-# ~/.cache/hydra-wallhues/<name>.json. PIL-quantize downscaled thumb, skip
+# ~/.cache/valkyx-wallhues/<name>.json. PIL-quantize downscaled thumb, skip
 # near-black/gray, keep <=3 hexes.
 import json
 import os
@@ -10,7 +10,7 @@ import sys
 
 from PIL import Image
 
-CACHE = os.path.expanduser("~/.cache/hydra-wallhues")
+CACHE = os.path.expanduser("~/.cache/valkyx-wallhues")
 
 
 def to_hsv(rgb):

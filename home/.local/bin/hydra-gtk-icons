@@ -1,10 +1,10 @@
 #!/bin/bash
-# hydra-gtk-icons <ThemeName> <AccentHex> — make the GTK icon theme follow the
+# valkyx-gtk-icons <ThemeName> <AccentHex> — make the GTK icon theme follow the
 # shell theme. Builds a tiny per-accent override of the MacTahoe identity set:
 # only the ~136 accent SVGs differ, so the override ships just those recolored
 # and Inherits the untouched base. Any theme/accent works — nothing hardcoded.
 set -euo pipefail
-name="${1:-Hydra}"
+name="${1:-Valkyx}"
 accent="${2:-00A86B}"
 accent="#${accent#\#}"
 accent="${accent,,}"

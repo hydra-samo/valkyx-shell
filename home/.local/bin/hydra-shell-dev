@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# hydra-shell-dev — DISABLED (removed Sep 13). Entering the sandbox used to flip
+# valkyx-shell-dev — DISABLED (removed Sep 13). Entering the sandbox used to flip
 # the whole live shell out — a leak. The sandbox shell still exists for
 # standalone poking (state.dev.json, never replaces live):
-#   qs -c hydra-dev
+#   qs -c valkyx-dev
 exit 1

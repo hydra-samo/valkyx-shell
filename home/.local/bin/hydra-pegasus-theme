@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-pegasus-theme <name-or-partial> — switch Pegasus Frontend theme live
+# valkyx-pegasus-theme <name-or-partial> — switch Pegasus Frontend theme live
 # Names (matching is case-insensitive substring): clean-covers-desktop, clearOS,
 # library, clean-covers, prosperoOS, colorful, minimis, epic-memories, grid
 set -e

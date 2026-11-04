@@ -1,11 +1,11 @@
 #!/bin/bash
-# HYDRA color picker — hyprpicker + copy hex to clipboard
-# Usage: hydra-color [format]  (hex|rgb|hsv, default hex)
+# VALKYX color picker — hyprpicker + copy hex to clipboard
+# Usage: valkyx-color [format]  (hex|rgb|hsv, default hex)
 
 FORMAT="${1:-hex}"
 COLOR=$(hyprpicker -a -f "$FORMAT" 2>/dev/null)
 if [ -n "$COLOR" ]; then
     wl-copy "$COLOR"
-    notify-send "HYDRA" "Copied $COLOR" 2>/dev/null || true
+    notify-send "VALKYX" "Copied $COLOR" 2>/dev/null || true
     echo "$COLOR"
 fi

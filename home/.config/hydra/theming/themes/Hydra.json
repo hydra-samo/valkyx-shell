@@ -1,6 +1,6 @@
 {
-  "name": "Hydra",
-  "source": "hydra",
+  "name": "Valkyx",
+  "source": "valkyx",
   "colors": {
     "accent": "#00A86B",
     "muted": "#66b996",
@@ -14,5 +14,5 @@
     "warning": "#d0a86a"
   },
   "wallpaper": null,
-  "style": "hydra"
+  "style": "valkyx"
 }

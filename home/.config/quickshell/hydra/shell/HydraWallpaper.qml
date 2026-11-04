@@ -1,6 +1,6 @@
-// HYDRA Wallpaper Selector — iNiR-style fan deck + grid toggle (Super+W).
+// VALKYX Wallpaper Selector — iNiR-style fan deck + grid toggle (Super+W).
 // Catalogue = local ~/Pictures/Wallpapers (stills/gifs/videos) + Wallhaven stills.
-// Apply routes through HydraState.setWallpaper (awww for images, mpvpaper for video/gif).
+// Apply routes through ValkyxState.setWallpaper (awww for images, mpvpaper for video/gif).
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
@@ -10,7 +10,7 @@ import "../core"
 
 PanelWindow {
     id: wsel
-    visible: HydraState.wallpaperOpen
+    visible: ValkyxState.wallpaperOpen
     focusable: true
     aboveWindows: true
     exclusiveZone: -1
@@ -28,8 +28,8 @@ PanelWindow {
     // `visible` is pinned true forever, so onVisibleChanged never fires — the open
     // sequence has to hang off the real state flag instead.
     Connections {
-        target: HydraState
-        function onWallpaperOpenChanged() { if (HydraState.wallpaperOpen) { open(); focusPoll.start() } else focusPoll.stop() }
+        target: ValkyxState
+        function onWallpaperOpenChanged() { if (ValkyxState.wallpaperOpen) { open(); focusPoll.start() } else focusPoll.stop() }
     }
 
     // ── geometry: fullscreen overlay (iNiR style) ──
@@ -135,7 +135,7 @@ PanelWindow {
     }
     property bool pendingCenter: false
     function centerOnActive() {
-        const i = deck.entries.findIndex(e => e.path === HydraState.activeMediaPath)
+        const i = deck.entries.findIndex(e => e.path === ValkyxState.activeMediaPath)
         deck.currentIndex = i >= 0 ? i : Math.floor(deck.entries.length / 2)
     }
     function toggleHue(hex) {
@@ -151,17 +151,17 @@ PanelWindow {
         if (deck.entries.length === 0) return
         const n = (deck.currentIndex + d + deck.entries.length) % deck.entries.length
         // single source of truth: gridItem.currentIndex is BOUND to deck.currentIndex
-        // (HydraWallpaper.qml:483) — writing it here would destroy that binding.
+        // (ValkyxWallpaper.qml:483) — writing it here would destroy that binding.
         deck.currentIndex = n
     }
     function activate() {
         if (deck.entries.length === 0) return
         const e = deck.entries[deck.currentIndex]
-        if (e.online) HydraState.downloadAndSetWallpaper(e.path)
-        else HydraState.setWallpaper(e.path)
+        if (e.online) ValkyxState.downloadAndSetWallpaper(e.path)
+        else ValkyxState.setWallpaper(e.path)
     }
     function close() {
-        HydraState.wallpaperOpen = false
+        ValkyxState.wallpaperOpen = false
     }
 
     Timer { id: searchT; interval: 450; repeat: false; onTriggered: if (wsel.visible) WallpaperApi.search(query) }
@@ -200,42 +200,42 @@ PanelWindow {
         // paints over the whole desktop and swallows every click, while
         // focusable:false + the ESC shortcut's `enabled` leave no way to close it.
         // `enabled` is required too — opacity 0 alone still eats pointer events.
-        opacity: HydraState.wallpaperOpen ? 1 : 0
-        enabled: HydraState.wallpaperOpen
+        opacity: ValkyxState.wallpaperOpen ? 1 : 0
+        enabled: ValkyxState.wallpaperOpen
 
         // floating toolbar pill
         Rectangle {
             id: bar
-            width: barRow.implicitWidth + 2 * HydraMetrics.m
-            height: barRow.implicitHeight + 2 * HydraMetrics.m
-            radius: HydraMetrics.radiusLg
-            color: HydraMaterials.surface1
-            border.color: HydraMaterials.borderFaint
+            width: barRow.implicitWidth + 2 * ValkyxMetrics.m
+            height: barRow.implicitHeight + 2 * ValkyxMetrics.m
+            radius: ValkyxMetrics.radiusLg
+            color: ValkyxMaterials.surface1
+            border.color: ValkyxMaterials.borderFaint
             border.width: 1
             layer.enabled: true
             layer.samples: 4
             anchors.top: parent.top
             // centre the whole selector block (pill + fan) vertically on screen
-            anchors.topMargin: Math.max(HydraMetrics.m, (parent.height - (barRow.implicitHeight + 4 * HydraMetrics.m + deck.cardH)) / 2)
+            anchors.topMargin: Math.max(ValkyxMetrics.m, (parent.height - (barRow.implicitHeight + 4 * ValkyxMetrics.m + deck.cardH)) / 2)
             anchors.horizontalCenter: parent.horizontalCenter
             z: 20
 
             RowLayout {
                 id: barRow
                 anchors.fill: parent
-                anchors.margins: HydraMetrics.m
-                spacing: HydraMetrics.l
+                anchors.margins: ValkyxMetrics.m
+                spacing: ValkyxMetrics.l
 
                 Text {
                     id: title
                     text: "WALLPAPER"
-                    color: HydraTheme.accent
-                    font.family: HydraTheme.fontUI
-                    font.pixelSize: Math.round(13 * HydraState.fontScale)
+                    color: ValkyxTheme.accent
+                    font.family: ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(13 * ValkyxState.fontScale)
                     font.bold: true
                 }
 
-                Item { Layout.preferredWidth: HydraMetrics.s }
+                Item { Layout.preferredWidth: ValkyxMetrics.s }
 
                 Repeater {
                     model: ["ALL", "IMG", "VID", "GIF"]
@@ -246,19 +246,19 @@ PanelWindow {
                         Layout.preferredHeight: 26
                         Rectangle {
                             anchors.fill: parent
-                            radius: HydraMetrics.radiusSm
-                            color: wsel.typeFilter === index ? HydraMaterials.surface2 : "transparent"
-                            border.color: wsel.typeFilter === index ? HydraTheme.accent : HydraMaterials.borderFaint
+                            radius: ValkyxMetrics.radiusSm
+                            color: wsel.typeFilter === index ? ValkyxMaterials.surface2 : "transparent"
+                            border.color: wsel.typeFilter === index ? ValkyxTheme.accent : ValkyxMaterials.borderFaint
                             border.width: 1
-                            Behavior on color { ColorAnimation { duration: HydraMotion.fast } }
-                            Behavior on border.color { ColorAnimation { duration: HydraMotion.fast } }
+                            Behavior on color { ColorAnimation { duration: ValkyxMotion.fast } }
+                            Behavior on border.color { ColorAnimation { duration: ValkyxMotion.fast } }
                             Text {
                                 id: lbl
                                 anchors.centerIn: parent
                                 text: modelData
-                                color: wsel.typeFilter === index ? HydraTheme.accent : HydraTheme.muted
-                                font.family: HydraTheme.fontUI
-                                font.pixelSize: Math.round(9 * HydraState.fontScale)
+                                color: wsel.typeFilter === index ? ValkyxTheme.accent : ValkyxTheme.muted
+                                font.family: ValkyxTheme.fontUI
+                                font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                                 font.bold: wsel.typeFilter === index
                             }
                         }
@@ -273,19 +273,19 @@ PanelWindow {
                 Rectangle {
                     Layout.preferredWidth: 150
                     Layout.preferredHeight: 28
-                    radius: HydraMetrics.radiusMd
-                    color: HydraMaterials.surface2
-                    border.color: queryInput.activeFocus ? HydraTheme.accent : HydraMaterials.borderFaint
+                    radius: ValkyxMetrics.radiusMd
+                    color: ValkyxMaterials.surface2
+                    border.color: queryInput.activeFocus ? ValkyxTheme.accent : ValkyxMaterials.borderFaint
                     border.width: 1
                     TextField {
                         id: queryInput
                         anchors.fill: parent
                         anchors.leftMargin: 8; anchors.rightMargin: 8
-                        color: HydraTheme.text
-                        font.family: HydraTheme.fontUI
-                        font.pixelSize: Math.round(10 * HydraState.fontScale)
+                        color: ValkyxTheme.text
+                        font.family: ValkyxTheme.fontUI
+                        font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                         placeholderText: "search wallhaven"
-                        placeholderTextColor: HydraTheme.muted
+                        placeholderTextColor: ValkyxTheme.muted
                         verticalAlignment: Text.AlignVCenter
                         background: Item {}
                         focus: false
@@ -303,19 +303,19 @@ PanelWindow {
                 Rectangle {
                     visible: WallpaperApi.loading
                     width: 10; height: 10; radius: 5
-                    color: HydraTheme.accent; opacity: 0.7
+                    color: ValkyxTheme.accent; opacity: 0.7
                     Layout.alignment: Qt.AlignVCenter
                 }
 
-                Item { Layout.preferredWidth: HydraMetrics.s }
+                Item { Layout.preferredWidth: ValkyxMetrics.s }
 
                 // view toggle: skew ⇄ grid (solid accent = selection, no wash)
                 Rectangle {
                     Layout.preferredHeight: 28
                     Layout.preferredWidth: 88
-                    radius: HydraMetrics.radiusMd
-                    color: HydraMaterials.surface2
-                    border.color: HydraMaterials.borderFaint
+                    radius: ValkyxMetrics.radiusMd
+                    color: ValkyxMaterials.surface2
+                    border.color: ValkyxMaterials.borderFaint
                     border.width: 1
                     Row {
                         anchors.centerIn: parent
@@ -328,14 +328,14 @@ PanelWindow {
                                 required property string modelData
                                 width: 42; height: 24
                                 radius: 6
-                                color: wsel.viewMode === index ? HydraTheme.accent : "transparent"
-                                Behavior on color { ColorAnimation { duration: HydraMotion.fast } }
+                                color: wsel.viewMode === index ? ValkyxTheme.accent : "transparent"
+                                Behavior on color { ColorAnimation { duration: ValkyxMotion.fast } }
                                 Text {
                                     anchors.centerIn: parent
                                     text: modelData
-                                    color: wsel.viewMode === index ? HydraTheme.textOnAccent : HydraTheme.muted
-                                    font.family: HydraTheme.fontUI
-                                    font.pixelSize: Math.round(9 * HydraState.fontScale)
+                                    color: wsel.viewMode === index ? ValkyxTheme.textOnAccent : ValkyxTheme.muted
+                                    font.family: ValkyxTheme.fontUI
+                                    font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                                     font.bold: wsel.viewMode === index
                                 }
                                 MouseArea {
@@ -347,13 +347,13 @@ PanelWindow {
                     }
                 }
 
-                Item { Layout.preferredWidth: HydraMetrics.l }
+                Item { Layout.preferredWidth: ValkyxMetrics.l }
 
                 Text {
                     text: hueFilter.length ? "FILTER" : "COLORS"
-                    color: HydraTheme.muted
-                    font.family: HydraTheme.fontUI
-                    font.pixelSize: Math.round(9 * HydraState.fontScale)
+                    color: ValkyxTheme.muted
+                    font.family: ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                     font.bold: true
                     Layout.alignment: Qt.AlignVCenter
                 }
@@ -366,9 +366,9 @@ PanelWindow {
                         Layout.alignment: Qt.AlignVCenter
                         color: modelData
                         border.width: wsel.hueFilter.indexOf(modelData) >= 0 ? 2 : 1
-                        border.color: wsel.hueFilter.indexOf(modelData) >= 0 ? HydraTheme.accent : HydraMaterials.border
+                        border.color: wsel.hueFilter.indexOf(modelData) >= 0 ? ValkyxTheme.accent : ValkyxMaterials.border
                         scale: wsel.hueFilter.indexOf(modelData) >= 0 ? 1.15 : 1
-                        Behavior on scale { NumberAnimation { duration: HydraMotion.fast } }
+                        Behavior on scale { NumberAnimation { duration: ValkyxMotion.fast } }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
@@ -379,9 +379,9 @@ PanelWindow {
                 Text {
                     visible: wsel.hueChips.length === 0
                     text: "…"
-                    color: HydraMaterials.border
-                    font.family: HydraTheme.fontUI
-                    font.pixelSize: Math.round(10 * HydraState.fontScale)
+                    color: ValkyxMaterials.border
+                    font.family: ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                 }
                 Rectangle {
                     visible: wsel.hueFilter.length > 0
@@ -389,14 +389,14 @@ PanelWindow {
                     Layout.preferredWidth: clrTxt.implicitWidth + 12
                     Layout.alignment: Qt.AlignVCenter
                     radius: 10
-                    color: HydraMaterials.surface2
-                    border.color: HydraMaterials.borderFaint; border.width: 1
+                    color: ValkyxMaterials.surface2
+                    border.color: ValkyxMaterials.borderFaint; border.width: 1
                     Text {
                         id: clrTxt
                         anchors.centerIn: parent
                         text: "✕"
-                        color: HydraTheme.muted
-                        font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale)
+                        color: ValkyxTheme.muted
+                        font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                     }
                     MouseArea {
                         anchors.fill: parent
@@ -405,32 +405,32 @@ PanelWindow {
                     }
                 }
 
-                Item { Layout.preferredWidth: HydraMetrics.s }
+                Item { Layout.preferredWidth: ValkyxMetrics.s }
 
                 // ACCENT THEME swatches (moved here from the old left sidebar)
                 Text {
                     text: "ACCENT"
-                    color: HydraTheme.muted
-                    font.family: HydraTheme.fontUI
-                    font.pixelSize: Math.round(9 * HydraState.fontScale)
+                    color: ValkyxTheme.muted
+                    font.family: ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                     font.bold: true
                     Layout.alignment: Qt.AlignVCenter
                 }
                 Repeater {
-                    model: HydraTheme.themeNames
+                    model: ValkyxTheme.themeNames
                     Rectangle {
                         required property string modelData
                         width: 16; height: 16; radius: 8
                         Layout.alignment: Qt.AlignVCenter
-                        color: HydraTheme.themeByName(modelData).accent
-                        border.width: HydraState.themeName === modelData ? 2 : 1
-                        border.color: HydraState.themeName === modelData ? HydraTheme.accent : HydraMaterials.border
-                        scale: HydraState.themeName === modelData ? 1.15 : 1
-                        Behavior on scale { NumberAnimation { duration: HydraMotion.fast } }
+                        color: ValkyxTheme.themeByName(modelData).accent
+                        border.width: ValkyxState.themeName === modelData ? 2 : 1
+                        border.color: ValkyxState.themeName === modelData ? ValkyxTheme.accent : ValkyxMaterials.border
+                        scale: ValkyxState.themeName === modelData ? 1.15 : 1
+                        Behavior on scale { NumberAnimation { duration: ValkyxMotion.fast } }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: HydraState.applyTheme(modelData)
+                            onClicked: ValkyxState.applyTheme(modelData)
                         }
                     }
                 }
@@ -440,15 +440,15 @@ PanelWindow {
                     Layout.preferredWidth: favTxt.implicitWidth + 22
                     Layout.alignment: Qt.AlignVCenter
                     radius: 11
-                    color: wsel.favOnly ? HydraTheme.accent : HydraMaterials.surface2
-                    border.color: wsel.favOnly ? HydraTheme.accent : HydraMaterials.borderFaint
+                    color: wsel.favOnly ? ValkyxTheme.accent : ValkyxMaterials.surface2
+                    border.color: wsel.favOnly ? ValkyxTheme.accent : ValkyxMaterials.borderFaint
                     border.width: 1
                     Text {
                         id: favTxt
                         anchors.centerIn: parent
                         text: "★ " + wsel.favCount
-                        color: wsel.favOnly ? HydraTheme.textOnAccent : HydraTheme.text
-                        font.family: HydraTheme.fontUI; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                        color: wsel.favOnly ? ValkyxTheme.textOnAccent : ValkyxTheme.text
+                        font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                         font.bold: true
                     }
                     MouseArea {
@@ -464,7 +464,7 @@ PanelWindow {
         Item {
             id: contentArea
             anchors.top: bar.bottom
-            anchors.topMargin: HydraMetrics.m
+            anchors.topMargin: ValkyxMetrics.m
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -480,19 +480,19 @@ PanelWindow {
                 Keys.onReturnPressed: { wsel.activate(); event.accepted = true }
                 Keys.onSpacePressed: { wsel.togglePreviewSK(); event.accepted = true }
 
-                HydraWallpaperSkew {
+                ValkyxWallpaperSkew {
                     id: deck
                     anchors.fill: parent
                     visible: wsel.viewMode === 0
-                    activePath: HydraState.activeMediaPath
+                    activePath: ValkyxState.activeMediaPath
                     currentIndex: 0
                     onPick: wsel.activate()
                 }
-                HydraWallpaperGrid {
+                ValkyxWallpaperGrid {
                     id: gridItem
                     anchors.fill: parent
                     visible: wsel.viewMode === 1
-                    activePath: HydraState.activeMediaPath
+                    activePath: ValkyxState.activeMediaPath
                     currentIndex: deck.currentIndex
                     onPick: wsel.activate()
                     onSelected: (i) => deck.currentIndex = i
@@ -502,9 +502,9 @@ PanelWindow {
                     visible: deck.entries.length === 0 && !WallpaperApi.loading
                     anchors.centerIn: parent
                     text: "No media yet — drop wallpapers into ~/Pictures/Wallpapers"
-                    color: HydraTheme.muted
-                    font.family: HydraTheme.fontUI
-                    font.pixelSize: Math.round(11 * HydraState.fontScale)
+                    color: ValkyxTheme.muted
+                    font.family: ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(11 * ValkyxState.fontScale)
                 }
             }
         }

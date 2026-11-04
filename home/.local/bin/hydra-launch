@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# hydra-launch — HYDRA command surface: apps(all) · projects · windows · commands · workspaces
-#   no args       → hand off to the QML launcher (ShellRoot/HydraLauncher)
+# valkyx-launch — VALKYX command surface: apps(all) · projects · windows · commands · workspaces
+#   no args       → hand off to the QML launcher (ShellRoot/ValkyxLauncher)
 #   --list-json   → print JSON entries {kind,name,icon,run} for the QML launcher
 #   --run GROUP   → execute a named action (run field from --list-json)
 set -uo pipefail
 
-root="$HOME/Projects HYDRA/HYDRA LABS"
+root="$HOME/Projects VALKYX/VALKYX LABS"
 
 # ───────────────────────── icon resolution ─────────────────────────
 find_icon() { # $1 = icon theme name ("" → generic app icon)
@@ -36,10 +36,10 @@ ws_names()     { printf '%s\n' "01 studio" "02 create" "03 code" "04 research" "
 game_names()   { sqlite3 "$HOME/.local/share/lutris/pga.db" "SELECT slug, name FROM games WHERE installed=1 ORDER BY name;" 2>/dev/null; }
 
 # ───────────────────────── themed glyph icon dir ─────────────────────────
-# accent-reactive custom icons live in ~/.cache/hydra-icons/<theme>/ — the
+# accent-reactive custom icons live in ~/.cache/valkyx-icons/<theme>/ — the
 # QML launcher passes the active theme so icons follow the accent on switch.
 icon_glyph() { # $1 = glyph name, $2 = theme ("" → current active)
-  echo "file://$HOME/.cache/hydra-icons/${2:-Hydra}/$1.png"
+  echo "file://$HOME/.cache/valkyx-icons/${2:-Valkyx}/$1.png"
 }
 
 # ───────────────────────── launch dispatch ─────────────────────────
@@ -84,29 +84,29 @@ launch_emoji() { # $1 = the glyph itself
 launch_dir() { # $1 = project name
   case "$1" in
     Portfolio)      setsid kitty --directory="$root/PORTFOLIO" >/dev/null 2>&1 & ;;
-    Motion\ Engine) setsid kitty --directory="$root/HYDRA MOTION ENGINE" >/dev/null 2>&1 & ;;
+    Motion\ Engine) setsid kitty --directory="$root/VALKYX MOTION ENGINE" >/dev/null 2>&1 & ;;
     Brand)          setsid kitty --directory="$root/BRAND" >/dev/null 2>&1 & ;;
     Workspace\ root) setsid kitty --directory="$root" >/dev/null 2>&1 & ;;
-    Studio\ site)   setsid /usr/bin/helium-browser --app=http://127.0.0.1:1717/ --class=HYDRAStudioSite --user-data-dir="$HOME/.local/share/hydra-studio/site-profile" --no-first-run --no-default-browser-check >/dev/null 2>&1 & ;;
-    Studio\ console) setsid /usr/bin/helium-browser --app=http://127.0.0.1:1717/dashboard --class=HYDRAStudioDash --user-data-dir="$HOME/.local/share/hydra-studio/console-profile" --no-first-run --no-default-browser-check >/dev/null 2>&1 & ;;
+    Studio\ site)   setsid /usr/bin/helium-browser --app=http://127.0.0.1:1717/ --class=VALKYXStudioSite --user-data-dir="$HOME/.local/share/valkyx-studio/site-profile" --no-first-run --no-default-browser-check >/dev/null 2>&1 & ;;
+    Studio\ console) setsid /usr/bin/helium-browser --app=http://127.0.0.1:1717/dashboard --class=VALKYXStudioDash --user-data-dir="$HOME/.local/share/valkyx-studio/console-profile" --no-first-run --no-default-browser-check >/dev/null 2>&1 & ;;
   esac
 }
 launch_cmd() { # $1 = command name
   case "$1" in
     Lock)               exec hyprlock ;;
-    Screenshot\ region) exec hydra-screenshot region ;;
-    Screenshot\ full)   exec hydra-screenshot full ;;
+    Screenshot\ region) exec valkyx-screenshot region ;;
+    Screenshot\ full)   exec valkyx-screenshot full ;;
     Toggle\ DND)        makoctl mode -t do-not-disturb >/dev/null 2>&1 & ;;
     Night\ light\ toggle) pgrep -x gammastep >/dev/null && pkill -x gammastep || { setsid gammastep -O 3500K >/dev/null 2>&1 & } ;;
-    Wallpaper\ next)    exec hydra-wallpaper next ;;
-    Wallpaper\ random)  exec hydra-wallpaper random ;;
-    Clipboard\ history) exec qs -c hydra ipc call launcher open clip ;;  # in-shell, accent-reactive
+    Wallpaper\ next)    exec valkyx-wallpaper next ;;
+    Wallpaper\ random)  exec valkyx-wallpaper random ;;
+    Clipboard\ history) exec qs -c valkyx ipc call launcher open clip ;;  # in-shell, accent-reactive
     Network\ settings)  setsid nm-connection-editor >/dev/null 2>&1 & ;;
-    Power\ menu)        exec hydra-power-menu ;;
+    Power\ menu)        exec valkyx-power-menu ;;
   esac
 }
 launch_ws() { # $1 = ws name
-  hydra-dispatch workspace "name:$1" >/dev/null 2>&1
+  valkyx-dispatch workspace "name:$1" >/dev/null 2>&1
 }
 launch_win() { # $1 = window title
   local addr want="$1"
@@ -120,7 +120,7 @@ try:
 except Exception: pass
 PY
 )
-  [ -n "$addr" ] && hydra-dispatch focuswindow "address:$addr" >/dev/null 2>&1 &
+  [ -n "$addr" ] && valkyx-dispatch focuswindow "address:$addr" >/dev/null 2>&1 &
 }
 
 # ───────────────────────── app map generator ─────────────────────────
@@ -159,11 +159,11 @@ PY
 }
 
 # ───────────────────────── JSON listing (QML launcher) ─────────────────────────
-# $1 = theme name ("" → Hydra) — styles the custom glyph icons per accent
+# $1 = theme name ("" → Valkyx) — styles the custom glyph icons per accent
 # $2 = section ("", "app", "dir", "cmd", "ws", "win", "game", "clip")
 #     section filters to ONE entry kind (project/clipboard/game pickers).
 list_json() {
-  local theme="${1:-Hydra}" section="${2:-}"
+  local theme="${1:-Valkyx}" section="${2:-}"
   local hy_map="$(mktemp)"
 
   echo "["
@@ -214,7 +214,7 @@ try:
     for c in cl:
         if c.get("mapped") and c.get("title"):
             t = c["title"][:70].replace("\\","\\\\").replace('"','\\"')
-            ic = "file://%s/.cache/hydra-icons/%s/window.png" % (__import__("os").path.expanduser("~"), theme)
+            ic = "file://%s/.cache/valkyx-icons/%s/window.png" % (__import__("os").path.expanduser("~"), theme)
             print('{"kind":"win","name":"%s","icon":"%s","run":"win|%s"}' % (t, ic, t))
 except Exception:
     pass
@@ -256,9 +256,9 @@ PY
     python3 - "$theme" <<'PY' | while IFS= read -r line; do emit "$line"; done
 import json, os, sys
 theme = sys.argv[1]
-f = os.path.expanduser("~/.local/share/hydra-emoji.txt")
+f = os.path.expanduser("~/.local/share/valkyx-emoji.txt")
 try:
-    ic = "file://%s/.cache/hydra-icons/%s/clip.png" % (os.path.expanduser("~"), theme)
+    ic = "file://%s/.cache/valkyx-icons/%s/clip.png" % (os.path.expanduser("~"), theme)
     for raw in open(f, encoding="utf-8").read().split("\n"):
         if not raw.strip():
             continue
@@ -293,7 +293,7 @@ try:
         txt = txt.replace("\n", " ").strip()[:60]
         if not txt: n += 1; continue
         txt = txt.replace("\\", "\\\\").replace('"', '\\"')
-        ic = "file://%s/.cache/hydra-icons/%s/clip.png" % (os.path.expanduser("~"), theme)
+        ic = "file://%s/.cache/valkyx-icons/%s/clip.png" % (os.path.expanduser("~"), theme)
         print('{"kind":"clip","name":"%s","icon":"%s","run":"clip|%s"}' % (txt, ic, n))
         n += 1
 except Exception:
@@ -317,7 +317,7 @@ PY
 # --list-json [theme] [section]   → JSON for the QML launcher
 # --run GROUP                     → execute a named action
 case "${1:-}" in
-  --list-json) list_json "${2:-Hydra}" "${3:-}"; exit 0 ;;
+  --list-json) list_json "${2:-Valkyx}" "${3:-}"; exit 0 ;;
   --run)
     run="$2"
     echo "$run" | grep -q '|' || { echo "bad run: $run" >&2; exit 1; }
@@ -330,11 +330,11 @@ case "${1:-}" in
         # them directly. Everything else
         # falls through to launch_app (app-map lookup by display name).
         case "$val" in
-          Games) exec qs -c hydra ipc call launcher open game ;;
+          Games) exec qs -c valkyx ipc call launcher open game ;;
           Terminal) setsid kitty >/dev/null 2>&1 & ;;
           Helium)   setsid helium-browser >/dev/null 2>&1 & ;;
 Files)    setsid thunar >/dev/null 2>&1 & ;;
-          Sandbox)  setsid kitty --title HydraSandbox --directory=$HOME/hydra-sandbox >/dev/null 2>&1 & ;;
+          Sandbox)  setsid kitty --title ValkyxSandbox --directory=$HOME/valkyx-sandbox >/dev/null 2>&1 & ;;
 Editor)   setsid code-oss >/dev/null 2>&1 & ;;
           Blender)  setsid blender >/dev/null 2>&1 & ;;
           Resolve)
@@ -358,7 +358,7 @@ esac
 # The QML launcher is the real launcher: it renders the same list from
 # --list-json and dispatches with --run. Hand off rather than keeping a second,
 # drifting copy of that dispatch here.
-if ! qs -c hydra ipc call launcher open >/dev/null 2>&1; then
-    printf 'hydra-launch: shell not running — start it with hydra-shell-reload\n' >&2
+if ! qs -c valkyx ipc call launcher open >/dev/null 2>&1; then
+    printf 'valkyx-launch: shell not running — start it with valkyx-shell-reload\n' >&2
     exit 1
 fi

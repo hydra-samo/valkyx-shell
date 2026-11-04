@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Hydra-S Console
+Name=Valkyx-S Console
 Comment=Master console — Automata, Remote and Studio in one window
-Exec=$HOME/.local/bin/hydra-console
-Icon=hydra
+Exec=$HOME/.local/bin/valkyx-console
+Icon=valkyx
 Terminal=false
 Categories=Development;Utility;
-StartupWMClass=HydraConsole
+StartupWMClass=ValkyxConsole
 X-KDE-StartupNotify=false

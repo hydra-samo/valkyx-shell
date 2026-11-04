@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-class-icon <class> — resolve a running window class to a real app icon
+# valkyx-class-icon <class> — resolve a running window class to a real app icon
 # (from .desktop Icon=, resolved against the hicolor/Papirus icon themes).
 # Emits "file:///path" or the generic PNG on failure. One class per call.
 set -u

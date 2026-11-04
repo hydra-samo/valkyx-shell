@@ -1,3 +1,3 @@
 #!/bin/bash
-# hydra-clipboard — open the shell launcher pre-filtered to clipboard history (accent-reactive)
-exec qs -c hydra ipc call launcher open clip
+# valkyx-clipboard — open the shell launcher pre-filtered to clipboard history (accent-reactive)
+exec qs -c valkyx ipc call launcher open clip

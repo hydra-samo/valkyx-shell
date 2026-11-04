@@ -1,11 +1,11 @@
-module hydra-core
-singleton HydraTheme 1.0 HydraTheme.qml
-singleton HydraMetrics 1.0 HydraMetrics.qml
-singleton HydraMotion 1.0 HydraMotion.qml
-singleton HydraMaterials 1.0 HydraMaterials.qml
-singleton HydraEvents 1.0 HydraEvents.qml
-singleton HydraState 1.0 HydraState.qml
-singleton HydraContext 1.0 HydraContext.qml
+module valkyx-core
+singleton ValkyxTheme 1.0 ValkyxTheme.qml
+singleton ValkyxMetrics 1.0 ValkyxMetrics.qml
+singleton ValkyxMotion 1.0 ValkyxMotion.qml
+singleton ValkyxMaterials 1.0 ValkyxMaterials.qml
+singleton ValkyxEvents 1.0 ValkyxEvents.qml
+singleton ValkyxState 1.0 ValkyxState.qml
+singleton ValkyxContext 1.0 ValkyxContext.qml
 singleton WallpaperApi 1.0 WallpaperApi.qml
 singleton WallpaperStore 1.0 WallpaperStore.qml
-singleton HydraHolo 1.0 HydraHolo.qml
+singleton ValkyxHolo 1.0 ValkyxHolo.qml

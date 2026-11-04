@@ -1,5 +1,5 @@
 #!/bin/bash
-# HYDRA game mode — full gaming focus
+# VALKYX game mode — full gaming focus
 # ON:  gamemoded -r (holds request), blur+animations off, kill desktop bloat
 # OFF: kill request, restore blur+animations
 # Always keeps: kitty (terminal session), FDM (downloads), SimpMusic, shell
@@ -12,15 +12,15 @@ if pgrep -f "[g]amemoded -r" >/dev/null; then
     pkill -f "[g]amemoded -r"
     hyprctl eval 'hl.config({ decoration = { blur = { enabled = true } } })'
     hyprctl eval 'hl.config({ animations = { enabled = true } })'
-    # syncthing/hydra-studio left alone
-    notify-send "HYDRA" "Game mode OFF" 2>/dev/null || true
+    # syncthing/valkyx-studio left alone
+    notify-send "VALKYX" "Game mode OFF" 2>/dev/null || true
     echo "game mode off"
 else
     setsid gamemoded -r </dev/null >/dev/null 2>&1 &
     hyprctl eval 'hl.config({ decoration = { blur = { enabled = false } } })'
     hyprctl eval 'hl.config({ animations = { enabled = false } })'
     pkill -f "$BLOAT" 2>/dev/null
-    # syncthing/hydra-studio keep running
-    notify-send "HYDRA" "Game mode ON — bloat killed, blur/animations off" 2>/dev/null || true
+    # syncthing/valkyx-studio keep running
+    notify-send "VALKYX" "Game mode ON — bloat killed, blur/animations off" 2>/dev/null || true
     echo "game mode on"
 fi

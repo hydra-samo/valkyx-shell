@@ -48,7 +48,7 @@ def active():
 def key(code):
     subprocess.Popen(['sudo', '-n', 'waydroid', 'shell', 'input', 'keyevent', str(code)],
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    with open('/tmp/hydra-ds4-tv.log', 'a') as f:
+    with open('/tmp/valkyx-ds4-tv.log', 'a') as f:
         f.write('%s keyevent %s\n' % (time.strftime('%H:%M:%S'), code))
 
 def main():

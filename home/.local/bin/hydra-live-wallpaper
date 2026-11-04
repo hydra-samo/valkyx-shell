@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""hydra-live-wallpaper — download mp4 live wallpapers from moewalls.com.
+"""valkyx-live-wallpaper — download mp4 live wallpapers from moewalls.com.
 
 Usage:
-    hydra-live-wallpaper <query> [count]     # e.g. hydra-live-wallpaper spiderman 2
-    hydra-live-wallpaper --url <detail-url>  # one specific wallpaper page
+    valkyx-live-wallpaper <query> [count]     # e.g. valkyx-live-wallpaper spiderman 2
+    valkyx-live-wallpaper --url <detail-url>  # one specific wallpaper page
 
 Saves into ~/Pictures/Wallpapers/video/ (picked up by the shell's wallpaper
 scan). Re-runnable: existing files are skipped.

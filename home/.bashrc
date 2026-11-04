@@ -62,7 +62,7 @@ fi
 # end iNiR
 
 # OpenIV launcher
-alias openiv='$HOME/.local/share/openiv-linux/openiv.sh "$HOME/.local/share/openiv-linux/prefix/drive_c/users/hydrasamo/AppData/Local/New Technology Studio/Apps/OpenIV/OpenIV.exe"'
+alias openiv='$HOME/.local/share/openiv-linux/openiv.sh "$HOME/.local/share/openiv-linux/prefix/drive_c/users/valkyxsamo/AppData/Local/New Technology Studio/Apps/OpenIV/OpenIV.exe"'
 
 # Added by LM Studio CLI tool (lms)
 export PATH="$PATH:$HOME/.lmstudio/bin"

@@ -1,4 +1,4 @@
-// HYDRA Wallpaper Skew Deck — iNiR/skwd-style parallelogram slice carousel.
+// VALKYX Wallpaper Skew Deck — iNiR/skwd-style parallelogram slice carousel.
 // Center card expands, side slices shrink + dim + slant (Matrix4x4 skewX),
 // z-order pulls them behind the active card.
 import QtQuick
@@ -39,7 +39,7 @@ Item {
     ListView {
         id: list
         anchors.top: parent.top
-        anchors.topMargin: HydraMetrics.m
+        anchors.topMargin: ValkyxMetrics.m
         anchors.left: parent.left
         anchors.right: parent.right
         height: deck.cardH            // fan band tight under the pill (reference: cards hug it)
@@ -91,28 +91,28 @@ Item {
                     matrix: Qt.matrix4x4(1, -deck.skew, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
                 }
 
-            Behavior on width { NumberAnimation { duration: HydraMotion.panel; easing.type: Easing.OutCubic } }
-            Behavior on height { NumberAnimation { duration: HydraMotion.panel; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: HydraMotion.fast } }
+            Behavior on width { NumberAnimation { duration: ValkyxMotion.panel; easing.type: Easing.OutCubic } }
+            Behavior on height { NumberAnimation { duration: ValkyxMotion.panel; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: ValkyxMotion.fast } }
 
             // hover-zoom + y-flip wrapper (front art / back details)
             Item {
                 id: fx
                 anchors.fill: parent
                 scale: isCurrent ? 1.0 : (hover ? 1.08 : 1.0)
-                Behavior on scale { NumberAnimation { duration: HydraMotion.fast; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: ValkyxMotion.fast; easing.type: Easing.OutCubic } }
 
                 // FRONT — art card
                 Rectangle {
                     id: front
                     opacity: flipped ? 0 : 1
                     scale: flipped ? 0.75 : 1
-                    Behavior on opacity { NumberAnimation { duration: HydraMotion.panel; easing.type: HydraMotion.curveOut } }
-                    Behavior on scale { NumberAnimation { duration: HydraMotion.panel; easing.type: HydraMotion.curveOut } }
+                    Behavior on opacity { NumberAnimation { duration: ValkyxMotion.panel; easing.type: ValkyxMotion.curveOut } }
+                    Behavior on scale { NumberAnimation { duration: ValkyxMotion.panel; easing.type: ValkyxMotion.curveOut } }
                     anchors.fill: parent
                     radius: 0                           // reference: ALL cards sharp corners, no radius
-                    color: HydraMaterials.surface2
-                    border.color: isActive && !isCurrent ? HydraTheme.tint(HydraTheme.accent, "88") : "transparent"   // no boxes (reference); accent marks the applied one
+                    color: ValkyxMaterials.surface2
+                    border.color: isActive && !isCurrent ? ValkyxTheme.tint(ValkyxTheme.accent, "88") : "transparent"   // no boxes (reference); accent marks the applied one
                     border.width: 1
                     clip: true
 
@@ -174,15 +174,15 @@ Item {
                         height: 18; implicitWidth: starTxt.implicitWidth + 10
                         radius: 9
                         visible: isCurrent || hover
-                        color: WallpaperStore.isFav(path) ? HydraTheme.accent : "transparent"
-                        border.color: WallpaperStore.isFav(path) ? HydraTheme.accent : HydraMaterials.borderFaint
+                        color: WallpaperStore.isFav(path) ? ValkyxTheme.accent : "transparent"
+                        border.color: WallpaperStore.isFav(path) ? ValkyxTheme.accent : ValkyxMaterials.borderFaint
                         border.width: 1
                         Text {
                             id: starTxt
                             anchors.centerIn: parent
                             text: WallpaperStore.isFav(path) ? "★" : "☆"
-                            color: WallpaperStore.isFav(path) ? HydraTheme.textOnAccent : HydraTheme.muted
-                            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                            color: WallpaperStore.isFav(path) ? ValkyxTheme.textOnAccent : ValkyxTheme.muted
+                            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                         }
                         MouseArea {
                             anchors.fill: parent
@@ -202,7 +202,7 @@ Item {
                             anchors.centerIn: parent
                             text: "▶"
                             color: "white"
-                            font.family: HydraTheme.fontUI; font.pixelSize: 18; font.bold: true
+                            font.family: ValkyxTheme.fontUI; font.pixelSize: 18; font.bold: true
                         }
                     }
 
@@ -213,14 +213,14 @@ Item {
                         anchors.topMargin: 8; anchors.rightMargin: 8
                         height: 18; implicitWidth: txtKind.implicitWidth + 10
                         radius: 9
-                        color: HydraMaterials.surface1
-                        border.color: HydraMaterials.borderFaint; border.width: 1
+                        color: ValkyxMaterials.surface1
+                        border.color: ValkyxMaterials.borderFaint; border.width: 1
                         Text {
                             id: txtKind
                             anchors.centerIn: parent
                             text: kind === "video" ? "▶ VID" : "■ GIF"
-                            color: HydraTheme.muted
-                            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale); font.bold: true
+                            color: ValkyxTheme.muted
+                            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale); font.bold: true
                         }
                     }
                 }
@@ -229,11 +229,11 @@ Item {
                 Rectangle {
                     id: back
                     opacity: flipped ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: HydraMotion.panel; easing.type: HydraMotion.curveOut } }
+                    Behavior on opacity { NumberAnimation { duration: ValkyxMotion.panel; easing.type: ValkyxMotion.curveOut } }
                     anchors.fill: parent
-                    radius: isCurrent ? HydraMetrics.radiusMd : HydraMetrics.radiusSm
-                    color: HydraMaterials.surface1
-                    border.color: isCurrent ? HydraTheme.accent : HydraMaterials.borderFaint
+                    radius: isCurrent ? ValkyxMetrics.radiusMd : ValkyxMetrics.radiusSm
+                    color: ValkyxMaterials.surface1
+                    border.color: isCurrent ? ValkyxTheme.accent : ValkyxMaterials.borderFaint
                     border.width: isCurrent ? 2 : 1
                     clip: true
 
@@ -247,35 +247,35 @@ Item {
                             text: entry ? String(entry.name) : ""
                             width: parent.width
                             elide: Text.ElideMiddle
-                            color: HydraTheme.text
-                            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(11 * HydraState.fontScale); font.bold: true
+                            color: ValkyxTheme.text
+                            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(11 * ValkyxState.fontScale); font.bold: true
                         }
                         Text {
                             text: kind === "image" ? "still" : (kind === "video" ? "video" : "gif")
                                 + (online ? " · wallhaven" : " · local")
-                            color: HydraTheme.muted
-                            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale)
+                            color: ValkyxTheme.muted
+                            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                         }
                         Text {
                             visible: !online
                             text: String(path).split("/").pop()
                             width: parent.width
                             elide: Text.ElideMiddle
-                            color: HydraMaterials.border
-                            font.family: HydraTheme.fontMono; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                            color: ValkyxMaterials.border
+                            font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                         }
                         Item { width: 1; height: 2 }
 
                         Rectangle {
                             height: 26; implicitWidth: setTxt.implicitWidth + 24
                             radius: 13
-                            color: HydraTheme.accent
+                            color: ValkyxTheme.accent
                             Text {
                                 id: setTxt
                                 anchors.centerIn: parent
                                 text: online ? "DOWNLOAD + SET" : "SET AS WALLPAPER"
-                                color: HydraTheme.textOnAccent
-                                font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale); font.bold: true
+                                color: ValkyxTheme.textOnAccent
+                                font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale); font.bold: true
                             }
                             MouseArea {
                                 anchors.fill: parent

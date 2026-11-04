@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# hydra-shell-reload — fast, reliable shell reload
-# Usage: hydra-shell-reload [--no-wait]
+# valkyx-shell-reload — fast, reliable shell reload
+# Usage: valkyx-shell-reload [--no-wait]
 #
 # `qs kill` (graceful) is mandatory, NOT `pkill`. SIGTERM makes quickshell exit
 # without destroying its PanelWindows, and Hyprland keeps the layershell surfaces
@@ -30,17 +30,17 @@ if [[ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" && -d "$XDG_RUNTIME_DIR/hypr" ]]; th
 fi
 LOG=/tmp/qs.log
 # The pattern must match the quickshell process and NOTHING else. `pgrep -f`
-# matches anywhere in a command line, so an unanchored `qs -c hydra` also matches
+# matches anywhere in a command line, so an unanchored `qs -c valkyx` also matches
 # every process that merely *mentions* that text: the caller's own shell, a grep
-# of hyprland.lua, a `hydra-update` wrapper. Bracketing (`qs -c hydr[a]`) does
+# of hyprland.lua, a `valkyx-update` wrapper. Bracketing (`qs -c hydr[a]`) does
 # NOT fix that — it only stops a literal invocation from matching; a shell whose
 # cmdline contains the string still matches. That is how step 3 ended up running
 # `pkill -9` against the live shell (the orphan-maker) while step 5 reported a
 # reload that never happened. The `^...$` anchors make the match whole-cmdline
-# only, so the real `qs -c hydra` matches and a shell that merely mentions it does
-# not. Keep this identical to the pattern in hydra-update and hydra-doctor:
+# only, so the real `qs -c valkyx` matches and a shell that merely mentions it does
+# not. Keep this identical to the pattern in valkyx-update and valkyx-doctor:
 # if the two disagree, one of them lies about whether the shell is running.
-PAT='^qs -c hydra$'
+PAT='^qs -c valkyx$'
 
 # 1. Graceful kill — quickshell destroys its own windows on the way out.
 for pid in $(pgrep -f "$PAT" 2>/dev/null || true); do
@@ -81,7 +81,7 @@ for attempt in 1 2; do
 
     # Start detached. Log to a real file: discarding it (>/dev/null) made a failed
     # start completely invisible.
-    setsid -f sh -c "qs -c hydra > $LOG 2>&1 < /dev/null &"
+    setsid -f sh -c "qs -c valkyx > $LOG 2>&1 < /dev/null &"
 
     # Wait for the process.
     started=false
@@ -90,7 +90,7 @@ for attempt in 1 2; do
         sleep 0.1
     done
     if [[ "$started" != true ]]; then
-        last_err="qs -c hydra did not start (WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-unset})"
+        last_err="qs -c valkyx did not start (WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-unset})"
     else
         # Wait for the IPC socket, which is the real proof the config loaded.
         sock=""
@@ -136,7 +136,7 @@ if [[ "$NO_WAIT" != true ]]; then
     orphans=$(hyprctl layers 2>/dev/null | grep -c 'pid: -1' || true)
     if [[ "${orphans:-0}" -gt 0 ]]; then
         echo "WARNING: $orphans orphaned layer surface(s) — clicks in that band are dead." >&2
-        echo "         Only a compositor restart (logout) clears these. See hydra-shell-reload." >&2
+        echo "         Only a compositor restart (logout) clears these. See valkyx-shell-reload." >&2
     fi
 
     echo "Shell reloaded. IPC ready: $sock"

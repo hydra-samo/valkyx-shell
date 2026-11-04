@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# hydra-vid2edit - make H.264/H.265 footage edit-native for DaVinci Resolve FREE.
+# valkyx-vid2edit - make H.264/H.265 footage edit-native for DaVinci Resolve FREE.
 #
 # Why: Linux free Resolve has no hardware decode for H.264/H.265 long-GOP
 # (Studio-only), which causes lag/stutter. DNxHR decodes trivially and is
 # fully native in the free version -> smooth playback, GPU free for color/FX.
 #
 # Usage:
-#   hydra-vid2edit [-q lb|sq] <file-or-folder> [more...]
+#   valkyx-vid2edit [-q lb|sq] <file-or-folder> [more...]
 #     -q sq   higher quality (color grading) - default: lb (proxy-grade)
 # Output: <input_dir>/_EDIT/<name>_edit.mov  (DNxHR + PCM audio)
 set -euo pipefail

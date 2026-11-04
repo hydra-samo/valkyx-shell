@@ -10,9 +10,9 @@ Flickable {
     Column {
         id: col
         width: parent.width
-        spacing: Core.HydraMetrics.m
+        spacing: Core.ValkyxMetrics.m
 
-        Text { text: "KEYBOARD SHORTCUTS"; color: Core.HydraTheme.accent; font.family: Core.HydraTheme.fontMono; font.pixelSize: Math.round(10 * Core.HydraState.fontScale); font.letterSpacing: 1; bottomPadding: 4 }
+        Text { text: "KEYBOARD SHORTCUTS"; color: Core.ValkyxTheme.accent; font.family: Core.ValkyxTheme.fontMono; font.pixelSize: Math.round(10 * Core.ValkyxState.fontScale); font.letterSpacing: 1; bottomPadding: 4 }
 
         Repeater {
             model: [
@@ -69,8 +69,8 @@ Flickable {
                     color: "transparent"
                     Text {
                         anchors.left: parent.left; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter
-                        text: modelData.cat || ""; color: Core.HydraTheme.accent
-                        font.family: Core.HydraTheme.fontUI; font.pixelSize: Math.round(9 * Core.HydraState.fontScale); font.letterSpacing: 1
+                        text: modelData.cat || ""; color: Core.ValkyxTheme.accent
+                        font.family: Core.ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * Core.ValkyxState.fontScale); font.letterSpacing: 1
                     }
                 }
 
@@ -78,28 +78,28 @@ Flickable {
                 Row {
                     visible: modelData.header !== true
                     width: parent.width; height: 26
-                    spacing: Core.HydraMetrics.s
+                    spacing: Core.ValkyxMetrics.s
 
                     Text {
                         id: kbText
                         anchors.verticalCenter: parent.verticalCenter
-                        text: modelData.desc || ""; color: Core.HydraTheme.text
-                        font.family: Core.HydraTheme.fontUI; font.pixelSize: Math.round(11 * Core.HydraState.fontScale)
+                        text: modelData.desc || ""; color: Core.ValkyxTheme.text
+                        font.family: Core.ValkyxTheme.fontUI; font.pixelSize: Math.round(11 * Core.ValkyxState.fontScale)
                     }
 
-                    Item { width: parent.width - kbText.implicitWidth - keyLabel.implicitWidth - 12 - 2 * Core.HydraMetrics.s; height: 1 }
+                    Item { width: parent.width - kbText.implicitWidth - keyLabel.implicitWidth - 12 - 2 * Core.ValkyxMetrics.s; height: 1 }
 
                     Rectangle {
                         id: kbKey
                         anchors.verticalCenter: parent.verticalCenter
                         width: keyLabel.implicitWidth + 12; height: 20; radius: 4
-                        color: Core.HydraTheme.surfaceFill
-                        border.color: Core.HydraTheme.tint(Core.HydraTheme.muted, "33"); border.width: 1
+                        color: Core.ValkyxTheme.surfaceFill
+                        border.color: Core.ValkyxTheme.tint(Core.ValkyxTheme.muted, "33"); border.width: 1
                         Text {
                             id: keyLabel
                             anchors.centerIn: parent
-                            text: modelData.key || ""; color: Core.HydraTheme.muted
-                            font.family: Core.HydraTheme.fontMono; font.pixelSize: Math.round(9 * Core.HydraState.fontScale)
+                            text: modelData.key || ""; color: Core.ValkyxTheme.muted
+                            font.family: Core.ValkyxTheme.fontMono; font.pixelSize: Math.round(9 * Core.ValkyxState.fontScale)
                         }
                     }
                 }

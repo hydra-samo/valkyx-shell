@@ -1,6 +1,6 @@
 #!/bin/bash
-# hydra-pointer: absolute cursor move (+ optional click) via REL deltas
-# usage: hydra-pointer X Y [click]
+# valkyx-pointer: absolute cursor move (+ optional click) via REL deltas
+# usage: valkyx-pointer X Y [click]
 # REL-only ydotoold: compute delta from current cursorpos (flat accel = 1:1)
 cur=$(hyprctl cursorpos | tr -d ' ')
 IFS=, read -r cx cy <<< "$cur"

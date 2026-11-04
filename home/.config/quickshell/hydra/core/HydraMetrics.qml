@@ -1,5 +1,5 @@
 pragma Singleton
-// HYDRA metrics — the single source of truth for dimension/spacing/radius tokens.
+// VALKYX metrics — the single source of truth for dimension/spacing/radius tokens.
 // Per spec §2.3/§2.4: strict radius scale (sm/md/lg/xl/full) and spacing scale (4/8/12/16/24/32).
 // Components reference these tokens, never one-off literals.
 import QtQuick

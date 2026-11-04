@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Wireless study: capture a whole controller-initiated BT link from PS press.
 # Usage (pad MUST be unplugged, powered from BT, then press PS to connect):
-#   hydra-ds4-bt-test [seconds]
+#   valkyx-ds4-bt-test [seconds]
 set -u
 SECS="${1:-25}"
 SIG="/tmp/ds4-wireless-sig-$(date +%Y%m%d-%H%M%S).btsnoop"

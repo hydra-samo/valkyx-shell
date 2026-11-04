@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-hydra-ui-test — runtime + static behavior harness for the HYDRA Quickshell shell.
+valkyx-ui-test — runtime + static behavior harness for the VALKYX Quickshell shell.
 
 Catches the class of bug that static code-reading cannot: QML binding-destruction
 and silent runtime failures. A model reasoning over source sees two "correct"
@@ -21,7 +21,7 @@ Two layers, both deterministic (no vision, no flaky pixel heuristics):
              window checks. This catches anything static misses.
 
 Usage:
-  hydra-ui-test [--static] [--runtime] [--shell-dir DIR] [--quiet] [--json]
+  valkyx-ui-test [--static] [--runtime] [--shell-dir DIR] [--quiet] [--json]
   (default: both static + runtime)
 
 Exit code: 0 = all pass, 1 = failures, 2 = harness error (shell not running, etc.)
@@ -34,8 +34,8 @@ import subprocess
 import sys
 import time
 
-SHELL_DIR = os.path.expanduser("~/.config/quickshell/hydra")
-STATE_DIR = os.path.expanduser("~/.local/state/hydra-ui-test")
+SHELL_DIR = os.path.expanduser("~/.config/quickshell/valkyx")
+STATE_DIR = os.path.expanduser("~/.local/state/valkyx-ui-test")
 RESULTS = []  # list of {name, status, detail}
 
 # ───────────────────────── helpers ─────────────────────────
@@ -53,7 +53,7 @@ def run(cmd, timeout=10):
         return -1, "", "command not found"
 
 def ipc(target, fn):
-    rc, out, err = run(["qs", "-c", "hydra", "ipc", "call", target, fn])
+    rc, out, err = run(["qs", "-c", "valkyx", "ipc", "call", target, fn])
     return out if rc == 0 else None
 
 def record(name, status, detail=""):
@@ -67,10 +67,10 @@ def record(name, status, detail=""):
         print(line)
 
 def shell_running():
-    # Anchored: `pgrep -f "qs -c hydra"` matches anything whose command line merely
+    # Anchored: `pgrep -f "qs -c valkyx"` matches anything whose command line merely
     # mentions that text — including the agent's own shell running this very
     # check — so it reported "running" against a desktop with no shell at all.
-    rc, out, _ = run(["pgrep", "-f", "^qs -c hydra$"])
+    rc, out, _ = run(["pgrep", "-f", "^qs -c valkyx$"])
     return rc == 0 and bool(out)
 
 # ───────────────────────── STATIC CHECKS ─────────────────────────
@@ -294,10 +294,10 @@ def _sized(lines, start, end, axis):
 
 def slop_checks(qml_files):
     log("STATIC: anti-slop + silent-failure rules")
-    # HydraMotion.qml DEFINES the vocabulary the other rules enforce, so scanning
+    # ValkyxMotion.qml DEFINES the vocabulary the other rules enforce, so scanning
     # it for that vocabulary flags the definitions themselves.
     live = [p for p in qml_files
-            if _live(p) and os.path.basename(p) != "HydraMotion.qml"]
+            if _live(p) and os.path.basename(p) != "ValkyxMotion.qml"]
     gates, cyc, easing, durs, palette = [], [], [], [], []
 
     for path in live:
@@ -378,17 +378,17 @@ def slop_checks(qml_files):
     emit("slop:no-circular-positioner-size", cyc,
          "no Column/Row derives its size from a child reading parent.<same axis>")
     emit("slop:no-ai-easing-curve", easing,
-         "no raw Easing.InOut*/In* curves (use HydraMotion.curveOut/curveIn/curveSnap)")
+         "no raw Easing.InOut*/In* curves (use ValkyxMotion.curveOut/curveIn/curveSnap)")
     emit("slop:no-literal-duration", durs,
-         "every animation duration comes from a HydraMotion token")
+         "every animation duration comes from a ValkyxMotion token")
     emit("slop:no-banned-accent", palette,
          "no cyan / violet-indigo accents")
 
 
-# Every `exec("...")` / `HydraState.exec("...")` string is run by `sh -c` with the
+# Every `exec("...")` / `ValkyxState.exec("...")` string is run by `sh -c` with the
 # SHELL's PATH, and the runner DISCARDS stdout+stderr. So a typo'd or missing
 # barename is a 100% silent no-op — the button just does nothing. This is how
-# `hydra-logout` shipped broken: exec'd by the power menu, never existed, no
+# `valkyx-logout` shipped broken: exec'd by the power menu, never existed, no
 # error anywhere. Every bare command token must resolve in the shell's PATH.
 EXEC_RE = re.compile(r'\bexec\(\s*"((?:[^"\\]|\\.)*)"')
 # segments are chained with && ; || | — the first word of each is a command
@@ -402,9 +402,9 @@ SHELL_BUILTINS = {"cd", "echo", "exit", "true", "false", "test", "exec", "eval",
 def exec_target_checks(qml_files):
     """Assert every barename exec'd from QML exists in the shell's PATH."""
     log("STATIC: resolving every exec()'d command against the shell PATH")
-    # the PATH qs actually runs with (HydraState passes it through to `sh -c`)
+    # the PATH qs actually runs with (ValkyxState passes it through to `sh -c`)
     path_env = os.environ.get(
-        "HYDRA_SHELL_PATH", "$HOME/.local/bin:/usr/local/bin:/usr/bin")
+        "VALKYX_SHELL_PATH", "$HOME/.local/bin:/usr/local/bin:/usr/bin")
     path_dirs = [p for p in path_env.split(":") if p]
     missing, checked = [], 0
     for path in sorted(qml_files):
@@ -440,7 +440,7 @@ def exec_target_checks(qml_files):
                    % (rel, line, tok, path_env))
     else:
         record("static:exec-target", "pass",
-               "all %d exec()'d hydra-* targets exist" % checked)
+               "all %d exec()'d valkyx-* targets exist" % checked)
 
 # ───────────────────────── RUNTIME CHECKS ─────────────────────────
 def ydotool_key(code):
@@ -529,7 +529,7 @@ def check_no_orphan_leak():
 def runtime_checks():
     log("RUNTIME: driving the live shell")
     if not shell_running():
-        record("runtime:shell-running", "fail", "qs -c hydra not running — start it first")
+        record("runtime:shell-running", "fail", "qs -c valkyx not running — start it first")
         return
 
     check_no_orphan_leak()
@@ -620,10 +620,10 @@ def runtime_checks():
 # ───────────────────────── main ─────────────────────────
 def main():
     global QUIET, SHELL_DIR
-    ap = argparse.ArgumentParser(description="HYDRA shell UI behavior harness")
+    ap = argparse.ArgumentParser(description="VALKYX shell UI behavior harness")
     ap.add_argument("--static", action="store_true", help="run static binding-destruction scan only")
     ap.add_argument("--runtime", action="store_true", help="run runtime behavior tests only")
-    ap.add_argument("--shell-dir", default=SHELL_DIR, help="path to the hydra shell dir")
+    ap.add_argument("--shell-dir", default=SHELL_DIR, help="path to the valkyx shell dir")
     ap.add_argument("--quiet", action="store_true", help="only print failures")
     ap.add_argument("--json", action="store_true", help="emit JSON report")
     args = ap.parse_args()

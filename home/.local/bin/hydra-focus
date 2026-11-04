@@ -1,15 +1,15 @@
 #!/bin/bash
-# hydra-focus <app-pattern> [launch-command]
+# valkyx-focus <app-pattern> [launch-command]
 # Launch an app, or focus its already-open window if one exists (launch-or-focus,
 # ported from Omarchy's omarchy-launch-or-focus). Pattern = extended regex
 # matched case-insensitively against class then title.
 #
-# Hyprland 0.56 Lua config note: hydra-dispatch mangles args, so focus goes
+# Hyprland 0.56 Lua config note: valkyx-dispatch mangles args, so focus goes
 # through hl.dsp.focus via eval. Exec is chained in one shell so tokens in
 # LAUNCH_CMD survive without eval.
 set -u
 
-PATTERN="${1:?usage: hydra-focus <pattern> [launch-command...]}"
+PATTERN="${1:?usage: valkyx-focus <pattern> [launch-command...]}"
 shift
 LAUNCH_CMD=("$@")
 if ((${#LAUNCH_CMD[@]} == 0)); then

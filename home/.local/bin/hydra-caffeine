@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Hydra caffeine timed override. "on" = disable idle now; "<minutes>" = disable
+# Valkyx caffeine timed override. "on" = disable idle now; "<minutes>" = disable
 # idle then auto-restore; "off" = restore hypridle now.
 set -u
 MIN="${1:-on}"
-CACHE="$HOME/.cache/hydra-caffeine.min"
+CACHE="$HOME/.cache/valkyx-caffeine.min"
 
 case "$MIN" in
   off|0)

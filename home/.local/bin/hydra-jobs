@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# hydra-jobs — scheduled maintenance + unattended agent runner.
+# valkyx-jobs — scheduled maintenance + unattended agent runner.
 #
 # One script, not one unit per job. Every job is read-only or self-gating and
 # writes a result file; nothing mutates system state without a rollback.
-# Result files: ~/.local/state/hydra/jobs/<name>.log   (never stdout-only)
+# Result files: ~/.local/state/valkyx/jobs/<name>.log   (never stdout-only)
 #
-#   hydra-jobs health     shell static check          -> journald on failure
+#   valkyx-jobs health     shell static check          -> journald on failure
 # Notifications go to stdout/stderr, which the timer unit captures into the user
 # journal. Do NOT use systemd-cat: /run/systemd/journal holds only dev-log here, no
 # live socket, so it always fails rc=1 ("Failed to execute process"). Verified.
-#   hydra-jobs orphans    pacman -Qtdq, REPORT ONLY  -> orphans.txt
-#   hydra-jobs drift      live quickshell vs sandbox mirror
-#   hydra-jobs doctor     hydra-doctor snapshot       -> doctor.log
-#   hydra-jobs sweep      prune unreferenced ~/.cache/hydra/* older than 30d
-#   hydra-jobs agents     drain ~/.local/state/hydra/queue/*.md via opencode
-#   hydra-jobs all        every read-only job above (NOT agents)
+#   valkyx-jobs orphans    pacman -Qtdq, REPORT ONLY  -> orphans.txt
+#   valkyx-jobs drift      live quickshell vs sandbox mirror
+#   valkyx-jobs doctor     valkyx-doctor snapshot       -> doctor.log
+#   valkyx-jobs sweep      prune unreferenced ~/.cache/valkyx/* older than 30d
+#   valkyx-jobs agents     drain ~/.local/state/valkyx/queue/*.md via opencode
+#   valkyx-jobs all        every read-only job above (NOT agents)
 #
 # Design constraints (see Documents/unified-docs/shell/MAJOR-FEATURES.md §1):
 #   * never a sleep loop — systemd --on-calendar does the scheduling
@@ -22,12 +22,12 @@
 #   * anything that mutates must be idempotent and safe to run twice
 set -uo pipefail
 
-STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/hydra"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/valkyx"
 JOB_DIR="$STATE_DIR/jobs"
 QUEUE_DIR="$STATE_DIR/queue"
-LOG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/hydra"
-SHELL_DIR="$HOME/.config/quickshell/hydra"
-SANDBOX_HYPR="$HOME/hydra-sandbox/system/hypr"
+LOG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/valkyx"
+SHELL_DIR="$HOME/.config/quickshell/valkyx"
+SANDBOX_HYPR="$HOME/valkyx-sandbox/system/hypr"
 OC="$HOME/.opencode/bin/opencode"
 export PATH="$PATH:/usr/local/bin:/usr/bin:$HOME/.local/bin"
 
@@ -43,14 +43,14 @@ fail() { printf '%s FAIL %s\n' "$(date +%F' '%T)" "$*" >&2; }
 # Check delivery with `makoctl list` — it prints "Notification N: <summary>" and NOT
 # the body, so grepping the list for the message text is a false negative.
 notify() { command -v notify-send >/dev/null 2>&1 && \
-           notify-send -t 8000 "HYDRA agent" "$*" >/dev/null 2>&1; return 0; }
+           notify-send -t 8000 "VALKYX agent" "$*" >/dev/null 2>&1; return 0; }
 
 # ── health ────────────────────────────────────────────────────────────────────
-# hydra-ui-test --static is a pure file scan: binding-destruction, exec() barename
+# valkyx-ui-test --static is a pure file scan: binding-destruction, exec() barename
 # resolution and 5 anti-slop rules. Non-zero exit means the shell tree is broken.
 job_health() {
   local rc=0
-  if out=$(hydra-ui-test --static 2>&1); then
+  if out=$(valkyx-ui-test --static 2>&1); then
     log "static check passed"
   else
     rc=$?
@@ -60,7 +60,7 @@ job_health() {
   # The :8444 page is a Python string literal feeding a browser. A JS escape eaten
   # by Python is a page-wide SyntaxError that every HTTP check still passes, so it
   # gets its own check rather than riding along in the UI scan.
-  if hydra-hub-check; then
+  if valkyx-hub-check; then
     log "hub page JS parses"
   else
     rc=1
@@ -81,7 +81,7 @@ job_orphans() {
 }
 
 # ── drift ─────────────────────────────────────────────────────────────────────
-# Known gap: hydra-shell-sync only syncs shell/, so nothing syncs system/hypr and
+# Known gap: valkyx-shell-sync only syncs shell/, so nothing syncs system/hypr and
 # that mirror drifts. Compare, never overwrite — the mirror has no source of truth.
 job_drift() {
   [ -d "$SANDBOX_HYPR" ] || { log "no sandbox mirror at $SANDBOX_HYPR — nothing to compare"; return 0; }
@@ -97,13 +97,13 @@ job_drift() {
 
 # ── doctor ────────────────────────────────────────────────────────────────────
 job_doctor() {
-  command -v hydra-doctor >/dev/null || { log "hydra-doctor absent"; return 0; }
-  hydra-doctor >> "$JOB_DIR/doctor.log" 2>&1 || log "hydra-doctor returned non-zero"
+  command -v valkyx-doctor >/dev/null || { log "valkyx-doctor absent"; return 0; }
+  valkyx-doctor >> "$JOB_DIR/doctor.log" 2>&1 || log "valkyx-doctor returned non-zero"
   log "doctor snapshot appended to $JOB_DIR/doctor.log"
 }
 
 # ── sweep ─────────────────────────────────────────────────────────────────────
-# Only entries under ~/.cache/hydra older than 30 days, and never anything
+# Only entries under ~/.cache/valkyx older than 30 days, and never anything
 # referenced by state.json.
 job_sweep() {
   [ -d "$LOG_DIR" ] || { log "no $LOG_DIR"; return 0; }
@@ -114,7 +114,7 @@ try: d=json.load(open(sys.argv[1]))
 except Exception: d={}
 for v in d.values():
     if isinstance(v,str) and "/" in v: print(v)
-' "$HOME/.config/hydra/state.json" 2>/dev/null)
+' "$HOME/.config/valkyx/state.json" 2>/dev/null)
   local n=0 f
   while IFS= read -r f; do
     local b; b=$(basename "$f")
@@ -144,8 +144,8 @@ for v in d.values():
 #     it raises a flag for a human, it never kills anything. Ceiling: a genuinely
 #     silent-but-working task still trips the flag. Replace with a provider hook or an
 #     `opencode` server-side event stream if that ever matters.
-AGENT_MODEL="${HYDRA_AGENT_MODEL:-opencode/space-bunny-free}"
-STALL_SECS="${HYDRA_STALL_SECS:-600}"
+AGENT_MODEL="${VALKYX_AGENT_MODEL:-opencode/space-bunny-free}"
+STALL_SECS="${VALKYX_STALL_SECS:-600}"
 POLL_SECS=30
 
 # watch_task <pid> <base> <name> — poll until the pid exits, raising a .blocked
@@ -180,16 +180,16 @@ job_agents() {
   shopt -s nullglob
   local tasks=("$QUEUE_DIR"/*.md)
   [ ${#tasks[@]} -eq 0 ] && { log "queue empty"; return 0; }
-  local work="${HYDRA_AGENT_CWD:-$HOME}"
+  local work="${VALKYX_AGENT_CWD:-$HOME}"
   for t in "${tasks[@]}"; do
     local base="${t%.md}"
     local name; name=$(basename "$base")
     log "running agent: $name (model=$AGENT_MODEL, cwd=$work)"
-    # No --agent here: hydra-worker is mode:subagent, and `opencode run` silently
+    # No --agent here: valkyx-worker is mode:subagent, and `opencode run` silently
     # falls back to build for a subagent name ("is a subagent, not a primary agent").
     # The prompt/permissions of a subagent only apply when a PARENT dispatches it via
     # the task tool; for an unattended queue run, pin the model and take build's
-    # permissions. Verified: passing --agent hydra-worker here just prints a warning.
+    # permissions. Verified: passing --agent valkyx-worker here just prints a warning.
     ( cd "$work" && exec timeout 3600 "$OC" run -m "$AGENT_MODEL" "$(cat "$t")" ) > "$base.out" 2>&1 &
     local pid=$!
     watch_task "$pid" "$base" "$name"
@@ -216,5 +216,5 @@ case "${1:-all}" in
   sweep)   job_sweep   ;;
   agents)  job_agents  ;;
   all)     job_health; job_orphans; job_drift; job_sweep ;;
-  *)       echo "usage: hydra-jobs {health|orphans|drift|doctor|sweep|agents|all}" >&2; exit 2 ;;
+  *)       echo "usage: valkyx-jobs {health|orphans|drift|doctor|sweep|agents|all}" >&2; exit 2 ;;
 esac

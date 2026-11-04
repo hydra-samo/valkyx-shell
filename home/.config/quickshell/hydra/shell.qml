@@ -1,5 +1,5 @@
 //@ pragma UseQApplication
-// HYDRA DE — Composition root.
+// VALKYX DE — Composition root.
 // Thin orchestrator: imports singletons + shell components.
 // All UI lives in shell/*.qml, all logic in core/*.qml.
 import Quickshell
@@ -16,32 +16,32 @@ ShellRoot {
     Shell.TopHud {}
 
     // Left sidebar: wallpaper & media picker
-    Shell.HydraLeftSidebar {}
+    Shell.ValkyxLeftSidebar {}
 
     // Right sidebar: ActionCenter (quick toggles, sliders, media, system, power)
-    Shell.HydraSidebar {}
+    Shell.ValkyxSidebar {}
 
     // Workspace transition indicator
     Shell.WorkspaceIndicator {}
 
     // Bottom dock
-    Shell.HydraDock {}
+    Shell.ValkyxDock {}
 
     // Volume/brightness/mic/media OSD
-    Shell.HydraOsd {}
+    Shell.ValkyxOsd {}
 
     // Notification toast
     Shell.NotifToast {}
 
     // Settings window
-    Shell.HydraSettings {}
+    Shell.ValkyxSettings {}
 
     // The welcome panel (Super+Shift+W).
-    Shell.HydraWelcomePanel {}
+    Shell.ValkyxWelcomePanel {}
 
     // The greeting overlay. It is loaded THROUGH A LOADER, gated on
     // `active`, and that is the whole point — do not "simplify" this back into
-    // a bare `Shell.HydraWelcomeGreeter {}`.
+    // a bare `Shell.ValkyxWelcomeGreeter {}`.
     //
     // A PanelWindow has `visible` pinned true: if it unmaps, Hyprland orphans it
     // and it keeps the input grab. So an always-instantiated greeter is a
@@ -55,7 +55,7 @@ ShellRoot {
     Loader {
         id: greetingLoader
         active: false
-        sourceComponent: Shell.HydraWelcomeGreeter {}
+        sourceComponent: Shell.ValkyxWelcomeGreeter {}
         onLoaded: {
             if (greetingLoader.pendingHold > 0) item.holdMs = greetingLoader.pendingHold
             item.showOnce()
@@ -67,15 +67,15 @@ ShellRoot {
     // Unmount as soon as the greeting is dismissed, so the fullscreen surface
     // goes away with it.
     Connections {
-        target: HydraState
+        target: ValkyxState
         function onWelcomeOpenChanged() {
-            if (!HydraState.welcomeOpen) greetingLoader.active = false
+            if (!ValkyxState.welcomeOpen) greetingLoader.active = false
         }
     }
 
     // Fire the greeting once, on boot, if the preference allows it.
     //
-    // Deliberately NOT `active: HydraState.greetsOnBoot`: assigning to `active`
+    // Deliberately NOT `active: ValkyxState.greetsOnBoot`: assigning to `active`
     // destroys the binding, and a surviving binding would re-mount the greeter
     // the instant the dismissal above sets it false — a greeting that can never
     // leave. One imperative trigger, no binding, no way to reopen.
@@ -93,18 +93,18 @@ ShellRoot {
     // to false, so the bug could never wear off.
     function tryGreeting() {
         if (greetedThisBoot) return
-        if (!HydraState.stateLoaded) return
+        if (!ValkyxState.stateLoaded) return
         greetedThisBoot = true
-        if (!HydraState.greetingEnabled || !HydraState.greetsOnBoot) return
+        if (!ValkyxState.greetingEnabled || !ValkyxState.greetsOnBoot) return
         // "Welcome" on the first login after install, "Welcome back" ever after.
         // Set before the mount and read once by the greeting line; never
         // persisted, because it describes this boot, not the machine.
         // `greetedOnce` IS the machine's, and is written only when a greeting is
         // really shown: starting with the toggle off must not quietly spend the
         // first run.
-        HydraState.firstGreeting = !HydraState.greetedOnce
-        HydraState.greetedOnce = true
-        HydraState.savePersisted()
+        ValkyxState.firstGreeting = !ValkyxState.greetedOnce
+        ValkyxState.greetedOnce = true
+        ValkyxState.savePersisted()
         greetingLoader.active = true
     }
     property bool greetedThisBoot: false
@@ -113,26 +113,26 @@ ShellRoot {
 
     // The late half of the same decision — see tryGreeting.
     Connections {
-        target: HydraState
+        target: ValkyxState
         function onStateLoadedChanged() {
-            if (HydraState.stateLoaded) tryGreeting()
+            if (ValkyxState.stateLoaded) tryGreeting()
         }
     }
 
     // Shell-native launcher (accent-reactive, app icons, keyboard search)
-    Shell.HydraLauncher { id: launcherWindow }
+    Shell.ValkyxLauncher { id: launcherWindow }
 
     // Floating power menu (on-screen popup, opened from the sidebar Power button)
-    Shell.HydraPowerMenu { id: powerMenu }
+    Shell.ValkyxPowerMenu { id: powerMenu }
 
     // Masked password prompt (WiFi join) — replaces fuzzel/zenity
-    Shell.HydraPassword { id: passwordPrompt }
+    Shell.ValkyxPassword { id: passwordPrompt }
 
     // Approval popup: standalone card whenever the backend holds a pending
     // tool call (the window overlay only shows while the window is open).
 
     // Super+W wallpaper/media selector (iNiR-style skew deck + grid, awww/mpvpaper)
-    Shell.HydraWallpaper { id: wallpaperWindow }
+    Shell.ValkyxWallpaper { id: wallpaperWindow }
 
     // IPC: toggle launcher (open only — closing is Esc/Enter inside)
     IpcHandler {
@@ -140,8 +140,8 @@ ShellRoot {
         function toggle(): string {
             // default toggle = full view; section pickers (open X) set section
             if (launcherWindow) launcherWindow.section = ""
-            HydraState.launcherOpen = !HydraState.launcherOpen
-            return HydraState.launcherOpen ? "open" : "close"
+            ValkyxState.launcherOpen = !ValkyxState.launcherOpen
+            return ValkyxState.launcherOpen ? "open" : "close"
         }
         // open a pre-filtered section: game | clip | dir | app | cmd ...
         function open(section: string): string {
@@ -154,8 +154,8 @@ ShellRoot {
     IpcHandler {
         target: "panelLeft"
         function toggle(): string {
-            HydraState.panelLeftOpen = !HydraState.panelLeftOpen
-            return HydraState.panelLeftOpen ? "open" : "close"
+            ValkyxState.panelLeftOpen = !ValkyxState.panelLeftOpen
+            return ValkyxState.panelLeftOpen ? "open" : "close"
         }
     }
 
@@ -163,15 +163,15 @@ ShellRoot {
     IpcHandler {
         target: "panel"
         function toggle(): string {
-            HydraState.panelOpen = !HydraState.panelOpen
-            return HydraState.panelOpen ? "open" : "close"
+            ValkyxState.panelOpen = !ValkyxState.panelOpen
+            return ValkyxState.panelOpen ? "open" : "close"
         }
         function open(): string {
-            HydraState.panelOpen = true
+            ValkyxState.panelOpen = true
             return "open"
         }
         function close(): string {
-            HydraState.panelOpen = false
+            ValkyxState.panelOpen = false
             return "close"
         }
     }
@@ -183,11 +183,11 @@ ShellRoot {
         // path can never contain the separator, but an SSID could.
         function open(args: string): string {
             const i = args.indexOf("|")
-            HydraState.passwordLabel = i < 0 ? "" : args.slice(0, i)
-            HydraState.passwordTarget = i < 0 ? "" : args.slice(i + 1)
-            if (HydraState.passwordTarget === "") return "no target"
-            HydraState.passwordText = ""
-            HydraState.passwordOpen = true
+            ValkyxState.passwordLabel = i < 0 ? "" : args.slice(0, i)
+            ValkyxState.passwordTarget = i < 0 ? "" : args.slice(i + 1)
+            if (ValkyxState.passwordTarget === "") return "no target"
+            ValkyxState.passwordText = ""
+            ValkyxState.passwordOpen = true
             return "prompted"
         }
         // cancel() and not a bare `passwordOpen = false`: only cancel() writes
@@ -206,18 +206,18 @@ ShellRoot {
 
         target: "power"
         function toggle(): string {
-            HydraState.powerOpen = !HydraState.powerOpen
-            return HydraState.powerOpen ? "open" : "close"
+            ValkyxState.powerOpen = !ValkyxState.powerOpen
+            return ValkyxState.powerOpen ? "open" : "close"
         }
         // open/close as separate entry points: `toggle` is unusable from a
         // script (you cannot know the current state without reading the UI),
         // which makes the menu impossible to drive deterministically in a test.
         function open(): string {
-            HydraState.powerOpen = true
+            ValkyxState.powerOpen = true
             return "open"
         }
         function close(): string {
-            HydraState.powerOpen = false
+            ValkyxState.powerOpen = false
             return "close"
         }
         // Which action the menu WOULD run if Return/Enter were pressed right now.
@@ -231,25 +231,25 @@ ShellRoot {
     IpcHandler {
         target: "settings"
         function toggle(): string {
-            HydraState.settingsOpen = !HydraState.settingsOpen
-            return HydraState.settingsOpen ? "open" : "close"
+            ValkyxState.settingsOpen = !ValkyxState.settingsOpen
+            return ValkyxState.settingsOpen ? "open" : "close"
         }
         function openKeyboard(): string {
-            HydraState.settingsPage = 2
-            HydraState.settingsOpen = true
+            ValkyxState.settingsPage = 2
+            ValkyxState.settingsOpen = true
             return "keyboard"
         }
     }
 
-    // IPC: cycle theme (Super+Shift+T). Routes through HydraState so accent,
+    // IPC: cycle theme (Super+Shift+T). Routes through ValkyxState so accent,
     // matching cursor, and the settings pickers all stay in sync.
     IpcHandler {
         target: "theme"
         function cycle(): string {
-            return HydraState.cycleTheme()
+            return ValkyxState.cycleTheme()
         }
         function apply(name: string): string {
-            HydraState.applyTheme(name)
+            ValkyxState.applyTheme(name)
             return name
         }
     }
@@ -258,17 +258,17 @@ ShellRoot {
     IpcHandler {
         target: "wallpaper"
         function toggle(): string {
-            HydraState.wallpaperOpen = !HydraState.wallpaperOpen
-            return HydraState.wallpaperOpen ? "open" : "close"
+            ValkyxState.wallpaperOpen = !ValkyxState.wallpaperOpen
+            return ValkyxState.wallpaperOpen ? "open" : "close"
         }
         function close(): string {
-            HydraState.wallpaperOpen = false
+            ValkyxState.wallpaperOpen = false
             return "close"
         }
         // CI probe: assert the picker deck has no duplicate cards. Mirrors the
         // deck's full-path dedupe key (WallpaperStore), so distinct === total
         // means every card renders uniquely. Usage:
-        //   qs -c hydra ipc call wallpaper uniqueCards
+        //   qs -c valkyx ipc call wallpaper uniqueCards
         function uniqueCards(): string {
             const total = WallpaperStore.mediaList.length
             const seen = new Set()
@@ -285,20 +285,20 @@ ShellRoot {
     IpcHandler {
         target: "welcome"
         function toggle(): string {
-            HydraState.welcomePanelOpen = !HydraState.welcomePanelOpen
-            return HydraState.welcomePanelOpen ? "open" : "close"
+            ValkyxState.welcomePanelOpen = !ValkyxState.welcomePanelOpen
+            return ValkyxState.welcomePanelOpen ? "open" : "close"
         }
         function open(): string {
-            HydraState.welcomePanelOpen = true
+            ValkyxState.welcomePanelOpen = true
             return "open"
         }
         function close(): string {
-            HydraState.welcomePanelOpen = false
+            ValkyxState.welcomePanelOpen = false
             return "close"
         }
     }
 
-    // TEST HOOK (hydra-ui-test): deterministic runtime verification surface.
+    // TEST HOOK (valkyx-ui-test): deterministic runtime verification surface.
     // Reads the ACTUAL rendered highlight (lv.currentIndex via selectedName),
     // not launcher.current — so a frozen highlight from binding-destruction is
     // caught even though launcher.current still moves. Harmless in production.
@@ -311,14 +311,14 @@ ShellRoot {
           // reading the token back is how a test proves reduced motion actually
           // reached the animation layer rather than just flipping a bool.
           function motion(): string {
-              return "scale=" + HydraMotion.motionScale
-                  + " pref=" + HydraState.motionPref
-                  + " reduced=" + HydraState.reducedMotion
-                  + " instant=" + HydraMotion.instant
-                  + " ambient=" + HydraMotion.ambient
+              return "scale=" + ValkyxMotion.motionScale
+                  + " pref=" + ValkyxState.motionPref
+                  + " reduced=" + ValkyxState.reducedMotion
+                  + " instant=" + ValkyxMotion.instant
+                  + " ambient=" + ValkyxMotion.ambient
           }
           function setMotion(on: bool): string {
-              HydraState.setMotion(on)
+              ValkyxState.setMotion(on)
               return motion()
           }
           // Show the greeting. An optional argument pins how long it stays up,
@@ -334,32 +334,32 @@ ShellRoot {
               const hold = parseInt(spec)
               // Preview only: sets the flag, never `greetedOnce`, so looking at
               // (or recording) the first run does not actually spend it.
-              HydraState.firstGreeting = spec.indexOf("first") !== -1
+              ValkyxState.firstGreeting = spec.indexOf("first") !== -1
               greetingLoader.pendingHold = (!isNaN(hold) && hold > 0) ? hold : 5000
               greetingLoader.active = true
-              return "greet hold=" + greetingLoader.pendingHold + " first=" + HydraState.firstGreeting
+              return "greet hold=" + greetingLoader.pendingHold + " first=" + ValkyxState.firstGreeting
           }
     }
 
     // Propagate persisted accent to the visual theme
     Connections {
-        target: HydraState
-        function onAccentChanged() { HydraTheme.accent = HydraState.accent }
+        target: ValkyxState
+        function onAccentChanged() { ValkyxTheme.accent = ValkyxState.accent }
     }
 
     // Global ESC — close any open panel (sidebar/settings/wallpaper picker) from anywhere.
     Shortcut {
         sequence: "Escape"
         context: Qt.ApplicationShortcut
-        enabled: HydraState.settingsOpen || HydraState.panelLeftOpen || HydraState.panelOpen || HydraState.wallpaperOpen || HydraState.welcomePanelOpen || HydraState.welcomeOpen || HydraState.passwordOpen
+        enabled: ValkyxState.settingsOpen || ValkyxState.panelLeftOpen || ValkyxState.panelOpen || ValkyxState.wallpaperOpen || ValkyxState.welcomePanelOpen || ValkyxState.welcomeOpen || ValkyxState.passwordOpen
         onActivated: {
-            if (HydraState.settingsOpen) HydraState.settingsOpen = false
-            else if (HydraState.panelLeftOpen) HydraState.panelLeftOpen = false
-            else if (HydraState.panelOpen) HydraState.panelOpen = false
-            else if (HydraState.wallpaperOpen) HydraState.wallpaperOpen = false
-            else if (HydraState.welcomePanelOpen) HydraState.welcomePanelOpen = false
-            else if (HydraState.welcomeOpen) HydraState.welcomeOpen = false
-              else if (HydraState.passwordOpen) passwordPrompt.cancel()
+            if (ValkyxState.settingsOpen) ValkyxState.settingsOpen = false
+            else if (ValkyxState.panelLeftOpen) ValkyxState.panelLeftOpen = false
+            else if (ValkyxState.panelOpen) ValkyxState.panelOpen = false
+            else if (ValkyxState.wallpaperOpen) ValkyxState.wallpaperOpen = false
+            else if (ValkyxState.welcomePanelOpen) ValkyxState.welcomePanelOpen = false
+            else if (ValkyxState.welcomeOpen) ValkyxState.welcomeOpen = false
+              else if (ValkyxState.passwordOpen) passwordPrompt.cancel()
         }
     }
 }

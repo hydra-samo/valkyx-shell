@@ -1,5 +1,5 @@
 #!/bin/bash
-# hydra-update — apply the current config to the live session, gated.
+# valkyx-update — apply the current config to the live session, gated.
 #
 # The configs are not in git, so there is no `pull`. "Update" therefore means
 # the only thing it can honestly mean: validate the config on disk, snapshot it,
@@ -10,7 +10,7 @@
 # there is nothing to undo. If the reload itself makes things worse, the
 # snapshot path is printed with its exact restore command.
 #
-# Usage: hydra-update
+# Usage: valkyx-update
 
 set -uo pipefail
 HYPR="$HOME/.config/hypr/hyprland.lua"
@@ -19,7 +19,7 @@ BIN="$HOME/.local/bin"
 die() { printf '\033[31mfail\033[0m    %s\n' "$1"; exit 1; }
 step() { printf '\033[36m==>\033[0m    %s\n' "$1"; }
 
-"$BIN/hydra-figlet" hydra update
+"$BIN/valkyx-figlet" valkyx update
 printf '\n'
 
 # 1. syntax. A malformed Lua config aborts the compositor into a config-less
@@ -29,12 +29,12 @@ luac -p "$HYPR" || die "config is not valid Lua — nothing was reloaded"
 
 # 2. static regression gate. Catches exec() targets that do not exist and
 #    binding destruction, both of which are silent at runtime.
-step "hydra-ui-test --static"
-"$BIN/hydra-ui-test" --static || die "static checks failed — nothing was reloaded"
+step "valkyx-ui-test --static"
+"$BIN/valkyx-ui-test" --static || die "static checks failed — nothing was reloaded"
 
 # 3. snapshot before mutating anything.
-step "hydra-backup"
-snap=$("$BIN/hydra-backup" | tail -1 | sed 's/^backup: //')
+step "valkyx-backup"
+snap=$("$BIN/valkyx-backup" | tail -1 | sed 's/^backup: //')
 printf '      %s\n' "$snap"
 
 # 4. reload. Shell first: the compositor config is already live from step 1's
@@ -53,12 +53,12 @@ for attempt in 1 2; do
     # invisible, and its own "RELOAD FAILED" line is the only diagnosis there is.
     # It is printed only when this attempt does not produce a shell, so a normal
     # run stays quiet.
-    rout=$("$BIN/hydra-shell-reload" 2>&1) || true
+    rout=$("$BIN/valkyx-shell-reload" 2>&1) || true
     # Always MEASURE, never infer from the helper's exit code. A helper that fails
     # early leaves a perfectly good instance running, and trusting its exit code
     # here made the fallback start a second one — two taskbars.
     for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-        n=$(pgrep -c -f '^qs -c hydra$' 2>/dev/null || echo 0)
+        n=$(pgrep -c -f '^qs -c valkyx$' 2>/dev/null || echo 0)
         [ "$n" = "1" ] && break
         sleep 0.5
     done
@@ -71,31 +71,31 @@ if [ "${n:-0}" != "1" ]; then
     # shell unconditionally turns a surviving instance into a double-shell (two
     # taskbars, and the loser's surfaces can linger as input-grabbing orphans).
     if [ "${n:-0}" -eq 0 ] 2>/dev/null; then
-        setsid -f sh -c "qs -c hydra >/tmp/qs.log 2>&1 </dev/null &" 2>/dev/null || true
+        setsid -f sh -c "qs -c valkyx >/tmp/qs.log 2>&1 </dev/null &" 2>/dev/null || true
         for _ in 1 2 3 4 5 6 7 8 9 10; do
-            n=$(pgrep -c -f '^qs -c hydra$' 2>/dev/null || echo 0)
+            n=$(pgrep -c -f '^qs -c valkyx$' 2>/dev/null || echo 0)
             [ "$n" -ge 1 ] 2>/dev/null && break
             sleep 0.5
         done
     fi
 fi
-[ "${n:-0}" -ge 1 ] 2>/dev/null || die "could not start a shell — run: hydra-shell-reload"
+[ "${n:-0}" -ge 1 ] 2>/dev/null || die "could not start a shell — run: valkyx-shell-reload"
 # Never tell anyone to `pkill` the shell: SIGTERM makes quickshell exit without
 # destroying its PanelWindows, and Hyprland keeps them as `pid: -1` surfaces that
 # hold the seat's input grab (invisible desktop, dead clicks).
-[ "$n" = "1" ] || die "expected exactly 1 quickshell instance, found $n — close the extra shell (qs kill --pid <pid>), then: hydra-shell-reload"
+[ "$n" = "1" ] || die "expected exactly 1 quickshell instance, found $n — close the extra shell (qs kill --pid <pid>), then: valkyx-shell-reload"
 
 # 5. prove it. Warnings are reported but do not fail the run: the 0.56.2
 #    dispatcher no-ops and the missing git repos are pre-existing, not caused
 #    by this reload.
-step "hydra-doctor -q"
+step "valkyx-doctor -q"
 sleep 2
-"$BIN/hydra-doctor" -q
+"$BIN/valkyx-doctor" -q
 rc=$?
 case $rc in
 0) printf '\n\033[32mapplied\033[0m — no warnings\n' ;;
 *) printf '\n\033[33mapplied with warnings\033[0m — see above\n' ;;
 esac
 
-printf '\nrollback: hydra-backup restore %s\n' "$snap"
+printf '\nrollback: valkyx-backup restore %s\n' "$snap"
 exit 0

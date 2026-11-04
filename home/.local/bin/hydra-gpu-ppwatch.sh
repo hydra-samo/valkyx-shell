@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# hydra-gpu-ppwatch — watch power-profiles-daemon for profile changes and
+# valkyx-gpu-ppwatch — watch power-profiles-daemon for profile changes and
 # keep the NVIDIA on-demand policy intact. Logs to the user journal.
 #
 set -u
@@ -8,7 +8,7 @@ set -u
 PROFILE_IFACE="net.hadess.PowerProfiles"
 
 _log() {
-    echo "[hydra-gpu] $*"
+    echo "[valkyx-gpu] $*"
 }
 
 apply_profile() {
@@ -17,16 +17,16 @@ apply_profile() {
     _log "power profile changed -> ${profile}"
     # If power-profiles-daemon (or a UI widget) changed the profile and
     # overwrote our EPP/governor, re-apply the profile we actually saved so
-    # hydra-power remains authoritative.
-    saved=$(cat "$HOME/.config/hydra/power-profile" 2>/dev/null || echo "")
+    # valkyx-power remains authoritative.
+    saved=$(cat "$HOME/.config/valkyx/power-profile" 2>/dev/null || echo "")
     case "$saved" in
         performance|balanced|power-saver)
-            ~/.local/bin/hydra-power set "$saved" >/dev/null 2>&1
+            ~/.local/bin/valkyx-power set "$saved" >/dev/null 2>&1
             _log "re-applied saved profile -> ${saved}"
             ;;
         *) _log "no valid saved profile; leaving as-is" ;;
     esac
-    ~/.local/bin/hydra-gpu profile >/dev/null 2>&1 || _log "hydra-gpu profile hook failed"
+    ~/.local/bin/valkyx-gpu profile >/dev/null 2>&1 || _log "valkyx-gpu profile hook failed"
 }
 
 # Apply once at start

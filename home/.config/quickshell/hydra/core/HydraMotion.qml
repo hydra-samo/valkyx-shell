@@ -1,5 +1,5 @@
 pragma Singleton
-// HYDRA motion language — one source of timing AND curve truth.
+// VALKYX motion language — one source of timing AND curve truth.
 //
 // interaction 120–180 · panel 180–260 · transition 280–400 · ambient 600+
 //
@@ -12,15 +12,15 @@ pragma Singleton
 //     Deliberately no bounce/elastic/back: reserved for things that are actually
 //     physical, and nothing in a shell is.
 //
-//  2. Reduced motion. `motionScale` is pushed in by HydraState from the desktop
+//  2. Reduced motion. `motionScale` is pushed in by ValkyxState from the desktop
 //     preference. Because the durations below are *derived*, every existing
-//     `duration: HydraMotion.x` call site collapses to 0 with no edits — which is
+//     `duration: ValkyxMotion.x` call site collapses to 0 with no edits — which is
 //     the only way 36 sites stay honest.
 import QtQuick
 
 QtObject {
     // ── reduced motion ────────────────────────────────────────────────────
-    // 1 = full motion, 0 = instant. Owned by HydraState, pushed here.
+    // 1 = full motion, 0 = instant. Owned by ValkyxState, pushed here.
     // Must be declared first: the duration tokens below derive from it.
     property int motionScale: 1
 
@@ -44,7 +44,7 @@ QtObject {
     readonly property int peekDelay: scaled(350)
 
     // Stagger between the greeting's two lines. This is a token rather than a
-    // literal precisely so it collapses: `HydraMotion.transition + 280` would
+    // literal precisely so it collapses: `ValkyxMotion.transition + 280` would
     // evaluate to a bare 280 once reduced motion zeroes the token, quietly
     // defeating the whole mechanism. Never do arithmetic on a scaled token.
     readonly property int stagger: scaled(90)

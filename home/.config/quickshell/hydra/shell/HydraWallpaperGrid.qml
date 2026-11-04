@@ -1,4 +1,4 @@
-// HYDRA Wallpaper Grid — flat tile grid, per-type hover + accent selection ring.
+// VALKYX Wallpaper Grid — flat tile grid, per-type hover + accent selection ring.
 import QtQuick
 import "../core"
 
@@ -52,9 +52,9 @@ Item {
                 id: card
                 anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
                 height: parent.height - 30
-                radius: HydraMetrics.radiusMd
-                color: HydraMaterials.surface2
-                border.color: isCurrent ? HydraTheme.accent : (isActive ? HydraTheme.tint(HydraTheme.accent, "88") : HydraMaterials.borderFaint)
+                radius: ValkyxMetrics.radiusMd
+                color: ValkyxMaterials.surface2
+                border.color: isCurrent ? ValkyxTheme.accent : (isActive ? ValkyxTheme.tint(ValkyxTheme.accent, "88") : ValkyxMaterials.borderFaint)
                 border.width: isCurrent ? 2 : 1
                 clip: true
 
@@ -89,15 +89,15 @@ Item {
                     height: 16; implicitWidth: starTxt.implicitWidth + 8
                     radius: 8
                     visible: isCurrent || hover
-                    color: WallpaperStore.isFav(path) ? HydraTheme.accent : "transparent"
-                    border.color: WallpaperStore.isFav(path) ? HydraTheme.accent : HydraMaterials.borderFaint
+                    color: WallpaperStore.isFav(path) ? ValkyxTheme.accent : "transparent"
+                    border.color: WallpaperStore.isFav(path) ? ValkyxTheme.accent : ValkyxMaterials.borderFaint
                     border.width: 1
                     Text {
                         id: starTxt
                         anchors.centerIn: parent
                         text: WallpaperStore.isFav(path) ? "★" : "☆"
-                        color: WallpaperStore.isFav(path) ? HydraTheme.textOnAccent : HydraTheme.muted
-                        font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale)
+                        color: WallpaperStore.isFav(path) ? ValkyxTheme.textOnAccent : ValkyxTheme.muted
+                        font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                     }
                     MouseArea {
                         anchors.fill: parent
@@ -117,14 +117,14 @@ Item {
                         anchors.centerIn: parent
                         text: kind === "video" ? "▶" : "■"
                         color: "white"
-                        font.family: HydraTheme.fontUI; font.pixelSize: 9; font.bold: true
+                        font.family: ValkyxTheme.fontUI; font.pixelSize: 9; font.bold: true
                     }
                 }
                 Rectangle {
                     visible: isActive
                     anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right
                     height: 3
-                    color: HydraTheme.accent
+                    color: ValkyxTheme.accent
                 }
             }
             Text {
@@ -132,8 +132,8 @@ Item {
                 anchors.topMargin: 4
                 elide: Text.ElideRight
                 text: entry ? String(entry.name) : ""
-                color: HydraTheme.muted
-                font.family: HydraTheme.fontUI; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                color: ValkyxTheme.muted
+                font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
             }
             MouseArea {
                 anchors.fill: parent

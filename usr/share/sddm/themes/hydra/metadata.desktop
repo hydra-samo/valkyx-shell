@@ -1,7 +1,7 @@
 [SddmGreeterTheme]
-Name=Hydra
-Description=HYDRA Samo branded greeter
-Author=Hydra Labs
+Name=Valkyx
+Description=VALKYX Samo branded greeter
+Author=Valkyx Labs
 License=MIT
 Type=sddm-theme
 ConfigFile=theme.conf

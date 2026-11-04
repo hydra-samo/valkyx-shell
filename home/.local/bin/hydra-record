@@ -1,6 +1,6 @@
 #!/bin/bash
-# HYDRA screen recorder — toggle record/stop with gpu-screen-recorder
-# Usage: hydra-record [region|full]  (default: full)
+# VALKYX screen recorder — toggle record/stop with gpu-screen-recorder
+# Usage: valkyx-record [region|full]  (default: full)
 # Toggle: run again to stop (SIGINT finalizes the file)
 
 OUT_DIR="$HOME/Videos"
@@ -11,13 +11,13 @@ MODE="${1:-full}"
 # If already recording, stop it (SIGINT finalizes the mp4)
 if pgrep -f "[g]pu-screen-recorder" >/dev/null; then
     pkill -INT -f "[g]pu-screen-recorder"
-    notify-send "HYDRA" "Recording saved to $OUT_DIR" 2>/dev/null || true
+    notify-send "VALKYX" "Recording saved to $OUT_DIR" 2>/dev/null || true
     exit 0
 fi
 
 # Start recording
 STAMP=$(date +%Y%m%d-%H%M%S)
-FILE="$OUT_DIR/hydra-$STAMP.mp4"
+FILE="$OUT_DIR/valkyx-$STAMP.mp4"
 
 if [ "$MODE" = "region" ]; then
     # Interactive region selection via slurp
@@ -27,5 +27,5 @@ else
     setsid gpu-screen-recorder -w eDP-1 -c mp4 -f 60 -a default_output -q medium -o "$FILE" >/dev/null 2>&1 &
 fi
 
-notify-send "HYDRA" "Recording started → $FILE" 2>/dev/null || true
+notify-send "VALKYX" "Recording started → $FILE" 2>/dev/null || true
 echo "Recording: $FILE"

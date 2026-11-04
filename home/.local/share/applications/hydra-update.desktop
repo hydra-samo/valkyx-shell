@@ -1,12 +1,12 @@
 [Desktop Entry]
 Type=Application
-Name=HYDRA Update
+Name=VALKYX Update
 GenericName=Apply config
 Comment=Validate, snapshot, reload compositor and shell, then verify
-Exec=kitty --hold -e $HOME/.local/bin/hydra-update
+Exec=kitty --hold -e $HOME/.local/bin/valkyx-update
 Icon=system-software-install
 Terminal=false
 Categories=System;
-Keywords=hydra;update;apply;reload;config;
+Keywords=valkyx;update;apply;reload;config;
 NoDisplay=false
 StartupNotify=true

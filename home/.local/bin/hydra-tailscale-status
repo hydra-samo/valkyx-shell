@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-tailscale-status — compact tailscale status lines for the top bar.
+# valkyx-tailscale-status — compact tailscale status lines for the top bar.
 # Output: up:<1|0> / self:<host>|<ip> / peer:<host>|<ip>|<os>|<online>
 ts=$(tailscale status --json 2>/dev/null) || { echo "up:0"; exit 0; }
 echo "$ts" | python3 -c '

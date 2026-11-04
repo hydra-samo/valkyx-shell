@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# hydra-gpu — HYDRA GPU control (Pop!_OS-style hybrid graphics on-demand)
+# valkyx-gpu — VALKYX GPU control (Pop!_OS-style hybrid graphics on-demand)
 #
 #   Intel Iris Xe  = default (desktop, browser, compositor)
 #   NVIDIA MX450   = on-demand via PRIME render offload (prime-run)
@@ -10,13 +10,13 @@
 # via prime-run and can return to a low-power state when idle (PCI runtime PM).
 #
 # Commands:
-#   hydra-gpu status     Show GPU + power state
-#   hydra-gpu menu       Rofi menu to launch an app on the discrete GPU
-#   hydra-gpu notif      Show GPU state as a desktop notification
-#   hydra-gpu profile    Re-apply on-demand GPU policy for current power profile
-#   hydra-gpu policy auto|on   Set NVIDIA PCI runtime PM control (needs root)
-#   hydra-gpu run <cmd>  Run <cmd> with PRIME offload on the NVIDIA GPU
-#   hydra-gpu auto on|off|status
+#   valkyx-gpu status     Show GPU + power state
+#   valkyx-gpu menu       Rofi menu to launch an app on the discrete GPU
+#   valkyx-gpu notif      Show GPU state as a desktop notification
+#   valkyx-gpu profile    Re-apply on-demand GPU policy for current power profile
+#   valkyx-gpu policy auto|on   Set NVIDIA PCI runtime PM control (needs root)
+#   valkyx-gpu run <cmd>  Run <cmd> with PRIME offload on the NVIDIA GPU
+#   valkyx-gpu auto on|off|status
 #                           Auto-run demanding apps (blender, godot, obs, ...)
 #                           on the NVIDIA GPU; Intel stays default for the rest
 #
@@ -30,7 +30,7 @@ APP_ICON="display-driver"
 _notify() {
     local title="$1" msg="$2" icon="${3:-$APP_ICON}"
     if command -v notify-send >/dev/null 2>&1; then
-        notify-send -a "HYDRA GPU" -i "$icon" "$title" "$msg"
+        notify-send -a "VALKYX GPU" -i "$icon" "$title" "$msg"
     fi
 }
 
@@ -151,13 +151,13 @@ cmd_policy() {
         echo "NVIDIA runtime PM already '${mode}'"
         return 0
     fi
-    sudo /usr/local/sbin/hydra-power-helper nvidia "$mode"
+    sudo /usr/local/sbin/valkyx-power-helper nvidia "$mode"
     echo "NVIDIA runtime PM set to '${mode}'"
 }
 
 # Run a command on the discrete GPU with full PRIME offload.
 cmd_run() {
-    [ $# -ge 1 ] || { echo "usage: hydra-gpu run <cmd> [args...]"; exit 2; }
+    [ $# -ge 1 ] || { echo "usage: valkyx-gpu run <cmd> [args...]"; exit 2; }
     _notify "Discrete GPU" "Running on NVIDIA MX450: $*"
     env "${PRIME_ENV[@]}" "$@"
 }
@@ -171,10 +171,10 @@ cmd_auto() {
     case "$mode" in
         on)
             for app in "${AUTO_APPS[@]}"; do
-                [ -e "$HOME/.local/bin/$app" ] || ln -s hydra-auto-prime "$HOME/.local/bin/$app"
+                [ -e "$HOME/.local/bin/$app" ] || ln -s valkyx-auto-prime "$HOME/.local/bin/$app"
             done
             echo "Auto-offload ON — on NVIDIA when launched: ${AUTO_APPS[*]}"
-            echo "Everything else keeps the Intel GPU. To disable: hydra-gpu auto off"
+            echo "Everything else keeps the Intel GPU. To disable: valkyx-gpu auto off"
             ;;
         off)
             for app in "${AUTO_APPS[@]}"; do
@@ -205,5 +205,5 @@ case "$cmd" in
     policy)  cmd_policy "${1:-auto}" ;;
     run)     cmd_run "$@" ;;
     auto)    cmd_auto "${1:-status}" ;;
-    *) echo "usage: hydra-gpu {status|notif|menu|profile|policy|run|auto}"; exit 2 ;;
+    *) echo "usage: valkyx-gpu {status|notif|menu|profile|policy|run|auto}"; exit 2 ;;
 esac

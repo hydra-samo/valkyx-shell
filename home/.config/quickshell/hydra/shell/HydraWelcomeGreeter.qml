@@ -1,10 +1,10 @@
-// HYDRA Welcome — the post-login greeting.
+// VALKYX Welcome — the post-login greeting.
 //
 // A greeting that drifts in over the desktop and leaves on its own. Deliberately
 // NOT a screen: no fullscreen background, no "press Enter", no keyboard grab, no
 // input interception of any kind. It is a guest on the desktop for a few seconds,
 // not a gate you have to pass through. The window with the actual settings
-// (theme, language, keybinds) is the panel — HydraWelcomePanel.qml, Super+Shift+W.
+// (theme, language, keybinds) is the panel — ValkyxWelcomePanel.qml, Super+Shift+W.
 //
 // The gate below is still mandatory even though nothing here is interactive:
 // the surface exists for the whole greeting and is unmounted by the Loader in
@@ -27,7 +27,7 @@
 //   2. The exit no longer travels. It used to drift y 0->-14 on the way out, so
 //      the element moved twice. It now fades in place: the block is anchored and
 //      nothing re-translates on the way down.
-//   3. The name is part of the SENTENCE. "Welcome back HYDRA" is one
+//   3. The name is part of the SENTENCE. "Welcome back VALKYX" is one
 //      greeting, so the name is set in the UI sans at the sentence's own size
 //      and tracking. It used to be a standalone lockup at 0.5em tracking — a
 //      monospace code eyebrow, the single most reliably-generated "label" in
@@ -65,7 +65,7 @@ PanelWindow {
     // enforceable in two places when it is in one.
 
     // The logged-in user's picture. QML has no file-exists(), and a Process is
-    // this shell's existing answer to that (HydraState.sysInfo does the same), so
+    // this shell's existing answer to that (ValkyxState.sysInfo does the same), so
     // ONE `sh -c` probe walks the candidates in order and prints the first hit.
     // Order matters: the shell's own copy is already cropped to a circle, so it
     // beats a square login picture. The trailing `true` is not decoration — the
@@ -75,7 +75,7 @@ PanelWindow {
     property string avatarSource: ""
     Process {
         running: true
-        command: ["/bin/sh", "-c", "for f in \"$HOME/.config/hydra/avatar-circle.png\" \"$HOME/.config/hydra/avatar-placeholder.svg\" \"$HOME/.local/share/sddm/avatars/user.face.icon\" \"$HOME/.face.icon\" \"$HOME/.face\"; do [ -f \"$f\" ] && printf %s \"$f\" && break; done; true"]
+        command: ["/bin/sh", "-c", "for f in \"$HOME/.config/valkyx/avatar-circle.png\" \"$HOME/.config/valkyx/avatar-placeholder.svg\" \"$HOME/.local/share/sddm/avatars/user.face.icon\" \"$HOME/.face.icon\" \"$HOME/.face\"; do [ -f \"$f\" ] && printf %s \"$f\" && break; done; true"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const found = String(text).trim()
@@ -100,7 +100,7 @@ PanelWindow {
     // as one event. It rides the name's own step, so there is no separate clock
     // for it to be half a beat out of sync with.
     property real brandGlow: 0
-    // "Welcome back HYDRA" — one pair per word, or they arrive together
+    // "Welcome back VALKYX" — one pair per word, or they arrive together
     // and it is just a phrase fade, which is the thing this is meant NOT to be.
     // The third word is the accent name, so it needs its own pair like the rest.
     property real greet0Op: 0
@@ -124,10 +124,10 @@ PanelWindow {
     // and it is NOT: on this build the rule is accepted and blurs nothing —
     // measured 0.3% change in image gradient energy, i.e. noise. (Same reason
     // `hyprctl keyword` is a no-op here: the non-legacy config parser refuses it,
-    // which is also why HydraState.applyBlur() never actually changed anything.
+    // which is also why ValkyxState.applyBlur() never actually changed anything.
     // Use `hyprctl eval 'hl.config({...})'` instead.) So: grab the real frame and
     // blur it in Qt, which is real blur and costs one grim call.
-    readonly property string bgPath: "/run/user/1000/hydra-greet-bg.png"
+    readonly property string bgPath: "/run/user/1000/valkyx-greet-bg.png"
     // The Image's source, kept SEPARATE from bgPath and reassigned on capture.
     // Binding `source` straight to bgPath looks correct and is not: the path
     // does not exist when the component loads (grim writes it later), QML logs
@@ -162,8 +162,8 @@ PanelWindow {
     // renders as a bare "Welcome, ". Fire the read on load, not just when the
     // panel opens, because this is the first thing on screen after login.
     function showOnce() {
-        if (HydraState.userName === "") { HydraState.sysInfo.running = true; awaitFacts.tries = 0; awaitFacts.start() }
-        HydraState.showGreeter()
+        if (ValkyxState.userName === "") { ValkyxState.sysInfo.running = true; awaitFacts.tries = 0; awaitFacts.start() }
+        ValkyxState.showGreeter()
         // play() HERE, not from the onWelcomeOpenChanged handler. If this
         // instance is mounted while the state is ALREADY open, the assignment
         // above changes nothing, no signal is emitted, and the handler never
@@ -187,7 +187,7 @@ PanelWindow {
         property int tries: 0
         onTriggered: {
             tries++
-            if (HydraState.userName !== "" || tries > 120) stop()
+            if (ValkyxState.userName !== "" || tries > 120) stop()
         }
     }
 
@@ -219,7 +219,7 @@ PanelWindow {
     Timer {
         id: hold
         interval: greeter.holdMs + 8000
-        onTriggered: HydraState.welcomeOpen = false
+        onTriggered: ValkyxState.welcomeOpen = false
     }
 
     function play() {
@@ -243,74 +243,74 @@ PanelWindow {
         // 0. the blur, before anything is readable on top of it
         NumberAnimation {
             target: greeter; property: "backdropOpacity"; from: 0; to: 1
-            duration: HydraMotion.ambient; easing.type: HydraMotion.curveOut
+            duration: ValkyxMotion.ambient; easing.type: ValkyxMotion.curveOut
         }
         // 1. the avatar. Scale from slightly under 1 so it settles into place
         //    rather than popping in at full size.
         ParallelAnimation {
             NumberAnimation {
                 target: greeter; property: "avatarOp"; from: 0; to: 1
-                duration: HydraMotion.ambient; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.ambient; easing.type: ValkyxMotion.curveOut
             }
             NumberAnimation {
                 target: greeter; property: "avatarScale"; from: 0.9; to: 1
-                duration: HydraMotion.ambient; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.ambient; easing.type: ValkyxMotion.curveOut
             }
         }
         // 2. "Welcome" — word one. This is the whole point of the build: the
         //    greeting is a sequence of words, not one line that fades up.
-        PauseAnimation { duration: HydraMotion.stagger }
+        PauseAnimation { duration: ValkyxMotion.stagger }
         ParallelAnimation {
             NumberAnimation {
                 target: greeter; property: "greet0Op"; from: 0; to: 1
-                duration: HydraMotion.base; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.base; easing.type: ValkyxMotion.curveOut
             }
             NumberAnimation {
                 target: greeter; property: "greet0Rise"; from: 18; to: 0
-                duration: HydraMotion.base; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.base; easing.type: ValkyxMotion.curveOut
             }
         }
         // 3. "back" — word two, a stagger behind the first.
-        PauseAnimation { duration: HydraMotion.stagger }
+        PauseAnimation { duration: ValkyxMotion.stagger }
         ParallelAnimation {
             NumberAnimation {
                 target: greeter; property: "greet1Op"; from: 0; to: 1
-                duration: HydraMotion.base; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.base; easing.type: ValkyxMotion.curveOut
             }
             NumberAnimation {
                 target: greeter; property: "greet1Rise"; from: 18; to: 0
-                duration: HydraMotion.base; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.base; easing.type: ValkyxMotion.curveOut
             }
         }
-        // 4. "HYDRA" — the name, in accent, with the halo rising on the
+        // 4. "VALKYX" — the name, in accent, with the halo rising on the
         //    same step. It is the loudest word in the line, so it is also the one
         //    that gets the glow; the avatar ring and the name therefore light up
         //    together instead of in two separate events.
-        PauseAnimation { duration: HydraMotion.stagger }
+        PauseAnimation { duration: ValkyxMotion.stagger }
         ParallelAnimation {
             NumberAnimation {
                 target: greeter; property: "greet2Op"; from: 0; to: 1
-                duration: HydraMotion.base; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.base; easing.type: ValkyxMotion.curveOut
             }
             NumberAnimation {
                 target: greeter; property: "greet2Rise"; from: 18; to: 0
-                duration: HydraMotion.base; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.base; easing.type: ValkyxMotion.curveOut
             }
             NumberAnimation {
                 target: greeter; property: "brandGlow"; from: 0; to: 1
-                duration: HydraMotion.ambient; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.ambient; easing.type: ValkyxMotion.curveOut
             }
         }
         // 5. the bar and "Entering the shell"
-        PauseAnimation { duration: HydraMotion.stagger }
+        PauseAnimation { duration: ValkyxMotion.stagger }
         ParallelAnimation {
             NumberAnimation {
                 target: greeter; property: "stat0Op"; from: 0; to: 1
-                duration: HydraMotion.fast; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.fast; easing.type: ValkyxMotion.curveOut
             }
             NumberAnimation {
                 target: greeter; property: "stat0Rise"; from: 10; to: 0
-                duration: HydraMotion.fast; easing.type: HydraMotion.curveOut
+                duration: ValkyxMotion.fast; easing.type: ValkyxMotion.curveOut
             }
         }
         // 8. dwell. This is legibility, not motion, so it is NOT scaled — the
@@ -322,20 +322,20 @@ PanelWindow {
         ParallelAnimation {
             NumberAnimation {
                 target: greeter; property: "contentOp"; from: 1; to: 0
-                duration: HydraMotion.ambient; easing.type: HydraMotion.curveIn
+                duration: ValkyxMotion.ambient; easing.type: ValkyxMotion.curveIn
             }
             NumberAnimation {
                 target: greeter; property: "contentRise"; from: 0; to: -10
-                duration: HydraMotion.ambient; easing.type: HydraMotion.curveIn
+                duration: ValkyxMotion.ambient; easing.type: ValkyxMotion.curveIn
             }
             NumberAnimation {
                 target: greeter; property: "backdropOpacity"; from: 1; to: 0
-                duration: HydraMotion.ambient; easing.type: HydraMotion.curveIn
+                duration: ValkyxMotion.ambient; easing.type: ValkyxMotion.curveIn
             }
         }
         // Last step, deliberately: end the greeting here, once the last frame
         // has actually been shown. Paired with the backstop Timer above.
-        ScriptAction { script: HydraState.welcomeOpen = false }
+        ScriptAction { script: ValkyxState.welcomeOpen = false }
     }
 
     // Only the CLOSE half lives here now. Opening is showOnce()'s job, because
@@ -344,9 +344,9 @@ PanelWindow {
     // stopping the backstop alongside the timeline is what left the surface
     // alive with nothing running.
     Connections {
-        target: HydraState
+        target: ValkyxState
         function onWelcomeOpenChanged() {
-            if (!HydraState.welcomeOpen) { timeline.stop(); hold.stop() }
+            if (!ValkyxState.welcomeOpen) { timeline.stop(); hold.stop() }
         }
     }
 
@@ -356,9 +356,9 @@ PanelWindow {
     Item {
         id: greeterBody
         anchors.fill: parent
-        enabled: HydraState.welcomeOpen
+        enabled: ValkyxState.welcomeOpen
         // The gate's opacity is ALWAYS this binding — never an animation target.
-        opacity: HydraState.welcomeOpen ? 1 : 0
+        opacity: ValkyxState.welcomeOpen ? 1 : 0
 
         // ── The blurred desktop, behind the type. First child so it paints
         // under the Column. It is a still frame of the desktop as it was at
@@ -406,7 +406,7 @@ PanelWindow {
             // no accent wash, which is banned for decoration.
             Rectangle {
                 anchors.fill: parent
-                color: HydraTheme.tint(HydraTheme.bg, "rest")
+                color: ValkyxTheme.tint(ValkyxTheme.bg, "rest")
             }
         }
 
@@ -429,9 +429,9 @@ PanelWindow {
             // Explicit width: the Rows below read `parent.width`, so a Column
             // left to derive its own width from them is a circular binding. It
             // collapses to 0 and the whole greeting renders as nothing, silently.
-            width: Math.min(parent.width - HydraMetrics.xl * 2, 720)
+            width: Math.min(parent.width - ValkyxMetrics.xl * 2, 720)
             anchors.centerIn: parent
-            spacing: HydraMetrics.m
+            spacing: ValkyxMetrics.m
             opacity: greeter.contentOp
             // transform only — animating `y` here would fight the layout pass.
             transform: Translate { y: greeter.contentRise }
@@ -457,13 +457,13 @@ PanelWindow {
                         anchors.fill: parent
                         anchors.margins: -10
                         radius: width / 2
-                        color: HydraTheme.accent
+                        color: ValkyxTheme.accent
                         opacity: 0.1 * greeter.brandGlow
                         visible: opacity > 0.005
                         layer.enabled: visible
                         layer.effect: MultiEffect {
                             shadowEnabled: true
-                            shadowColor: HydraTheme.accent
+                            shadowColor: ValkyxTheme.accent
                             shadowBlur: 1.0
                         }
                     }
@@ -475,7 +475,7 @@ PanelWindow {
                         radius: width / 2
                         color: "transparent"
                         border.width: 1
-                        border.color: HydraTheme.accent
+                        border.color: ValkyxTheme.accent
                         // The ring brightens with the brand glow, so the avatar and
                         // the wordmark light up as one event.
                         opacity: 0.35 + 0.65 * greeter.brandGlow
@@ -499,7 +499,7 @@ PanelWindow {
                     }
                 }
 
-                // ── "Welcome back HYDRA" ────────────────────────────────
+                // ── "Welcome back VALKYX" ────────────────────────────────
                 // The greeting, word by word. Three Texts rather than one
                 // animated string: the gap between the words has to be a real
                 // layout gap, and each word needs its own clock.
@@ -525,8 +525,8 @@ PanelWindow {
                     Text {
                         id: greet0
                         text: "Welcome"
-                        color: HydraTheme.text
-                        font.family: HydraTheme.fontUI
+                        color: ValkyxTheme.text
+                        font.family: ValkyxTheme.fontUI
                         font.pixelSize: 40
                         font.weight: Font.DemiBold
                         font.letterSpacing: 0.5
@@ -537,13 +537,13 @@ PanelWindow {
                     Text {
                         id: greet1
                         // Empty on the first run, so the line reads "Welcome
-                        // HYDRASAMO" instead of "Welcome back HYDRASAMO". Bound
+                        // VALKYXSAMO" instead of "Welcome back VALKYXSAMO". Bound
                         // to `text`, not `visible`, so the word's width really is
                         // zero and the Row's layout cannot leave its gap behind.
-                        text: HydraState.firstGreeting ? "" : "back"
-                        leftPadding: HydraState.firstGreeting ? 0 : HydraMetrics.m
-                        color: HydraTheme.text
-                        font.family: HydraTheme.fontUI
+                        text: ValkyxState.firstGreeting ? "" : "back"
+                        leftPadding: ValkyxState.firstGreeting ? 0 : ValkyxMetrics.m
+                        color: ValkyxTheme.text
+                        font.family: ValkyxTheme.fontUI
                         font.pixelSize: 40
                         font.weight: Font.DemiBold
                         font.letterSpacing: 0.5
@@ -559,18 +559,18 @@ PanelWindow {
                     Text {
                         id: greet2
                         // The user who is logged in, uppercase. Falls back to the
-                        // brand while HydraState.userName is still empty: the
+                        // brand while ValkyxState.userName is still empty: the
                         // system-facts process has not answered yet on a cold
                         // boot, and an empty word would collapse the whole
                         // centred line to nothing.
-                        text: HydraState.userName === ""
-                              ? "HYDRA"
-                              : HydraState.userName.toUpperCase()
-                        color: HydraTheme.accent
+                        text: ValkyxState.userName === ""
+                              ? "VALKYX"
+                              : ValkyxState.userName.toUpperCase()
+                        color: ValkyxTheme.accent
                         // Always padded: the name follows "Welcome" on the first
                         // run too, so unlike "back" this gap never disappears.
-                        leftPadding: HydraMetrics.m
-                        font.family: HydraTheme.fontUI
+                        leftPadding: ValkyxMetrics.m
+                        font.family: ValkyxTheme.fontUI
                         font.pixelSize: 40
                         font.weight: Font.DemiBold
                         font.letterSpacing: 0.5
@@ -585,7 +585,7 @@ PanelWindow {
                         layer.enabled: true
                         layer.effect: MultiEffect {
                             shadowEnabled: true
-                            shadowColor: HydraTheme.accent
+                            shadowColor: ValkyxTheme.accent
                             // 0.5 keeps it a halo, not a second text.
                             shadowBlur: 0.5
                             shadowOpacity: 0.55 * greeter.brandGlow
@@ -611,7 +611,7 @@ PanelWindow {
                         radius: width / 2
                         // Neutral, not accent: the accent is the segment. Two
                         // accent shapes in a row reads as decoration.
-                        color: HydraTheme.tint(HydraTheme.line, "fill")
+                        color: ValkyxTheme.tint(ValkyxTheme.line, "fill")
                     }
 
                     Rectangle {
@@ -619,7 +619,7 @@ PanelWindow {
                         width: 72
                         height: parent.height
                         radius: width / 2
-                        color: HydraTheme.accent
+                        color: ValkyxTheme.accent
                     }
 
                     // End to end and back, forever, for as long as the greeting is
@@ -634,19 +634,19 @@ PanelWindow {
                     // (not token + literal) so it still scales with reduced motion.
                     SequentialAnimation {
                         id: sweep
-                        running: HydraState.welcomeOpen
+                        running: ValkyxState.welcomeOpen
                         loops: Animation.Infinite
                         NumberAnimation {
                             target: seg; property: "x"
                             from: 0; to: 168  // 240 track − 72 segment
-                            duration: HydraMotion.ambient + HydraMotion.base
-                            easing.type: HydraMotion.curveOut
+                            duration: ValkyxMotion.ambient + ValkyxMotion.base
+                            easing.type: ValkyxMotion.curveOut
                         }
                         NumberAnimation {
                             target: seg; property: "x"
                             from: 168; to: 0  // same travel, reversed
-                            duration: HydraMotion.ambient + HydraMotion.base
-                            easing.type: HydraMotion.curveOut
+                            duration: ValkyxMotion.ambient + ValkyxMotion.base
+                            easing.type: ValkyxMotion.curveOut
                         }
                     }
                 }
@@ -655,8 +655,8 @@ PanelWindow {
                     id: stat0
                     text: "Entering the shell"
                     anchors.horizontalCenter: parent.horizontalCenter
-                    color: HydraTheme.muted
-                    font.family: HydraTheme.fontUI
+                    color: ValkyxTheme.muted
+                    font.family: ValkyxTheme.fontUI
                     font.pixelSize: 11
                     font.letterSpacing: 2
                     opacity: greeter.stat0Op

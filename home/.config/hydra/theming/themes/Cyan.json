@@ -1,6 +1,6 @@
 {
   "name": "Cyan",
-  "source": "hydra",
+  "source": "valkyx",
   "colors": {
     "accent": "#00BCD4",
     "muted": "#66c2c5",
@@ -14,5 +14,5 @@
     "warning": "#d0a86a"
   },
   "wallpaper": null,
-  "style": "hydra"
+  "style": "valkyx"
 }

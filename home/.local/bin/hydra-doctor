@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# hydra-doctor — is this shell actually correct right now?
+# valkyx-doctor — is this shell actually correct right now?
 #
-# The gap this fills: `hydra-diagnose` reads the journal ("what did the system
+# The gap this fills: `valkyx-diagnose` reads the journal ("what did the system
 # say"). It cannot tell you "your config is wrong". chezmoi ships `doctor`,
 # `diff`, `verify` and `update`; Stow ships `chkstow`; npm/Homebrew ship
 # `doctor`. Nothing in the Quickshell/Hyprland ecosystem does — the closest is
@@ -12,8 +12,8 @@
 # and before reporting a bug — most of the "the keybind doesn't work" reports
 # on this box are one of the checks below.
 #
-#   hydra-doctor          full report
-#   hydra-doctor -q       only warnings and errors (for scripts and CI)
+#   valkyx-doctor          full report
+#   valkyx-doctor -q       only warnings and errors (for scripts and CI)
 # Exit: 0 clean · 1 something is wrong
 
 set -uo pipefail
@@ -39,11 +39,11 @@ head_() { $QUIET && return 0; printf '\n\033[1m%s\033[0m\n' "$1"; }
 
 # Wordmark, in the live accent. Skipped under -q so quiet output stays
 # machine-parseable for scripts and CI.
-$QUIET || "$HOME/.local/bin/hydra-figlet" hydra doctor
+$QUIET || "$HOME/.local/bin/valkyx-figlet" valkyx doctor
 $QUIET || printf '\n'
 
 CFG=${HYPR_CFG:-$HOME/.config/hypr/hyprland.lua}
-QS_DIR=${HYDRASHELL:-$HOME/.config/quickshell/hydra}
+QS_DIR=${VALKYXSHELL:-$HOME/.config/quickshell/valkyx}
 
 # ── compositor ────────────────────────────────────────────────────────────────
 head_ "compositor"
@@ -80,10 +80,10 @@ orph=$(hyprctl layers 2>/dev/null | grep -c 'pid: -1')
 
 # ── shell ─────────────────────────────────────────────────────────────────────
 head_ "shell"
-nqs=$(pgrep -c -f '^qs -c hydra$' 2>/dev/null || echo 0)
+nqs=$(pgrep -c -f '^qs -c valkyx$' 2>/dev/null || echo 0)
 case "$nqs" in
 1) ok quickshell "1 instance" ;;
-0) err quickshell "no shell running — start with hydra-shell-reload" ;;
+0) err quickshell "no shell running — start with valkyx-shell-reload" ;;
 *) err quickshell "$nqs instances running (double taskbars); exactly 1 expected" ;;
 esac
 
@@ -119,7 +119,7 @@ head_ "dispatchers (Hyprland 0.56.2 silent no-ops)"
 #                             refuses fullscreen ones, which is why PiP/pin look
 #                             broken on a maximised window
 # group.next()/group.prev() are the genuine article: they return ok and change
-# nothing even with three tiled windows. ALT+Tab is routed to hydra-alt-tab
+# nothing even with three tiled windows. ALT+Tab is routed to valkyx-alt-tab
 # instead, which computes the MRU order from focusHistoryID.
 DEAD_RE='group\.(next|prev)\('
 dead=$(grep -nE "$DEAD_RE" "$CFG" 2>/dev/null)
@@ -134,8 +134,8 @@ fi
 # no-ops. Anything still calling either is dead.
 left=$(grep -rn 'hyprctl dispatch' "$HOME/.local/bin" "$HOME/.config/hypr" \
 	"$QS_DIR/core" 2>/dev/null \
-	| grep -v hydra-dispatch \
-	| grep -v 'hydra-doctor:' \
+	| grep -v valkyx-dispatch \
+	| grep -v 'valkyx-doctor:' \
 	| grep -vE ':[0-9]+:[[:space:]]*(#|--)')
 [ -n "$left" ] && warn dead-dispatch-calls "$left" || ok dead-dispatch-calls "none"
 
@@ -143,7 +143,7 @@ left=$(grep -rn 'hyprctl dispatch' "$HOME/.local/bin" "$HOME/.config/hypr" \
 head_ "helpers"
 bin=$HOME/.local/bin
 missing=0
-for t in $(grep -rhoE "exec_cmd\(\"(hydra-[a-z-]+)" "$CFG" 2>/dev/null | sed 's/.*"//' | sort -u); do
+for t in $(grep -rhoE "exec_cmd\(\"(valkyx-[a-z-]+)" "$CFG" 2>/dev/null | sed 's/.*"//' | sort -u); do
 	[ -x "$bin/$t" ] || { err "helper:$t" "bound in hyprland.lua but not executable in ~/.local/bin"; missing=1; }
 done
 [ "$missing" = 0 ] && ok helper-targets "every hyprland.lua exec target exists and is executable"
@@ -161,8 +161,8 @@ case "$kb" in
 us | ara) ok kb_layout "$kb" ;;
 *) warn kb_layout "unexpected: '${kb:-unset}'" ;;
 esac
-[ -r "$HOME/.cache/hydra-im-state" ] && ok im-state "cached: $(cat "$HOME/.cache/hydra-im-state")" \
-	|| warn im-state "no ~/.cache/hydra-im-state — the first config reload will snap the layout to us"
+[ -r "$HOME/.cache/valkyx-im-state" ] && ok im-state "cached: $(cat "$HOME/.cache/valkyx-im-state")" \
+	|| warn im-state "no ~/.cache/valkyx-im-state — the first config reload will snap the layout to us"
 pgrep -x fcitx5 >/dev/null 2>&1 \
 	&& warn fcitx5 "running — its virtual keyboard takes the seat's main keyboard and the xkb layout stops changing" \
 	|| ok fcitx5 "stopped (correct: Arabic is a plain xkb layout here)"
@@ -184,8 +184,8 @@ sink=$(pactl get-default-sink 2>/dev/null)
 case "$sink" in
 *Speaker*) ok audio "default sink: Speaker (correct)" ;;
 *Headphones*)
-	warn audio "default sink is Headphones — Speaker and Headphones are mutually exclusive ACP profile slots here and Speaker is the intended default. Fix: hydra-audio set-sink NEED_Speaker" ;;
-"") warn audio "no default sink — hydra-audio set-sink NEED_Speaker" ;;
+	warn audio "default sink is Headphones — Speaker and Headphones are mutually exclusive ACP profile slots here and Speaker is the intended default. Fix: valkyx-audio set-sink NEED_Speaker" ;;
+"") warn audio "no default sink — valkyx-audio set-sink NEED_Speaker" ;;
 *) info audio "default sink: $sink" ;;
 esac
 
@@ -203,13 +203,13 @@ if [ -n "$top" ]; then
 	[ "$n" -gt 0 ] && warn drift "$n uncommitted change(s) — 'git -C $top diff' to review" \
 		|| ok drift "working tree clean"
 else
-	for d in "$QS_DIR" "$HOME/.config/hypr" "$HOME/.config/hydra" "$bin"; do
+	for d in "$QS_DIR" "$HOME/.config/hypr" "$HOME/.config/valkyx" "$bin"; do
 		warn "git:$d" "not version controlled — no diff, no verify, no rollback"
 	done
 fi
-nb2=$(ls "$HOME/backups/hydra" 2>/dev/null | wc -l)
-[ "${nb2:-0}" -gt 0 ] && info backups "$nb2 tarball(s) in ~/backups/hydra" \
-	|| warn backups "no backups in ~/backups/hydra — run hydra-backup"
+nb2=$(ls "$HOME/backups/valkyx" 2>/dev/null | wc -l)
+[ "${nb2:-0}" -gt 0 ] && info backups "$nb2 tarball(s) in ~/backups/valkyx" \
+	|| warn backups "no backups in ~/backups/valkyx — run valkyx-backup"
 
 # ── summary ───────────────────────────────────────────────────────────────────
 printf '\n\033[1m%s\033[0m\n' "────────────────────────────────────────────────────────"

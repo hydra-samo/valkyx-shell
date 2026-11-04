@@ -1,5 +1,5 @@
 pragma Singleton
-// HYDRA context engine — workspace+app → UI behavioral rules.
+// VALKYX context engine — workspace+app → UI behavioral rules.
 // Components bind to rule() instead of hardcoded context checks.
 import QtQuick
 
@@ -15,7 +15,7 @@ QtObject {
     // Default fallback for unknown contexts
     readonly property var _default: ({ dock: true, blur: true, notifications: true, hud: true, osd: true, sidebar: true })
 
-    // Look up a rule for the given context. Usage: HydraContext.rule(ctx, "dock")
+    // Look up a rule for the given context. Usage: ValkyxContext.rule(ctx, "dock")
     function rule(ctx, key) {
         var r = rules[ctx]
         if (!r) r = _default

@@ -2,5 +2,5 @@
 Type=Application
 Name=Reveal in File Manager
 NoDisplay=true
-Exec=$HOME/.local/bin/hydra-reveal %U
+Exec=$HOME/.local/bin/valkyx-reveal %U
 MimeType=inode/directory;

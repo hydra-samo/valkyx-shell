@@ -1,11 +1,11 @@
 -- ============================================================
--- HYDRA WORKSPACE — Hyprland Lua config (united single file)
+-- VALKYX WORKSPACE — Hyprland Lua config (united single file)
 -- CachyOS · Hyprland 0.57 · brand accent #00A86B
 -- ============================================================
 
 -- KEYBOARD
 -- Two xkb layouts, so the *compositor* owns the input language: every app
--- follows, native + XWayland. hydra-im toggles this by re-applying kb_layout
+-- follows, native + XWayland. valkyx-im toggles this by re-applying kb_layout
 -- (hyprctl rebuilds every keymap live) — fcitx's own hotkeys never fire here.
 hl.config({ input = { kb_layout = "us,ara", kb_variant = "", kb_model = "", kb_options = "", kb_rules = "" } })
 
@@ -19,7 +19,7 @@ hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 hl.env("XCURSOR_THEME", "Maya-Green")
 hl.env("XCURSOR_SIZE", "34")
--- input method (fcitx5, see hydra-im.service) — without these Qt/GTK apps
+-- input method (fcitx5, see valkyx-im.service) — without these Qt/GTK apps
 -- never create an fcitx input context, so no Arabic, no candidate window
 hl.env("QT_IM_MODULE", "fcitx")
 hl.env("GTK_IM_MODULE", "fcitx")
@@ -35,7 +35,7 @@ hl.config({
         -- kb_layout is deliberately NOT set here: the KEYBOARD block above
         -- declares "us,ara". A second hl.config with kb_layout overwrote the
         -- list with a single "us", so the second layout only ever existed
-        -- because of `hydra-im restore`. Do not re-add it.
+        -- because of `valkyx-im restore`. Do not re-add it.
         follow_mouse = 1,
         sensitivity  = 0,
         touchpad = {
@@ -81,24 +81,24 @@ hl.bind("SUPER_R", hl.dsp.submap("reset"))
 -- never what you meant. Super+Shift+Return keeps the launch-or-focus
 -- behaviour for when you do want to jump back to the existing one.
 hl.bind(mod .. " + Return",         hl.dsp.exec_cmd("setsid -f kitty"))
-hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd("hydra-focus kitty kitty"))
-hl.bind(mod .. " + B",           hl.dsp.exec_cmd("hydra-focus chrome helium-browser"))
-hl.bind(mod .. " + E",           hl.dsp.exec_cmd("hydra-focus thunar thunar"))
-hl.bind(mod .. " + C",           hl.dsp.exec_cmd("hydra-focus code-oss code-oss"))
-hl.bind(mod .. " + Space",       hl.dsp.exec_cmd("qs -c hydra ipc call launcher toggle"))
-hl.bind(mod .. " + S",           hl.dsp.exec_cmd("qs -c hydra ipc call panel toggle"))
-hl.bind(mod .. " + A",           hl.dsp.exec_cmd("qs -c hydra ipc call panelLeft toggle"))
-hl.bind(mod .. " + I",           hl.dsp.exec_cmd("qs -c hydra ipc call settings toggle"))
-hl.bind(mod .. " + D",           hl.dsp.exec_cmd("$HOME/.local/bin/hydra-holo-window"))
-hl.bind(mod .. " + CTRL + D",     hl.dsp.exec_cmd("$HOME/.local/bin/hydra-holo-window"))
--- input language (xkb layout, via hydra-im). Two paths, both on keys a 60%
+hl.bind(mod .. " + SHIFT + Return", hl.dsp.exec_cmd("valkyx-focus kitty kitty"))
+hl.bind(mod .. " + B",           hl.dsp.exec_cmd("valkyx-focus chrome helium-browser"))
+hl.bind(mod .. " + E",           hl.dsp.exec_cmd("valkyx-focus thunar thunar"))
+hl.bind(mod .. " + C",           hl.dsp.exec_cmd("valkyx-focus code-oss code-oss"))
+hl.bind(mod .. " + Space",       hl.dsp.exec_cmd("qs -c valkyx ipc call launcher toggle"))
+hl.bind(mod .. " + S",           hl.dsp.exec_cmd("qs -c valkyx ipc call panel toggle"))
+hl.bind(mod .. " + A",           hl.dsp.exec_cmd("qs -c valkyx ipc call panelLeft toggle"))
+hl.bind(mod .. " + I",           hl.dsp.exec_cmd("qs -c valkyx ipc call settings toggle"))
+hl.bind(mod .. " + D",           hl.dsp.exec_cmd("$HOME/.local/bin/valkyx-holo-window"))
+hl.bind(mod .. " + CTRL + D",     hl.dsp.exec_cmd("$HOME/.local/bin/valkyx-holo-window"))
+-- input language (xkb layout, via valkyx-im). Two paths, both on keys a 60%
 -- board actually has. Scroll_Lock is the primary: one dead key repurposed, no
 -- chord, one tap — nothing to hold in the right order. Ctrl+Space is the
 -- universal OS/IME standard (Windows/Android/every DE) for muscle memory.
 -- The old Super+SHIFT+Space was removed: it trained mashing, and mashing is
 -- what the pre-flock race turned into 1000 presses per switch.
-hl.bind("Scroll_Lock",      hl.dsp.exec_cmd("hydra-im toggle"))
-hl.bind("CTRL + Space",     hl.dsp.exec_cmd("hydra-im toggle"))
+hl.bind("Scroll_Lock",      hl.dsp.exec_cmd("valkyx-im toggle"))
+hl.bind("CTRL + Space",     hl.dsp.exec_cmd("valkyx-im toggle"))
 
 -- ---- window control ----
 hl.bind(mod .. " + Q",           hl.dsp.window.close())
@@ -114,8 +114,8 @@ hl.bind(mod .. " + ALT + H",            hl.dsp.window.move({ into_group = "l" })
 hl.bind(mod .. " + ALT + J",            hl.dsp.window.move({ into_group = "d" }))
 hl.bind(mod .. " + ALT + K",            hl.dsp.window.move({ into_group = "u" }))
 hl.bind(mod .. " + ALT + L",            hl.dsp.window.move({ into_group = "r" }))
-hl.bind(mod .. " + ALT + Tab",          hl.dsp.exec_cmd("hydra-alt-tab next"),  { repeating = true })
-hl.bind(mod .. " + ALT + SHIFT + Tab",  hl.dsp.exec_cmd("hydra-alt-tab prev"), { repeating = true })
+hl.bind(mod .. " + ALT + Tab",          hl.dsp.exec_cmd("valkyx-alt-tab next"),  { repeating = true })
+hl.bind(mod .. " + ALT + SHIFT + Tab",  hl.dsp.exec_cmd("valkyx-alt-tab prev"), { repeating = true })
 
 -- ---- focus (vim home row) ----
 hl.bind(mod .. " + H",           hl.dsp.focus({ direction = "left" }))
@@ -182,20 +182,20 @@ for _, a in ipairs(shift_aliases) do
 end
 
 -- prev / next workspace (comma / period) — Ctrl variant carries the window
-hl.bind(mod .. " + comma",        hl.dsp.exec_cmd("hydra-ws prev"),     { repeating = true })
-hl.bind(mod .. " + period",       hl.dsp.exec_cmd("hydra-ws next"),     { repeating = true })
-hl.bind(mod .. " + CTRL + comma", hl.dsp.exec_cmd("hydra-ws prev move"))
-hl.bind(mod .. " + CTRL + period",hl.dsp.exec_cmd("hydra-ws next move"))
-hl.bind("SUPER + Prior", hl.dsp.exec_cmd("hydra-ws prev"))
-hl.bind("SUPER + Next",  hl.dsp.exec_cmd("hydra-ws next"))
+hl.bind(mod .. " + comma",        hl.dsp.exec_cmd("valkyx-ws prev"),     { repeating = true })
+hl.bind(mod .. " + period",       hl.dsp.exec_cmd("valkyx-ws next"),     { repeating = true })
+hl.bind(mod .. " + CTRL + comma", hl.dsp.exec_cmd("valkyx-ws prev move"))
+hl.bind(mod .. " + CTRL + period",hl.dsp.exec_cmd("valkyx-ws next move"))
+hl.bind("SUPER + Prior", hl.dsp.exec_cmd("valkyx-ws prev"))
+hl.bind("SUPER + Next",  hl.dsp.exec_cmd("valkyx-ws next"))
 
 -- ---- alt-tab: most-recent window cycle ----
 -- Was two hl.bind on the same key (cyclenext + bringactivetotop) to fake a
 -- chain, which Hyprland does not do. bringactivetotop has no Lua API and is
 -- a no-op now anyway — focusing raises the window. One bind each, repeating so
 -- holding Alt+Tab walks the stack like every other DE.
-hl.bind("ALT + Tab",         hl.dsp.exec_cmd("hydra-alt-tab next"),  { repeating = true })
-hl.bind("ALT + SHIFT + Tab", hl.dsp.exec_cmd("hydra-alt-tab prev"), { repeating = true })
+hl.bind("ALT + Tab",         hl.dsp.exec_cmd("valkyx-alt-tab next"),  { repeating = true })
+hl.bind("ALT + SHIFT + Tab", hl.dsp.exec_cmd("valkyx-alt-tab prev"), { repeating = true })
 
 -- ---- volume (U/D/M = up/down/mute) ----
 hl.bind(mod .. " + SHIFT + U", hl.dsp.exec_cmd("pamixer -i 5"),  { repeating = true })
@@ -223,29 +223,29 @@ hl.bind("XF86AudioPause",    hl.dsp.exec_cmd("playerctl play-pause"))
 hl.bind("XF86AudioNext",     hl.dsp.exec_cmd("playerctl next"))
 
 -- ---- screenshots (no Print key on 60%) ----
-hl.bind(mod .. " + CTRL + P",                hl.dsp.exec_cmd("hydra-screenshot region"))
-hl.bind(mod .. " + CTRL + SHIFT + P",        hl.dsp.exec_cmd("hydra-screenshot full"))
-hl.bind("Print",                             hl.dsp.exec_cmd("hydra-screenshot full"))
-hl.bind(mod .. " + Print",                   hl.dsp.exec_cmd("hydra-screenshot region"))
+hl.bind(mod .. " + CTRL + P",                hl.dsp.exec_cmd("valkyx-screenshot region"))
+hl.bind(mod .. " + CTRL + SHIFT + P",        hl.dsp.exec_cmd("valkyx-screenshot full"))
+hl.bind("Print",                             hl.dsp.exec_cmd("valkyx-screenshot full"))
+hl.bind(mod .. " + Print",                   hl.dsp.exec_cmd("valkyx-screenshot region"))
 
 -- ---- screen recording (toggle) ----
-hl.bind(mod .. " + SHIFT + R",               hl.dsp.exec_cmd("hydra-record"))
+hl.bind(mod .. " + SHIFT + R",               hl.dsp.exec_cmd("valkyx-record"))
 
 -- ---- game mode (toggle) ----
-hl.bind(mod .. " + SHIFT + G",               hl.dsp.exec_cmd("hydra-gamemode"))
+hl.bind(mod .. " + SHIFT + G",               hl.dsp.exec_cmd("valkyx-gamemode"))
 
 -- ---- game picker (launcher games section) ----
-hl.bind(mod .. " + CTRL + G",                hl.dsp.exec_cmd("qs -c hydra ipc call launcher open game"))
+hl.bind(mod .. " + CTRL + G",                hl.dsp.exec_cmd("qs -c valkyx ipc call launcher open game"))
 
 -- ---- emoji picker ----
-hl.bind(mod .. " + SHIFT + E",               hl.dsp.exec_cmd("hydra-emoji"))
+hl.bind(mod .. " + SHIFT + E",               hl.dsp.exec_cmd("valkyx-emoji"))
 
 -- ---- color picker ----
-hl.bind(mod .. " + SHIFT + C",               hl.dsp.exec_cmd("hydra-color"))
+hl.bind(mod .. " + SHIFT + C",               hl.dsp.exec_cmd("valkyx-color"))
 
 -- ---- picture-in-picture (toggle) ----
 -- pin / center / picture-in-picture.
--- These were shell scripts (hydra-pin / hydra-center / hydra-pip) that read
+-- These were shell scripts (valkyx-pin / valkyx-center / valkyx-pip) that read
 -- window state with `hyprctl activewindow -j` — which works — and then called
 -- `hyprctl dispatch` to act on it, which is broken in 0.56.2 and did nothing
 -- while reporting success. The state-reading part was fine; the writing part
@@ -275,44 +275,44 @@ hl.bind(mod .. " + SHIFT + O", hl.dsp.window.pin())
 hl.bind(mod .. " + SHIFT + N",               hl.dsp.exec_cmd("makoctl invoke"))
 
 -- ---- cycle accent color (theme switcher) ----
-hl.bind(mod .. " + SHIFT + T",               hl.dsp.exec_cmd("qs -c hydra ipc call theme cycle"))
+hl.bind(mod .. " + SHIFT + T",               hl.dsp.exec_cmd("qs -c valkyx ipc call theme cycle"))
 
 -- ---- lock ----
-hl.bind(mod .. " + CTRL + ALT + L",          hl.dsp.exec_cmd("hydra-lock"))
+hl.bind(mod .. " + CTRL + ALT + L",          hl.dsp.exec_cmd("valkyx-lock"))
 
 -- ---- power menu (Super+X direct, and the physical power key) ----
-hl.bind(mod .. " + X",              hl.dsp.exec_cmd("qs -c hydra ipc call power toggle"))
-hl.bind("XF86PowerOff",             hl.dsp.exec_cmd("qs -c hydra ipc call power toggle"))
+hl.bind(mod .. " + X",              hl.dsp.exec_cmd("qs -c valkyx ipc call power toggle"))
+hl.bind("XF86PowerOff",             hl.dsp.exec_cmd("qs -c valkyx ipc call power toggle"))
 
 -- ---- keybinds reference (Super+Shift+K; K itself = focus up) ----
-hl.bind(mod .. " + SHIFT + K", hl.dsp.exec_cmd("qs -c hydra ipc call settings openKeyboard"))
+hl.bind(mod .. " + SHIFT + K", hl.dsp.exec_cmd("qs -c valkyx ipc call settings openKeyboard"))
 
 -- ---- network editor (was SYSTEM submap N) ----
 hl.bind(mod .. " + N",     hl.dsp.exec_cmd("nm-connection-editor"))
 
 -- ---- project picker ----
-hl.bind(mod .. " + P",                       hl.dsp.exec_cmd("hydra-project"))
+hl.bind(mod .. " + P",                       hl.dsp.exec_cmd("valkyx-project"))
 
 -- ---- clipboard manager ----
-hl.bind(mod .. " + SHIFT + V",   hl.dsp.exec_cmd("hydra-clipboard"))
+hl.bind(mod .. " + SHIFT + V",   hl.dsp.exec_cmd("valkyx-clipboard"))
 
 -- ---- Quake scratchpad console (dropdown terminal) ----
 hl.bind(mod .. " + grave",              hl.dsp.workspace.toggle_special("scratchpad"))
 hl.bind(mod .. " + SHIFT + grave",      hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
 
 -- ---- wallpaper/media selector (skew deck + grid) ----
-hl.bind(mod .. " + W",           hl.dsp.exec_cmd("qs -c hydra ipc call wallpaper toggle"))
+hl.bind(mod .. " + W",           hl.dsp.exec_cmd("qs -c valkyx ipc call wallpaper toggle"))
 
 -- ---- welcome panel: keybinds, theme, language, on/off switches ----
-hl.bind(mod .. " + SHIFT + W",   hl.dsp.exec_cmd("qs -c hydra ipc call welcome toggle"))
+hl.bind(mod .. " + SHIFT + W",   hl.dsp.exec_cmd("qs -c valkyx ipc call welcome toggle"))
 
 -- ---- mouse: SUPER+RMB drag = resize window ----
 hl.bind("SUPER + mouse:272", function()
     hl.dsp.window.resize()
 end)
 
--- ---- backup HYDRA configs ----
-hl.bind(mod .. " + SHIFT + B",               hl.dsp.exec_cmd("hydra-backup"))
+-- ---- backup VALKYX configs ----
+hl.bind(mod .. " + SHIFT + B",               hl.dsp.exec_cmd("valkyx-backup"))
 
 -- ============================================================
 -- SUBMAPS
@@ -358,7 +358,7 @@ end
 -- ============================================================
 
 -- LOOK & BEHAVIOR — quiet creative workstation
--- Palette derived from hydra-wallpaper (#0a1210 base).
+-- Palette derived from valkyx-wallpaper (#0a1210 base).
 -- #00A86B appears ONLY here (focused border) and in UI accents.
 hl.config({
     general = {
@@ -423,15 +423,15 @@ hl.config({
 
 -- ANIMATIONS — cinematic but instant
 -- Brand easing token (same curve as the PORTFOLIO site).
-hl.curve("hydraOut", { type = "bezier", points = { { 0.22, 1 }, { 0.36, 1 } } })
+hl.curve("valkyxOut", { type = "bezier", points = { { 0.22, 1 }, { 0.36, 1 } } })
 
-hl.animation({ leaf = "windows",       enabled = true,  speed = 2, bezier = "hydraOut", style = "slide" })
-hl.animation({ leaf = "windowsOut",    enabled = true,  speed = 2, bezier = "hydraOut", style = "slide" })
-hl.animation({ leaf = "fadeIn",        enabled = true,  speed = 1, bezier = "hydraOut" })
-hl.animation({ leaf = "fadeOut",       enabled = true,  speed = 1, bezier = "hydraOut" })
-hl.animation({ leaf = "fadeSwitch",    enabled = true,  speed = 1, bezier = "hydraOut" })
-hl.animation({ leaf = "fadeDim",       enabled = true,  speed = 1, bezier = "hydraOut" })
-hl.animation({ leaf = "workspaces",    enabled = true,  speed = 3, bezier = "hydraOut", style = "slide" })
+hl.animation({ leaf = "windows",       enabled = true,  speed = 2, bezier = "valkyxOut", style = "slide" })
+hl.animation({ leaf = "windowsOut",    enabled = true,  speed = 2, bezier = "valkyxOut", style = "slide" })
+hl.animation({ leaf = "fadeIn",        enabled = true,  speed = 1, bezier = "valkyxOut" })
+hl.animation({ leaf = "fadeOut",       enabled = true,  speed = 1, bezier = "valkyxOut" })
+hl.animation({ leaf = "fadeSwitch",    enabled = true,  speed = 1, bezier = "valkyxOut" })
+hl.animation({ leaf = "fadeDim",       enabled = true,  speed = 1, bezier = "valkyxOut" })
+hl.animation({ leaf = "workspaces",    enabled = true,  speed = 3, bezier = "valkyxOut", style = "slide" })
 hl.animation({ leaf = "border",        enabled = true,  speed = 1, bezier = "default" })
 hl.animation({ leaf = "borderangle",   enabled = false })
 hl.animation({ leaf = "layers",        enabled = false })
@@ -441,10 +441,10 @@ hl.animation({ leaf = "layers",        enabled = false })
 
 -- WINDOW + LAYER RULES
 
--- Hydra Studio → STUDIO workspace
+-- Valkyx Studio → STUDIO workspace
 hl.window_rule({
-    name      = "hydra-studio",
-    match     = { class = "^(HYDRAStudioSite|HYDRAStudioDash)$" },
+    name      = "valkyx-studio",
+    match     = { class = "^(VALKYXStudioSite|VALKYXStudioDash)$" },
     workspace = "name:01 studio",
 })
 
@@ -468,28 +468,28 @@ hl.window_rule({
     size  = "900 600",
 })
 
--- Settings floats (HydraSettings panel)
+-- Settings floats (ValkyxSettings panel)
 hl.window_rule({
     name  = "float-settings",
-    match = { class = "^(HydraSettings)$" },
+    match = { class = "^(ValkyxSettings)$" },
     float = true,
 })
 
 hl.window_rule({
     name = "size-settings",
-    match = { class = "^(HydraSettings)$" },
+    match = { class = "^(ValkyxSettings)$" },
     size  = "960 640",
 })
 
--- HYDRA GAMES floats at a fixed size (it is a tool, not a tiled doc window)
+-- VALKYX GAMES floats at a fixed size (it is a tool, not a tiled doc window)
 hl.window_rule({
-    name  = "float-hydra-games",
-    match = { class = "hydra-games" },
+    name  = "float-valkyx-games",
+    match = { class = "valkyx-games" },
     float = true,
 })
 hl.window_rule({
-    name = "size-hydra-games",
-    match = { class = "hydra-games" },
+    name = "size-valkyx-games",
+    match = { class = "valkyx-games" },
     size  = "1120 680",
 })
 
@@ -629,8 +629,8 @@ hl.on("window.destroy",          recount)
 hl.on("window.move_to_workspace", recount)
 hl.on("window.update_rules",     recount)
 
-hl.animation({ leaf = "specialWorkspaceIn",  enabled = true, speed = 3, bezier = "hydraOut", style = "slide top" })
-hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 2, bezier = "hydraOut", style = "slide bottom" })
+hl.animation({ leaf = "specialWorkspaceIn",  enabled = true, speed = 3, bezier = "valkyxOut", style = "slide top" })
+hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 2, bezier = "valkyxOut", style = "slide bottom" })
 -- ============================================================
 -- SECTION: AUTOSTART
 -- ============================================================
@@ -643,11 +643,11 @@ hl.on("hyprland.start", function()
 
     -- wallpaper (kind-dispatch: image → awww still instant; gif/video → mpvpaper over a
     -- blanked awww so the previous still never peeks under the video or flashes back)
-    -- ~/.cache/hydra-wallpaper.{kind,path} written by HydraState.setWallpaper.
-    hl.exec_cmd("sleep 0.4 && sh -c 'K=$(cat ~/.cache/hydra-wallpaper.kind 2>/dev/null || echo image); P=$(cat ~/.cache/hydra-wallpaper.path 2>/dev/null); if [ \"$K\" = image ]; then awww img --transition-type none \"${P:-$HOME/.local/share/backgrounds/hydra-wallpaper.svg}\"; else awww clear 2>/dev/null; [ -n \"$P\" ] && mpvpaper -o \"loop=inf no-audio no-osc\" eDP-1 \"$P\" >/dev/null 2>&1 & fi'")
+    -- ~/.cache/valkyx-wallpaper.{kind,path} written by ValkyxState.setWallpaper.
+    hl.exec_cmd("sleep 0.4 && sh -c 'K=$(cat ~/.cache/valkyx-wallpaper.kind 2>/dev/null || echo image); P=$(cat ~/.cache/valkyx-wallpaper.path 2>/dev/null); if [ \"$K\" = image ]; then awww img --transition-type none \"${P:-$HOME/.local/share/backgrounds/valkyx-wallpaper.svg}\"; else awww clear 2>/dev/null; [ -n \"$P\" ] && mpvpaper -o \"loop=inf no-audio no-osc\" eDP-1 \"$P\" >/dev/null 2>&1 & fi'")
 
     -- shell chrome
-    hl.exec_cmd("qs -c hydra")
+    hl.exec_cmd("qs -c valkyx")
     hl.exec_cmd("mako")
     hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
     -- nm-applet removed: shell owns wifi UI (nmcli) + connection toast; its GTK
@@ -660,4 +660,4 @@ hl.on("hyprland.start", function()
 end)
 -- Re-apply the last chosen input language: a config (re)load rebuilds every
 -- keymap from input.kb_layout above, which would snap the layout back to "us".
-hl.exec_cmd("$HOME/.local/bin/hydra-im restore")
+hl.exec_cmd("$HOME/.local/bin/valkyx-im restore")

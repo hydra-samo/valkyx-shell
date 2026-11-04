@@ -16,26 +16,26 @@ __pycache__/
 .venv-tts/
 
 # Backups made by the installer
-*.hydra-bak-*/
+*.valkyx-bak-*/
 
 # ── Personal data (never commit) ──────────────────────────────────────────
 # Personal avatar / profile picture — replace with your own at
-# ~/.config/hydra/avatar-circle.png (or avatar-placeholder.svg fallback)
-home/.config/hydra/avatar-circle.png
-home/.config/hydra/avatar-*.png
-home/.config/hydra/avatar-*.jpg
-home/.config/hydra/*.face*
+# ~/.config/valkyx/avatar-circle.png (or avatar-placeholder.svg fallback)
+home/.config/valkyx/avatar-circle.png
+home/.config/valkyx/avatar-*.png
+home/.config/valkyx/avatar-*.jpg
+home/.config/valkyx/*.face*
 
 # Personal wallpaper — replace with your own at
-# ~/.local/share/backgrounds/hydra-wallpaper.png
-home/.local/share/backgrounds/hydra-wallpaper.png
-home/.local/share/backgrounds/hydra-wallpaper.jpg
-home/.local/share/backgrounds/hydra-wallpaper.jpeg
+# ~/.local/share/backgrounds/valkyx-wallpaper.png
+home/.local/share/backgrounds/valkyx-wallpaper.png
+home/.local/share/backgrounds/valkyx-wallpaper.jpg
+home/.local/share/backgrounds/valkyx-wallpaper.jpeg
 
 # Personal state / usage data (contains greetOnce, fontScale, etc.)
-home/.config/hydra/state.json
-home/.config/hydra/state.dev.json
-home/.config/hydra/power-profile
+home/.config/valkyx/state.json
+home/.config/valkyx/state.dev.json
+home/.config/valkyx/power-profile
 
 # ── Secrets / environment (never commit) ───────────────────────────────────
 .env
@@ -50,10 +50,10 @@ home/.config/hydra/power-profile
 *password*
 
 # Personal remote config (may contain endpoints/tokens)
-home/.config/hydra/remote.json
+home/.config/valkyx/remote.json
 
 # Cache / runtime data
 home/.cache/
-home/.local/share/hydra-memory/
-home/.local/share/hydra-automata/
-home/.local/share/hydra-console/
+home/.local/share/valkyx-memory/
+home/.local/share/valkyx-automata/
+home/.local/share/valkyx-console/

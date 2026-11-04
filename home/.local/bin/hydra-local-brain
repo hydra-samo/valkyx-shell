@@ -1,5 +1,5 @@
 #!/bin/sh
-# hydra-local-brain — uncensored 2B multimodal brain on the MX450 (Vulkan, full GPU offload).
+# valkyx-local-brain — uncensored 2B multimodal brain on the MX450 (Vulkan, full GPU offload).
 # Model: noctrex/Huihui-Qwen3-VL-2B-Instruct-abliterated-GGUF Q4_K_M (uncensored, vision-capable)
 # llama.cpp's CUDA builds need libcudart 11/12 (this box has CUDA 13), so we use the
 # Vulkan backend pinned to the NVIDIA device — same GPU, full offload, works today.

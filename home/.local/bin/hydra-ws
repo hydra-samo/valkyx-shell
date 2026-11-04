@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-ws <next|prev> [move] — deterministic prev/next over the canonical six.
+# valkyx-ws <next|prev> [move] — deterministic prev/next over the canonical six.
 # (Hyprland's m-1/m+1 misbehaves on sparse negative-ID named workspaces.)
 set -euo pipefail
 
@@ -22,9 +22,9 @@ done
 # If not on a canonical workspace, go to the first one
 if [ "$idx" -lt 0 ]; then
   if [ "$dir" = next ]; then
-    hydra-dispatch workspace "name:${list[0]}"
+    valkyx-dispatch workspace "name:${list[0]}"
   else
-    hydra-dispatch workspace "name:${list[$((n-1))]}"
+    valkyx-dispatch workspace "name:${list[$((n-1))]}"
   fi
   exit 0
 fi
@@ -33,7 +33,7 @@ if [ "$dir" = next ]; then idx=$(( (idx + 1) % n )); else idx=$(( (idx + n - 1) 
 target="name:${list[$idx]}"
 
 if [ "$action" = move ]; then
-  hydra-dispatch movetoworkspace "$target"
+  valkyx-dispatch movetoworkspace "$target"
 else
-  hydra-dispatch workspace "$target"
+  valkyx-dispatch workspace "$target"
 fi

@@ -1,5 +1,5 @@
 #!/bin/bash
-# hydra-alt-tab — MRU window cycling, the one thing Hyprland 0.56.2 cannot do.
+# valkyx-alt-tab — MRU window cycling, the one thing Hyprland 0.56.2 cannot do.
 #
 # Why this exists: hl.dsp.group.next()/group.prev() are silent no-ops on 0.56.2,
 # and the stock `hyprctl dispatch focuswindow last` string form is rejected
@@ -9,7 +9,7 @@
 #
 # NOTE the `address:` prefix — a bare "0x..." is "window not found".
 #
-# Usage: hydra-alt-tab [next|prev]      (default: next)
+# Usage: valkyx-alt-tab [next|prev]      (default: next)
 
 set -uo pipefail
 dir="${1:-next}"

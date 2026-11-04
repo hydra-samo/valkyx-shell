@@ -1,4 +1,4 @@
-// HYDRA OSD — right-edge vertical pill (Caelestia / smart-TV style).
+// VALKYX OSD — right-edge vertical pill (Caelestia / smart-TV style).
 // Shows volume / brightness / mic / media as a capsule with an accent fill
 // rising from the bottom; scroll over it to change the value it represents.
 import Quickshell
@@ -9,10 +9,10 @@ PanelWindow {
     id: osd
     // A mapped layershell surface keeps the pointer, so the root visible must
     // follow the open state (never pinned to true).
-    visible: HydraState.osdMode !== ""
-    focusable: HydraState.osdMode !== ""
+    visible: ValkyxState.osdMode !== ""
+    focusable: ValkyxState.osdMode !== ""
     anchors { right: true; top: true; bottom: true }
-    margins { right: HydraMetrics.l }
+    margins { right: ValkyxMetrics.l }
     color: "transparent"
     exclusiveZone: -1
     aboveWindows: true
@@ -23,30 +23,30 @@ PanelWindow {
     readonly property real barW: 6
 
     readonly property string glyph: ({
-        "vol":   HydraState.volPct === 0 ? "\uDB81\uDD81" : HydraState.volPct < 33 ? "\uDB81\uDD7F" : HydraState.volPct < 66 ? "\uDB81\uDD80" : "\uDB81\uDD7E",
+        "vol":   ValkyxState.volPct === 0 ? "\uDB81\uDD81" : ValkyxState.volPct < 33 ? "\uDB81\uDD7F" : ValkyxState.volPct < 66 ? "\uDB81\uDD80" : "\uDB81\uDD7E",
         "bri":   "\uDB81\uDDA8",
-        "mic":   HydraState.micMuted ? "\uDB80\uDF6D" : "\uDB80\uDF6C",
+        "mic":   ValkyxState.micMuted ? "\uDB80\uDF6D" : "\uDB80\uDF6C",
         "media": "\uDB81\uDF5A"
-    }[HydraState.osdMode] || "")
+    }[ValkyxState.osdMode] || "")
     readonly property string label: ({
-        "vol":   Math.round(HydraState.volPct) + "%",
-        "bri":   Math.round(HydraState.briPct) + "%",
-        "mic":   HydraState.micMuted ? "Muted" : "Live",
+        "vol":   Math.round(ValkyxState.volPct) + "%",
+        "bri":   Math.round(ValkyxState.briPct) + "%",
+        "mic":   ValkyxState.micMuted ? "Muted" : "Live",
         "media": ""
-    }[HydraState.osdMode] || "")
+    }[ValkyxState.osdMode] || "")
     // 0..1 fill. mic/media have no level, so they read as full/empty.
     // "vol" MUST be an explicit branch: falling through to the mic default
     // pinned the volume pill at 100% no matter what the real value was.
-    readonly property real pct: HydraState.osdMode === "vol" ? HydraState.volPct / 100
-                                  : HydraState.osdMode === "bri" ? HydraState.briPct / 100
-                                  : HydraState.osdMode === "media" ? 1
-                                  : HydraState.micMuted ? 0 : 1
+    readonly property real pct: ValkyxState.osdMode === "vol" ? ValkyxState.volPct / 100
+                                  : ValkyxState.osdMode === "bri" ? ValkyxState.briPct / 100
+                                  : ValkyxState.osdMode === "media" ? 1
+                                  : ValkyxState.micMuted ? 0 : 1
 
     function nudge(dir) {
-        if (HydraState.osdMode === "vol")
-            HydraState.setVolume(Math.max(0, Math.min(100, HydraState.volPct + dir * 5)))
-        else if (HydraState.osdMode === "bri")
-            HydraState.setBrightness(Math.max(0, Math.min(100, HydraState.briPct + dir * 5)))
+        if (ValkyxState.osdMode === "vol")
+            ValkyxState.setVolume(Math.max(0, Math.min(100, ValkyxState.volPct + dir * 5)))
+        else if (ValkyxState.osdMode === "bri")
+            ValkyxState.setBrightness(Math.max(0, Math.min(100, ValkyxState.briPct + dir * 5)))
     }
 
     Rectangle {
@@ -56,8 +56,8 @@ PanelWindow {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         radius: width / 2            // capsule family: r == min(w,h)/2
-        color: HydraMaterials.osdGlass
-        border.color: HydraMaterials.border
+        color: ValkyxMaterials.osdGlass
+        border.color: ValkyxMaterials.border
         border.width: 1
 
         Text {
@@ -65,9 +65,9 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 14
             text: osd.glyph
-            color: HydraTheme.accent
-            font.family: HydraTheme.fontMono
-            font.pixelSize: Math.round(13 * HydraState.fontScale)
+            color: ValkyxTheme.accent
+            font.family: ValkyxTheme.fontMono
+            font.pixelSize: Math.round(13 * ValkyxState.fontScale)
         }
 
         // track
@@ -78,7 +78,7 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 38
             radius: width / 2
-            color: HydraTheme.tint(HydraTheme.muted, "33")
+            color: ValkyxTheme.tint(ValkyxTheme.muted, "33")
         }
 
         // accent fill, rises from the bottom
@@ -88,17 +88,17 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             y: track.y + track.height - height
             radius: width / 2
-            color: HydraTheme.accent
-            Behavior on height { NumberAnimation { duration: HydraMotion.fast; easing.type: Easing.OutCubic } }
+            color: ValkyxTheme.accent
+            Behavior on height { NumberAnimation { duration: ValkyxMotion.fast; easing.type: Easing.OutCubic } }
         }
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 140
             text: osd.label
-            color: HydraTheme.text
-            font.family: HydraTheme.fontUI
-            font.pixelSize: Math.round(11 * HydraState.fontScale)
+            color: ValkyxTheme.text
+            font.family: ValkyxTheme.fontUI
+            font.pixelSize: Math.round(11 * ValkyxState.fontScale)
         }
 
         MouseArea {
@@ -109,10 +109,10 @@ PanelWindow {
 
         // Fade the CONTENT, never the window: PanelWindow has no opacity and a
         // mapped-but-invisible layershell surface still holds the pointer, which
-        // is how the closed OSD ends up eating clicks (see HydraPowerMenu).
-        opacity: HydraState.osdMode !== "" ? 1 : 0
+        // is how the closed OSD ends up eating clicks (see ValkyxPowerMenu).
+        opacity: ValkyxState.osdMode !== "" ? 1 : 0
         Behavior on opacity {
-            NumberAnimation { duration: HydraMotion.base; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: ValkyxMotion.base; easing.type: Easing.OutCubic }
         }
     }
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# hydra-env — STATUS/RESTORE ONLY. The live shell is PERMANENT.
+# valkyx-env — STATUS/RESTORE ONLY. The live shell is PERMANENT.
 # The sandbox swap was removed (user decision Sep 13): flipping the live shell
 # out was a leak that could destroy it. Live configs are the real dirs under
 # ~/.config (the pristine copies live in ~/.config/.env-live/ as a last-resort
-# roster). The sandbox shell at ~/hydra-sandbox/shell is a git-backed,
-# standalone config (qs -c hydra-dev) for poking ONLY — it never swaps live.
+# roster). The sandbox shell at ~/valkyx-sandbox/shell is a git-backed,
+# standalone config (qs -c valkyx-dev) for poking ONLY — it never swaps live.
 #
 # Modes:  status | live
 #   status    show which mode the shell/hypr/gtk/mako configs are in
@@ -13,14 +13,14 @@
 #   toggle    DISABLED — removed Sep 13
 set -euo pipefail
 
-BASE=$HOME/hydra-sandbox
+BASE=$HOME/valkyx-sandbox
 SYS="$BASE/system"
 STASH="$HOME/.config/.env-live"
 SHELL_SRC="$BASE/shell"
 
 # the list of config trees we flip: cfg(relative-to-config) : sandbox target
 flip_specs() {
-  printf '%s\n' "quickshell/hydra|$SHELL_SRC"
+  printf '%s\n' "quickshell/valkyx|$SHELL_SRC"
   printf '%s\n' "hypr|$SYS/hypr"
   printf '%s\n' "gtk-3.0|$SYS/gtk-3.0"
   printf '%s\n' "gtk-4.0|$SYS/gtk-4.0"
@@ -39,7 +39,7 @@ reload_all() {
   for _ in {1..20}; do pgrep -f 'qs -c hydr[a]' >/dev/null || break; sleep 0.1; done
   pkill -9 -f 'qs -c hydr[a]' 2>/dev/null || true
   rm -f /run/user/1000/quickshell/by-id/*/instance.lock 2>/dev/null || true
-  setsid -f sh -c 'qs -c hydra > /tmp/qs.log 2>&1 < /dev/null &'
+  setsid -f sh -c 'qs -c valkyx > /tmp/qs.log 2>&1 < /dev/null &'
   hyprctl reload >/dev/null 2>&1 || true
   makoctl reload >/dev/null 2>&1 || true
   sleep 2
@@ -77,11 +77,11 @@ do_sandbox() {
   echo "=== ENTER SANDBOX ==="
   while IFS='|' read -r cfg sandx; do flip_cfg "$cfg" "$sandx"; done < <(flip_specs)
   # keep the state-isolation patch on the sandbox shell copy (sync may overwrite it)
-  if [ -f "$SHELL_SRC/core/HydraState.qml" ]; then
-    sed -i 's#_persistPath: "$HOME/.config/hydra/state.json"#_persistPath: "$HOME/.config/hydra/state.dev.json"#' "$SHELL_SRC/core/HydraState.qml"
+  if [ -f "$SHELL_SRC/core/ValkyxState.qml" ]; then
+    sed -i 's#_persistPath: "$HOME/.config/valkyx/state.json"#_persistPath: "$HOME/.config/valkyx/state.dev.json"#' "$SHELL_SRC/core/ValkyxState.qml"
   fi
   reload_all
-  echo "sandbox: shell + hypr + gtk + mako now from ~/hydra-sandbox. State -> state.dev.json."
+  echo "sandbox: shell + hypr + gtk + mako now from ~/valkyx-sandbox. State -> state.dev.json."
 }
 
 do_live() {
@@ -106,7 +106,7 @@ case "${1:-}" in
   live) do_live ;;
   sandbox|toggle)
     echo "DISABLED: the live<->sandbox swap was removed (Sep 13). The live shell" >&2
-    echo "is permanent. Sandbox shell is a standalone config: qs -c hydra-dev" >&2
+    echo "is permanent. Sandbox shell is a standalone config: qs -c valkyx-dev" >&2
     echo "(runs alongside live with state.dev.json; never replaces it)." >&2
     exit 1
     ;;

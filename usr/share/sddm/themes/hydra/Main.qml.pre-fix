@@ -30,7 +30,7 @@ Rectangle {
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: "HYDRA"
+            text: "VALKYX"
             color: "#00A86B"
             font.family: "Space Grotesk"
             font.pixelSize: 20

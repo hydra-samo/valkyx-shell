@@ -12,13 +12,13 @@ Flickable {
     Column {
         id: col
         width: parent.width
-        spacing: Core.HydraMetrics.l
+        spacing: Core.ValkyxMetrics.l
 
         // ── Section: Wallpaper ──
         // Full-width blurred hero of the applied wallpaper — ports iNiR's coverflow
         // backdrop (blurMax 64, blur 1.0, saturation 0.15 + dark scrim + vignette).
         // Clicking opens the full skew/grid selector (Super+W).
-        Comp.HydraSection { label: "WALLPAPER" }
+        Comp.ValkyxSection { label: "WALLPAPER" }
 
         Item {
             id: wpHero
@@ -32,12 +32,12 @@ Flickable {
             // binding (QML flagged a binding loop on _src). Resolve imperatively.
             property string _src: ""
             function refreshSrc() {
-                _src = Core.HydraState.activeMediaPath.length > 0
-                    ? Core.WallpaperStore.posterFor(Core.HydraState.activeMediaPath) : ""
+                _src = Core.ValkyxState.activeMediaPath.length > 0
+                    ? Core.WallpaperStore.posterFor(Core.ValkyxState.activeMediaPath) : ""
             }
             Component.onCompleted: refreshSrc()
             Connections {
-                target: Core.HydraState
+                target: Core.ValkyxState
                 function onActiveMediaPathChanged() { wpHero.refreshSrc() }
             }
 
@@ -61,7 +61,7 @@ Flickable {
                             Rectangle {
                                 x: wpHero.blurOverflow; y: wpHero.blurOverflow
                                 width: wpHero.width; height: wpHero.height
-                                radius: Core.HydraMetrics.radiusMd
+                                radius: Core.ValkyxMetrics.radiusMd
                                 color: "white"
                             }
                         }
@@ -80,7 +80,7 @@ Flickable {
             // dark scrim over the blur for label legibility
             Rectangle {
                 anchors.fill: parent
-                color: Core.HydraMaterials.surface0
+                color: Core.ValkyxMaterials.surface0
                 opacity: 0.45
             }
 
@@ -90,16 +90,16 @@ Flickable {
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "transparent" }
                     GradientStop { position: 0.65; color: "transparent" }
-                    GradientStop { position: 1.0; color: Core.HydraTheme.tint(Core.HydraTheme.bg, "66") }
+                    GradientStop { position: 1.0; color: Core.ValkyxTheme.tint(Core.ValkyxTheme.bg, "66") }
                 }
             }
 
             // 1px outline on the rounded mask edge
             Rectangle {
                 anchors.fill: parent
-                radius: Core.HydraMetrics.radiusMd
+                radius: Core.ValkyxMetrics.radiusMd
                 color: "transparent"
-                border.color: Core.HydraMaterials.border; border.width: 1
+                border.color: Core.ValkyxMaterials.border; border.width: 1
             }
 
             // icon-style affordance, nudged below center rather than dead-center
@@ -111,43 +111,43 @@ Flickable {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "\uDB80\uDEE9"
-                    color: Core.HydraTheme.text
-                    font.family: Core.HydraTheme.fontMono
-                    font.pixelSize: Math.round(18 * Core.HydraState.fontScale)
+                    color: Core.ValkyxTheme.text
+                    font.family: Core.ValkyxTheme.fontMono
+                    font.pixelSize: Math.round(18 * Core.ValkyxState.fontScale)
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Browse wallpapers"
-                    color: Core.HydraTheme.tint(Core.HydraTheme.text, "99")
-                    font.family: Core.HydraTheme.fontUI
-                    font.pixelSize: Math.round(10 * Core.HydraState.fontScale)
+                    color: Core.ValkyxTheme.tint(Core.ValkyxTheme.text, "99")
+                    font.family: Core.ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(10 * Core.ValkyxState.fontScale)
                 }
             }
 
             MouseArea {
                 anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                onClicked: Core.HydraState.wallpaperOpen = true
+                onClicked: Core.ValkyxState.wallpaperOpen = true
             }
         }
 
         // ── Section: Online (Wallhaven, SFW) ──
-        Comp.HydraSection { label: "ONLINE"; topPadding: 8 }
+        Comp.ValkyxSection { label: "ONLINE"; topPadding: 8 }
 
         Row {
             width: parent.width; spacing: 8
             Rectangle {
                 width: parent.width - 70; height: 30; radius: 6
-                color: Core.HydraMaterials.panelGlass; border.color: Core.HydraMaterials.border; border.width: 1
+                color: Core.ValkyxMaterials.panelGlass; border.color: Core.ValkyxMaterials.border; border.width: 1
                 TextInput {
                     id: searchInput
                     anchors.fill: parent; anchors.margins: 6
-                    color: Core.HydraTheme.text; selectionColor: Core.HydraTheme.accent
-                    font.family: Core.HydraTheme.fontUI; font.pixelSize: Math.round(11 * Core.HydraState.fontScale)
+                    color: Core.ValkyxTheme.text; selectionColor: Core.ValkyxTheme.accent
+                    font.family: Core.ValkyxTheme.fontUI; font.pixelSize: Math.round(11 * Core.ValkyxState.fontScale)
                     clip: true
                     property string placeholder: "Search wallpapers..."
                     Text {
                         visible: !searchInput.text && !searchInput.activeFocus
-                        text: searchInput.placeholder; color: Core.HydraTheme.muted
+                        text: searchInput.placeholder; color: Core.ValkyxTheme.muted
                         font: searchInput.font; anchors.verticalCenter: parent.verticalCenter
                     }
                     Keys.onReturnPressed: doSearch()
@@ -157,10 +157,10 @@ Flickable {
             }
             Rectangle {
                 width: 62; height: 30; radius: 6
-                color: Core.HydraTheme.accent
+                color: Core.ValkyxTheme.accent
                 Text {
                     anchors.centerIn: parent; text: "Search"
-                    color: "#fff"; font.family: Core.HydraTheme.fontUI; font.pixelSize: Math.round(10 * Core.HydraState.fontScale)
+                    color: "#fff"; font.family: Core.ValkyxTheme.fontUI; font.pixelSize: Math.round(10 * Core.ValkyxState.fontScale)
                 }
                 MouseArea {
                     anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -178,7 +178,7 @@ Flickable {
                     required property var modelData
                     width: 100; height: 64; radius: 8
                     color: "transparent"
-                    border.color: Core.HydraMaterials.border; border.width: 1
+                    border.color: Core.ValkyxMaterials.border; border.width: 1
                     Image {
                         anchors.fill: parent; anchors.margins: 2
                         source: modelData.thumb; fillMode: Image.PreserveAspectCrop
@@ -186,7 +186,7 @@ Flickable {
                     }
                     MouseArea {
                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: Core.HydraState.downloadAndSetWallpaper(modelData.full)
+                        onClicked: Core.ValkyxState.downloadAndSetWallpaper(modelData.full)
                     }
                 }
             }
@@ -199,11 +199,11 @@ Flickable {
             Rectangle {
                 visible: Core.WallpaperApi.hasMore && !Core.WallpaperApi.loading
                 width: loadMoreLabel.implicitWidth + 24; height: 26; radius: 6
-                color: "transparent"; border.color: Core.HydraMaterials.border; border.width: 1
+                color: "transparent"; border.color: Core.ValkyxMaterials.border; border.width: 1
                 Text {
                     id: loadMoreLabel; anchors.centerIn: parent; text: "Load more"
-                    color: Core.HydraTheme.text; font.family: Core.HydraTheme.fontUI
-                    font.pixelSize: Math.round(10 * Core.HydraState.fontScale)
+                    color: Core.ValkyxTheme.text; font.family: Core.ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(10 * Core.ValkyxState.fontScale)
                 }
                 MouseArea {
                     anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -212,104 +212,104 @@ Flickable {
             }
             Text {
                 visible: Core.WallpaperApi.loading
-                text: "Loading..."; color: Core.HydraTheme.muted
-                font.family: Core.HydraTheme.fontUI; font.pixelSize: Math.round(10 * Core.HydraState.fontScale)
+                text: "Loading..."; color: Core.ValkyxTheme.muted
+                font.family: Core.ValkyxTheme.fontUI; font.pixelSize: Math.round(10 * Core.ValkyxState.fontScale)
             }
         }
 
         // ── Section: Theme (accent + bg family, applied live) ──
-        // Only the 6 hydra accents here (the full omarchy catalogue is applied via
-        // `qs -c hydra ipc call theme apply <name>` — 28 swatches made this unreadable).
-        Comp.HydraSection { label: "THEME"; topPadding: 8 }
+        // Only the 6 valkyx accents here (the full omarchy catalogue is applied via
+        // `qs -c valkyx ipc call theme apply <name>` — 28 swatches made this unreadable).
+        Comp.ValkyxSection { label: "THEME"; topPadding: 8 }
 
         Row {
             spacing: 12
             Repeater {
-                model: Core.HydraTheme.themeNames
+                model: Core.ValkyxTheme.themeNames
                 Column {
                     required property string modelData
-                    property var theme: Core.HydraTheme.themeByName(modelData)
+                    property var theme: Core.ValkyxTheme.themeByName(modelData)
                     spacing: 4
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 32; height: 32; radius: 16
                         color: theme.accent
-                        border.color: Core.HydraState.themeName === modelData ? Core.HydraTheme.text : "transparent"
+                        border.color: Core.ValkyxState.themeName === modelData ? Core.ValkyxTheme.text : "transparent"
                         border.width: 2
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                            onClicked: Core.HydraState.applyTheme(modelData)
+                            onClicked: Core.ValkyxState.applyTheme(modelData)
                         }
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: modelData
-                        color: Core.HydraState.themeName === modelData ? Core.HydraTheme.accent : Core.HydraTheme.muted
-                        font.family: Core.HydraTheme.fontUI; font.pixelSize: Math.round(8 * Core.HydraState.fontScale)
+                        color: Core.ValkyxState.themeName === modelData ? Core.ValkyxTheme.accent : Core.ValkyxTheme.muted
+                        font.family: Core.ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * Core.ValkyxState.fontScale)
                     }
                 }
             }
         }
 
         // ── Section: Effects ──
-        Comp.HydraSection { label: "EFFECTS"; topPadding: 8 }
+        Comp.ValkyxSection { label: "EFFECTS"; topPadding: 8 }
 
         Row {
-            spacing: Core.HydraMetrics.m; height: 36
-            Text { text: "Blur"; color: Core.HydraTheme.text; font.family: Core.HydraTheme.fontUI; font.pixelSize: Math.round(12 * Core.HydraState.fontScale); anchors.verticalCenter: parent.verticalCenter }
-            Comp.HydraToggle {
-                checked: Core.HydraState.blurEnabled
+            spacing: Core.ValkyxMetrics.m; height: 36
+            Text { text: "Blur"; color: Core.ValkyxTheme.text; font.family: Core.ValkyxTheme.fontUI; font.pixelSize: Math.round(12 * Core.ValkyxState.fontScale); anchors.verticalCenter: parent.verticalCenter }
+            Comp.ValkyxToggle {
+                checked: Core.ValkyxState.blurEnabled
                 anchors.verticalCenter: parent.verticalCenter
-                onToggled: Core.HydraState.toggleBlur()
+                onToggled: Core.ValkyxState.toggleBlur()
             }
         }
 
         // ── Section: Motion ──
-        Comp.HydraSection { label: "MOTION"; topPadding: 8 }
+        Comp.ValkyxSection { label: "MOTION"; topPadding: 8 }
 
         Row {
-            spacing: Core.HydraMetrics.m; height: 36
-            Text { text: "Reduced motion"; color: Core.HydraTheme.text; font.family: Core.HydraTheme.fontUI; font.pixelSize: Math.round(12 * Core.HydraState.fontScale); anchors.verticalCenter: parent.verticalCenter }
-            Comp.HydraToggle {
+            spacing: Core.ValkyxMetrics.m; height: 36
+            Text { text: "Reduced motion"; color: Core.ValkyxTheme.text; font.family: Core.ValkyxTheme.fontUI; font.pixelSize: Math.round(12 * Core.ValkyxState.fontScale); anchors.verticalCenter: parent.verticalCenter }
+            Comp.ValkyxToggle {
                 // resolved value, not the pref: "auto" that resolves to reduced
                 // must show as ON, or the toggle lies about the shell's state.
-                checked: Core.HydraState.reducedMotion
+                checked: Core.ValkyxState.reducedMotion
                 anchors.verticalCenter: parent.verticalCenter
-                onToggled: Core.HydraState.setMotion(checked)
+                onToggled: Core.ValkyxState.setMotion(checked)
             }
         }
 
         // ── Section: Font Scale ──
-        Comp.HydraSection { label: "FONT SCALE"; topPadding: 8 }
+        Comp.ValkyxSection { label: "FONT SCALE"; topPadding: 8 }
 
         Row {
-            spacing: Core.HydraMetrics.m; height: 28
-            Text { text: "0.8×"; color: Core.HydraTheme.muted; font.pixelSize: Math.round(10 * Core.HydraState.fontScale); anchors.verticalCenter: parent.verticalCenter }
+            spacing: Core.ValkyxMetrics.m; height: 28
+            Text { text: "0.8×"; color: Core.ValkyxTheme.muted; font.pixelSize: Math.round(10 * Core.ValkyxState.fontScale); anchors.verticalCenter: parent.verticalCenter }
             Item {
                 id: fsTrack
                 width: parent.parent.width - 128; height: 20
                 anchors.verticalCenter: parent.verticalCenter
                 Rectangle { // rail
                     anchors.left: parent.left; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    height: 6; radius: 3; color: Core.HydraTheme.tint(Core.HydraTheme.muted, "26")
+                    height: 6; radius: 3; color: Core.ValkyxTheme.tint(Core.ValkyxTheme.muted, "26")
                 }
                 Rectangle { // fill
                     anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width * ((Core.HydraState.fontScale - 0.8) / 0.7)
-                    height: 6; radius: 3; color: Core.HydraTheme.tint(Core.HydraTheme.muted, "55")
+                    width: parent.width * ((Core.ValkyxState.fontScale - 0.8) / 0.7)
+                    height: 6; radius: 3; color: Core.ValkyxTheme.tint(Core.ValkyxTheme.muted, "55")
                 }
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onPressed: (m) => setFromX(m.x)
                     onPositionChanged: (m) => { if (pressed) setFromX(m.x) }
-                    onReleased: Core.HydraState.savePersisted()
+                    onReleased: Core.ValkyxState.savePersisted()
                     function setFromX(x) {
                         const v = Math.max(0, Math.min(1, x / fsTrack.width))
-                        Core.HydraState.fontScale = Math.round((0.8 + v * 0.7) * 100) / 100
+                        Core.ValkyxState.fontScale = Math.round((0.8 + v * 0.7) * 100) / 100
                     }
                 }
             }
-            Text { text: "1.5×"; color: Core.HydraTheme.muted; font.pixelSize: Math.round(10 * Core.HydraState.fontScale); anchors.verticalCenter: parent.verticalCenter }
+            Text { text: "1.5×"; color: Core.ValkyxTheme.muted; font.pixelSize: Math.round(10 * Core.ValkyxState.fontScale); anchors.verticalCenter: parent.verticalCenter }
         }
     }
 }

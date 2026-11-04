@@ -1,5 +1,5 @@
 #!/bin/sh
-# hydra-dispatch — a working replacement for `hyprctl dispatch <name>`.
+# valkyx-dispatch — a working replacement for `hyprctl dispatch <name>`.
 #
 # WHY: Hyprland 0.56.2 has TWO silent-failure paths, both of which return
 # success while doing nothing.
@@ -23,16 +23,16 @@
 # Fail loudly: unknown/unreachable dispatchers exit 2 with a reason. A silent
 # no-op is what let 7 features die unnoticed.
 #
-#   hydra-dispatch workspace    <name>   Super+<n>       focus a semantic workspace
-#   hydra-dispatch movetoworkspace <name> Super+Shift+<n> carry the window there
-#   hydra-dispatch                       list what is reachable
+#   valkyx-dispatch workspace    <name>   Super+<n>       focus a semantic workspace
+#   valkyx-dispatch movetoworkspace <name> Super+Shift+<n> carry the window there
+#   valkyx-dispatch                       list what is reachable
 
 set -u
 
 case "${1:-}" in
 "")
 	cat <<'EOF'
-hydra-dispatch <name> [args]
+valkyx-dispatch <name> [args]
 
   workspace       name:0N label    focus a semantic workspace   (Super+N)
   movetoworkspace name:0N label    carry the window there       (Super+Shift+N)
@@ -47,7 +47,7 @@ esac
 n() { printf '%s' "$1" | sed -nE 's/^[^0-9]*0*([1-6]).*/\1/p'; }
 
 unreachable() {
-	echo "hydra-dispatch: no working path to '$*' on Hyprland 0.56.2." >&2
+	echo "valkyx-dispatch: no working path to '$*' on Hyprland 0.56.2." >&2
 	echo "  \`hyprctl dispatch\` and \`hyprctl eval\` both return success and do nothing." >&2
 	echo "  Bind it in hyprland.lua and call that bind instead (hl.dsp.* works from a bind)." >&2
 	exit 2
@@ -58,7 +58,7 @@ shift
 
 case "$cmd" in
 workspace | focusworkspace | movetoworkspace)
-	[ $# -ge 1 ] || { echo "usage: hydra-dispatch $cmd <name:0N label>" >&2; exit 2; }
+	[ $# -ge 1 ] || { echo "usage: valkyx-dispatch $cmd <name:0N label>" >&2; exit 2; }
 	k=$(n "$1")
 	[ -n "$k" ] || unreachable "$1"
 	kc=$((k + 1)) # evdev: KEY_1=2 .. KEY_6=7

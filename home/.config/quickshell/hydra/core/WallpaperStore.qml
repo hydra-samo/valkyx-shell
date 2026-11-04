@@ -1,8 +1,8 @@
 pragma Singleton
-// HYDRA WallpaperStore — media catalogue for the wallpaper selector (Super+W).
+// VALKYX WallpaperStore — media catalogue for the wallpaper selector (Super+W).
 // Scans ~/Pictures/Wallpapers for stills/gifs/videos, lazily materialises ffmpeg
 // poster thumbs for animated media, and answers "which thumbnail url".
-// Applying goes through HydraState.setWallpaper (kind-dispatch lives there).
+// Applying goes through ValkyxState.setWallpaper (kind-dispatch lives there).
 import QtQuick
 import Quickshell.Io
 
@@ -10,7 +10,7 @@ QtObject {
     id: store
 
     readonly property string wallDir: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/Pictures/Wallpapers"
-    readonly property string thumbDir: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.cache/hydra-wallthumbs"
+    readonly property string thumbDir: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.cache/valkyx-wallthumbs"
 
     // full local catalogue: { path, name, kind }  ("image" | "gif" | "video")
     property var mediaList: []
@@ -18,7 +18,7 @@ QtObject {
 
     // hue extraction: path -> [hex,...] dominant colors (iNiR-style dots)
     property var hues: ({})
-    // favorites: array of paths persisted via hydra-wallfavs
+    // favorites: array of paths persisted via valkyx-wallfavs
     property var favs: []
 
     signal mediaChanged()
@@ -46,7 +46,7 @@ QtObject {
 
     // toggle + optimistic local update (mirrors the persisted file)
     function toggleFav(path) {
-        favProc.command = ["hydra-wallfavs", "toggle", path]
+        favProc.command = ["valkyx-wallfavs", "toggle", path]
         favProc.running = true
         const f = store.favs.slice()
         const i = f.indexOf(path)
@@ -125,7 +125,7 @@ QtObject {
         if (_hueBusy || _hueQueue.length === 0) return
         _hueBusy = true
         _hueSrc = _hueQueue.shift()
-        hueProc.command = ["hydra-wallhues", _hueSrc]
+        hueProc.command = ["valkyx-wallhues", _hueSrc]
         hueProc.running = true
     }
 
@@ -223,7 +223,7 @@ QtObject {
         scan()
         posterSeed.command = ["sh", "-c", "ls '" + thumbDir + "' 2>/dev/null"]
         posterSeed.running = true
-        favLoad.command = ["hydra-wallfavs", "list"]
+        favLoad.command = ["valkyx-wallfavs", "list"]
         favLoad.running = true
     }
 }

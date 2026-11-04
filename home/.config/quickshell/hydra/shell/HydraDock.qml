@@ -1,4 +1,4 @@
-// HYDRA Dock — bottom center, glassmorphism, context-priority ordering.
+// VALKYX Dock — bottom center, glassmorphism, context-priority ordering.
 // Icons only, hover-expand, running indicators.
 import Quickshell
 import QtQuick
@@ -7,7 +7,7 @@ import "../core"
 
 PanelWindow {
     id: dock
-    visible: HydraContext.rule(HydraState.context, "dock")
+    visible: ValkyxContext.rule(ValkyxState.context, "dock")
     // NOT full-width: the panel surface is sized to the centered pill so it
     // doesn't cover/intercept the whole bottom edge of the screen. Height
     // collapses to a thin reveal strip when hidden. (Anchors only support the
@@ -25,7 +25,7 @@ PanelWindow {
     // pill width: contents + padding, capped so a pile of running apps doesn't
     // stretch the dock across the screen. pillWidth = min(content, 70% screen).
     readonly property real pillWidth: {
-        const w = dockRow.implicitWidth + HydraMetrics.xl * 2
+        const w = dockRow.implicitWidth + ValkyxMetrics.xl * 2
         const max = (dock.screen ? dock.screen.width : 1366) * 0.7
         return Math.min(w, max)
     }
@@ -53,12 +53,12 @@ PanelWindow {
             if (!t) return
             if (mouse.button === Qt.RightButton) dockMenu.openAt(t)
             else if (t.item.isAction) t.item.action()
-            else HydraState.focusOrLaunch(t.item.cls, t.item.cmd)
+            else ValkyxState.focusOrLaunch(t.item.cls, t.item.cmd)
         }
         cursorShape: hoveredIdx >= 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
     }
 
-    Timer { id: armTimer; interval: HydraMotion.peekDelay; onTriggered: { shown = true; hideTimer.stop() } }
+    Timer { id: armTimer; interval: ValkyxMotion.peekDelay; onTriggered: { shown = true; hideTimer.stop() } }
     Timer { id: hideTimer; interval: 400; onTriggered: shown = false }
 
     onVisibleChanged: if (visible) shown = false
@@ -76,7 +76,7 @@ PanelWindow {
         { key: "terminal", cls: "kitty", cmd: "kitty", label: "Terminal" },
         { key: "web",      cls: "helium", cmd: "helium-browser", label: "Browser" },
         { key: "files",    cls: "thunar", cmd: "thunar", label: "Files" },
-        { key: "sandbox",  cls: "kitty", cmd: "kitty --title HydraSandbox --directory=" + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/hydra-sandbox", label: "Sandbox" },
+        { key: "sandbox",  cls: "kitty", cmd: "kitty --title ValkyxSandbox --directory=" + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/valkyx-sandbox", label: "Sandbox" },
         { key: "blender",  cls: "blender", cmd: "blender", label: "Blender" },
         { key: "resolve",  cls: "resolve", cmd: "/opt/resolve/resolve", label: "DaVinci Resolve" }
     ]
@@ -111,12 +111,12 @@ PanelWindow {
 
     function getLabel(cls) {
         if (labelMap[cls]) return labelMap[cls]
-        return HydraState.appLabel(cls)
+        return ValkyxState.appLabel(cls)
     }
 
     // context priority reordering (for pinned apps only)
     function contextOrder() {
-        const ctx = HydraState.context
+        const ctx = ValkyxState.context
         if (ctx === "creative") return [3, 5, 0, 1, 2, 4]  // sandbox, blender, resolve then the rest
         return [0, 1, 2, 3, 4, 5]  // normal order
     }
@@ -130,22 +130,22 @@ PanelWindow {
     function refreshModel() {
         const order = contextOrder()
         const pinned = []
-        const running = HydraState.runningWindows || []
+        const running = ValkyxState.runningWindows || []
         for (let i = 0; i < order.length; i++) {
             const app = apps[order[i]]
             const isAction = app.cls === ""
             // keep visible themed glyph for pinned entries (accent-branded and
             // readable on the dark glass); real icons used for extra running apps
-            pinned.push({ key: app.key, cls: app.cls, cmd: app.cmd, label: app.label, pinned: true, realIdx: order[i], icon: themedIcon(app.key), isAction: isAction, action: function() { HydraState.launch(app.cmd) } })
+            pinned.push({ key: app.key, cls: app.cls, cmd: app.cmd, label: app.label, pinned: true, realIdx: order[i], icon: themedIcon(app.key), isAction: isAction, action: function() { ValkyxState.launch(app.cmd) } })
         }
         // add running apps not in pinned list (chrome-* = Helium, already pinned as web)
         const pinnedClasses = new Set(apps.map(a => a.cls))
         for (const cls of running) {
             if (!pinnedClasses.has(cls) && cls.indexOf("chrome-") !== 0) {
                 // real app icon when resolved, else themed glyph
-                const real = HydraState.classIcons[cls]
+                const real = ValkyxState.classIcons[cls]
                 // resolve a launch command for unknown running apps so New Window / click-launch works
-                const resolvedCmd = HydraState.commandForClass(cls)
+                const resolvedCmd = ValkyxState.commandForClass(cls)
                 const label = resolvedCmd !== "" ? getLabel(cls) : getLabel(cls)
                 pinned.push({ key: cls, cls: cls, cmd: resolvedCmd, icon: real || themedIcon(cls), label: label, pinned: false })
             }
@@ -155,7 +155,7 @@ PanelWindow {
 
     // accent-themed glyph for pinned apps + unknown running classes (fits the shell).
     function themedIcon(cls) {
-        const theme = HydraState.themedName || "Hydra"
+        const theme = ValkyxState.themedName || "Valkyx"
         const map = {
             terminal: "terminal", web: "browser", files: "files", editor: "editor",
             blender: "blender", resolve: "resolve", kitty: "terminal", thunar: "files",
@@ -164,12 +164,12 @@ PanelWindow {
             "code-oss": "editor"
         }
         const g = map[cls] || "window"
-        return "file://StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.cache/hydra-icons/"" + theme + "/" + g + ".png"
+        return "file://StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.cache/valkyx-icons/"" + theme + "/" + g + ".png"
     }
 
     Component.onCompleted: refreshModel()
     Connections {
-        target: HydraState
+        target: ValkyxState
         function onRunningWindowsChanged() { refreshModel() }
         function onContextChanged() { refreshModel() }
         function onThemeNameChanged() { refreshModel() }
@@ -184,17 +184,17 @@ PanelWindow {
         anchors.bottomMargin: shown ? 12 : -64
         width: dock.pillWidth
         height: 56
-        radius: HydraMetrics.rPanel
-        color: HydraMaterials.dockGlass
-        border.color: HydraTheme.tint(HydraTheme.accent, "66")
+        radius: ValkyxMetrics.rPanel
+        color: ValkyxMaterials.dockGlass
+        border.color: ValkyxTheme.tint(ValkyxTheme.accent, "66")
         border.width: 1
 
         Row {
             id: dockRow
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: HydraMetrics.xs
-            spacing: HydraMetrics.s
+            anchors.bottomMargin: ValkyxMetrics.xs
+            spacing: ValkyxMetrics.s
 
             Repeater {
                 model: dock.dockItems
@@ -203,7 +203,7 @@ PanelWindow {
                     required property int index
                     required property var modelData
                     property var item: modelData
-                    property bool running: item.pinned ? (HydraState.states["dock_" + item.key] === "on") : true
+                    property bool running: item.pinned ? (ValkyxState.states["dock_" + item.key] === "on") : true
 
                     width: 54
                     height: 54
@@ -217,7 +217,7 @@ PanelWindow {
                         anchors.bottom: parent.bottom; anchors.bottomMargin: 3
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 6; height: 6; radius: 3
-                        color: HydraTheme.accent
+                        color: ValkyxTheme.accent
                     }
 
                     // icon — macOS-style "pop": hovered icon scales up and lifts
@@ -244,15 +244,15 @@ PanelWindow {
                         anchors.bottom: dockIcon.top; anchors.bottomMargin: 4
                         anchors.horizontalCenter: parent.horizontalCenter
                         height: 18; radius: 4
-                        color: HydraMaterials.panelGlass
-                        border.color: HydraMaterials.border; border.width: 1
+                        color: ValkyxMaterials.panelGlass
+                        border.color: ValkyxMaterials.border; border.width: 1
                         width: 80
                         Text {
                             id: label
                             anchors.centerIn: parent
                             text: item.label
-                            color: HydraTheme.text
-                            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale)
+                            color: ValkyxTheme.text
+                            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                             elide: Text.ElideRight
                         }
                     }
@@ -269,12 +269,12 @@ PanelWindow {
         property bool itemEnabled: modelData.enabled !== false
         signal triggered()
         width: parent.width; height: 26; radius: 6
-        color: mrH.containsMouse && itemEnabled ? HydraMaterials.tileGlass : "transparent"
+        color: mrH.containsMouse && itemEnabled ? ValkyxMaterials.tileGlass : "transparent"
         Text {
             anchors.left: parent.left; anchors.leftMargin: 8
             anchors.verticalCenter: parent.verticalCenter
-            text: modelData.label; color: itemEnabled ? (mrH.containsMouse ? HydraTheme.accent : HydraTheme.text) : HydraTheme.tint(HydraTheme.muted, "88")
-            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale)
+            text: modelData.label; color: itemEnabled ? (mrH.containsMouse ? ValkyxTheme.accent : ValkyxTheme.text) : ValkyxTheme.tint(ValkyxTheme.muted, "88")
+            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
         }
         MouseArea {
             id: mrH; anchors.fill: parent; hoverEnabled: true; enabled: mr.itemEnabled
@@ -309,9 +309,9 @@ PanelWindow {
 
         Rectangle {
             anchors.fill: parent
-            radius: HydraMetrics.rPanel
-            color: HydraMaterials.panelGlass
-            border.color: HydraMaterials.border
+            radius: ValkyxMetrics.rPanel
+            color: ValkyxMaterials.panelGlass
+            border.color: ValkyxMaterials.border
             border.width: 1
         }
 
@@ -325,22 +325,22 @@ PanelWindow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: dm.app ? dm.app.label : ""
-                    color: HydraTheme.text; font.family: HydraTheme.fontUI
-                    font.pixelSize: Math.round(10 * HydraState.fontScale); font.bold: true
+                    color: ValkyxTheme.text; font.family: ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(10 * ValkyxState.fontScale); font.bold: true
                 }
             }
-            Rectangle { width: parent.width; height: 1; color: HydraMaterials.border }
+            Rectangle { width: parent.width; height: 1; color: ValkyxMaterials.border }
             Repeater {
                 model: dm.app && dm.app.isAction ? [
                     { label: "Toggle Shell",
-                      action: function() { HydraState.launch(dm.app.cmd) },
+                      action: function() { ValkyxState.launch(dm.app.cmd) },
                       enabled: true }
                 ] : dm.app ? [
                     { label: dm.app.running ? "New Window" : "Open",
-                      action: function() { HydraState.launch(dm.app.cmd) },
+                      action: function() { ValkyxState.launch(dm.app.cmd) },
                       enabled: dm.app.cmd !== "" },
-                    { label: "Close Window(s)", action: function() { HydraState.closeClass(dm.app.cls) }, enabled: dm.app.running },
-                    { label: "Quit", action: function() { HydraState.quitClass(dm.app.cls) }, enabled: dm.app.running }
+                    { label: "Close Window(s)", action: function() { ValkyxState.closeClass(dm.app.cls) }, enabled: dm.app.running },
+                    { label: "Quit", action: function() { ValkyxState.quitClass(dm.app.cls) }, enabled: dm.app.running }
                 ] : []
                 MenuRow {
                     onTriggered: { modelData.action(); dm.visible = false }

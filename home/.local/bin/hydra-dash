@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# hydra-dash — HYDRA dashboard poller (per-core CPU, swap, mount disks,
+# valkyx-dash — VALKYX dashboard poller (per-core CPU, swap, mount disks,
 # temps, GPU). Emits key=value lines. Covers the fields NOT already polled by
-# HydraState.sysGet / netBandGet.
+# ValkyxState.sysGet / netBandGet.
 #
 #   cores:   comma-separated per-core util %
 #   swap:    swap used %

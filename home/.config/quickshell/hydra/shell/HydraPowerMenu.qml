@@ -1,4 +1,4 @@
-// HYDRA Power Menu — floating row of 5 solid tiles, no wrapping plate.
+// VALKYX Power Menu — floating row of 5 solid tiles, no wrapping plate.
 // Built on the launcher's proven data path: ListView + ListModel + required
 // roles. NOT Repeater (JS-array or otherwise) — this Qt build silently fails
 // to create Repeater delegates, leaving the window transparent.
@@ -15,7 +15,7 @@ PanelWindow {
     // the seat's input grab. The orphan was real, but it came from SIGTERM:
     // killing `qs` with a bare `pkill` tore the surface down without tearing the
     // client down. `qs kill --pid` leaves 0 orphans, and that is what
-    // `hydra-shell-reload` uses. The conclusion drawn from it was wrong, and it
+    // `valkyx-shell-reload` uses. The conclusion drawn from it was wrong, and it
     // cost a dead input area across the whole shell.
     //
     // A mapped layershell surface KEEPS the pointer. Hyprland routes the event to
@@ -32,8 +32,8 @@ PanelWindow {
     // orphans. Follow the majority.
     // (PanelWindow has no `opacity` property — it is a QsQuick type, not a QML
     // Window — so the content Item is what gets faded.)
-    visible: HydraState.powerOpen
-    focusable: HydraState.powerOpen
+    visible: ValkyxState.powerOpen
+    focusable: ValkyxState.powerOpen
     aboveWindows: true
     exclusiveZone: -1
     color: "transparent"
@@ -58,9 +58,9 @@ PanelWindow {
     // An external property needs Connections; `onPowerOpenChanged:` is not a
     // valid handler on the PanelWindow itself.
     Connections {
-        target: HydraState
+        target: ValkyxState
         function onPowerOpenChanged() {
-            if (HydraState.powerOpen) { power.gear(); power.focusPoll.start() }
+            if (ValkyxState.powerOpen) { power.gear(); power.focusPoll.start() }
             else { power.focusPoll.stop() }
         }
     }
@@ -89,13 +89,13 @@ PanelWindow {
         anchors.fill: parent
         // never hold focus while closed, or the Keys.* handlers below keep
         // swallowing Escape/arrows meant for whatever is underneath
-        focus: HydraState.powerOpen
+        focus: ValkyxState.powerOpen
         // `enabled` is not optional alongside opacity: Qt still delivers pointer
         // events to a mapped layershell item that is only invisible.
-        enabled: HydraState.powerOpen
-        opacity: HydraState.powerOpen ? 1 : 0
+        enabled: ValkyxState.powerOpen
+        opacity: ValkyxState.powerOpen ? 1 : 0
 
-        Keys.onEscapePressed: HydraState.powerOpen = false
+        Keys.onEscapePressed: ValkyxState.powerOpen = false
         Keys.onLeftPressed: { move(-1); event.accepted = true }
         Keys.onRightPressed: { move(1); event.accepted = true }
         Keys.onReturnPressed: { activate(); event.accepted = true }
@@ -119,16 +119,16 @@ PanelWindow {
 
         // ONE dispatch for the whole menu. It used to be duplicated verbatim in
         // activate() and in the delegate's onClicked, so every action had to be
-        // fixed in two places — and `hydra-logout` was missing from both, which
-        // is why Logout did nothing. hydra-power-action logs every attempt.
+        // fixed in two places — and `valkyx-logout` was missing from both, which
+        // is why Logout did nothing. valkyx-power-action logs every attempt.
         //
-        // Absolute path, NOT a barename: HydraState.exec runs through
+        // Absolute path, NOT a barename: ValkyxState.exec runs through
         // `sh -c` inheriting Hyprland's PATH (/usr/local/bin:/usr/bin), which
         // has no ~/.local/bin — a bare name is "not found" and the tile is
         // then a silent no-op again.
         function run(fn: string) {
-            HydraState.powerOpen = false
-            HydraState.exec(StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-power-action " + fn)
+            ValkyxState.powerOpen = false
+            ValkyxState.exec(StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-power-action " + fn)
         }
 
         function activate() {
@@ -147,11 +147,11 @@ PanelWindow {
             orientation: Qt.Horizontal
             model: powerBasicModel
             interactive: false
-            focus: HydraState.powerOpen
+            focus: ValkyxState.powerOpen
             // an opacity-0 layershell surface still receives pointer events —
             // without this the closed menu would sit over the desktop eating
             // every click in its 688x152 rect
-            enabled: HydraState.powerOpen
+            enabled: ValkyxState.powerOpen
             currentIndex: powerBody.current
             highlightFollowsCurrentItem: true
 
@@ -167,9 +167,9 @@ PanelWindow {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: HydraMetrics.rBtn
-                    color: HydraMaterials.surface2
-                    border.color: (hov || activeCur) ? HydraMaterials.borderActive : HydraMaterials.borderFaint
+                    radius: ValkyxMetrics.rBtn
+                    color: ValkyxMaterials.surface2
+                    border.color: (hov || activeCur) ? ValkyxMaterials.borderActive : ValkyxMaterials.borderFaint
                     border.width: 1
 
                     Column {
@@ -178,16 +178,16 @@ PanelWindow {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: icon
-                            color: (hov || activeCur) ? HydraTheme.accent : HydraTheme.text
-                            font.family: HydraTheme.fontMono
-                            font.pixelSize: Math.round(30 * HydraState.fontScale)
+                            color: (hov || activeCur) ? ValkyxTheme.accent : ValkyxTheme.text
+                            font.family: ValkyxTheme.fontMono
+                            font.pixelSize: Math.round(30 * ValkyxState.fontScale)
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: label
-                            color: HydraTheme.text
-                            font.family: HydraTheme.fontUI
-                            font.pixelSize: Math.round(12 * HydraState.fontScale)
+                            color: ValkyxTheme.text
+                            font.family: ValkyxTheme.fontUI
+                            font.pixelSize: Math.round(12 * ValkyxState.fontScale)
                         }
                     }
                 }

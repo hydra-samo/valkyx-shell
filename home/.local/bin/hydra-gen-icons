@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# hydra-gen-icons — render HYDRA's custom glyph icons, tinted per accent theme.
-# Output: ~/.cache/hydra-icons/<theme>/<name>.png for every theme (or one theme).
-# Themes + accents mirror HydraTheme.themes (hydra shell). rsvg-convert renders.
+# valkyx-gen-icons — render VALKYX's custom glyph icons, tinted per accent theme.
+# Output: ~/.cache/valkyx-icons/<theme>/<name>.png for every theme (or one theme).
+# Themes + accents mirror ValkyxTheme.themes (valkyx shell). rsvg-convert renders.
 set -euo pipefail
 
 # themeName | accentHex | bgHex
 themes() {
   printf '%s\n' \
-    "Hydra|#00A86B|#0a1210" \
+    "Valkyx|#00A86B|#0a1210" \
     "Violet|#7C4DFF|#0d0a14" \
     "Ocean|#2196F3|#0a1016" \
     "Ember|#FF5252|#140a0a" \
@@ -15,7 +15,7 @@ themes() {
     "Cyan|#00BCD4|#0a1214"
 }
 
-accent_of() { # theme name → accent hex (default Hydra)
+accent_of() { # theme name → accent hex (default Valkyx)
   themes | awk -F'|' -v t="$1" '$1==t{print $2; exit}'
   echo "#00A86B"
 }
@@ -185,7 +185,7 @@ SVG
 SVG
       ;;
     brand)
-      # HYDRA control-panel mark: rounded plate + angular cobra-hood hood top
+      # VALKYX control-panel mark: rounded plate + angular cobra-hood hood top
       # + three picker/slider rows (sidebar · launcher · settings spirit).
       cat <<SVG
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
@@ -201,7 +201,7 @@ SVG
 
 # ── render one theme's glyph into the cache dir ──
 render_theme() { # $1 = theme name, $2 = accent hex, $3 = bg hex
-  local dir="$HOME/.cache/hydra-icons/$1"
+  local dir="$HOME/.cache/valkyx-icons/$1"
   mkdir -p "$dir"
   # brighten bg for plate fills so glyphs read on translucent panels
   local tfill="#1d2a24"
@@ -225,7 +225,7 @@ case "${1:-}" in
     while IFS='|' read -r t a b; do render_theme "$t" "$a" "$b"; done < <(themes)
     ;;
   *)
-    t="${1:-Hydra}"; a="$(accent_of "$t")"; b="#0a1210"
+    t="${1:-Valkyx}"; a="$(accent_of "$t")"; b="#0a1210"
     case "$t" in Violet) b="#0d0a14" ;; Ocean) b="#0a1016" ;; Ember) b="#140a0a" ;; Amber) b="#14100a" ;; Cyan) b="#0a1214" ;; esac
     render_theme "$t" "$a" "$b"
     ;;

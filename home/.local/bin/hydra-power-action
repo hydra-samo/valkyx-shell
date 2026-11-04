@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# hydra-power-action <lock|logout|suspend|reboot|shutdown>
+# valkyx-power-action <lock|logout|suspend|reboot|shutdown>
 #
 # Single entry point for the power menu, and the reason a broken button can
 # never be silent again. The shell's exec runner discards stdout+stderr, which
-# is how `hydra-logout` shipped as a button that did nothing at all: the command
+# is how `valkyx-logout` shipped as a button that did nothing at all: the command
 # was exec'd, failed instantly, and left no trace. Everything now lands in
-# hydra-power.log.
+# valkyx-power.log.
 set -u
 
-LOG="${XDG_STATE_HOME:-$HOME/.local/state}/hydra-power.log"
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/valkyx-power.log"
 mkdir -p "$(dirname "$LOG")"
 action="${1:-}"
 note() { printf '%s %-9s %s\n' "$(date -Iseconds)" "${action:-none}" "$*" >> "$LOG"; }
 
 note "requested"
-# Absolute paths for the hydra-* helpers: this script is exec'd from a Quickshell
+# Absolute paths for the valkyx-* helpers: this script is exec'd from a Quickshell
 # `sh -c` that inherits Hyprland's PATH, which does NOT include ~/.local/bin.
 case "$action" in
     lock)
-        exec $HOME/.local/bin/hydra-lock
+        exec $HOME/.local/bin/valkyx-lock
         ;;
     logout)
-        exec $HOME/.local/bin/hydra-logout
+        exec $HOME/.local/bin/valkyx-logout
         ;;
     reboot|shutdown|hibernate)
         what=poweroff; [ "$action" = reboot ] && what=reboot
@@ -43,13 +43,13 @@ case "$action" in
         # button — so putting the lock here meant closing the lid suspended with
         # the session unlocked and the panel lit, while this button did it right.
         # One hook, one behaviour. The 'pre' hook blanks again, which is a no-op.
-        hydra-dispatch dpms off >/dev/null 2>&1
+        valkyx-dispatch dpms off >/dev/null 2>&1
         systemctl --no-block suspend
         rc=$?
         note "systemctl rc=$rc"
         # If the suspend was refused, do not leave the user staring at a black
         # screen — put the panel straight back.
-        [ "$rc" -ne 0 ] && hydra-dispatch dpms on >/dev/null 2>&1
+        [ "$rc" -ne 0 ] && valkyx-dispatch dpms on >/dev/null 2>&1
         exit $rc
         ;;
     *)

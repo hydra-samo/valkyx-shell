@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# HYDRA wallfavs — favorite wallpaper paths in ~/.cache/hydra-favs (one per
+# VALKYX wallfavs — favorite wallpaper paths in ~/.cache/valkyx-favs (one per
 # line). subcommands: list | add <p> | rm <p> | toggle <p> (prints 1/0).
 import os
 import sys
 
-FAVS = os.path.expanduser("~/.cache/hydra-favs")
+FAVS = os.path.expanduser("~/.cache/valkyx-favs")
 
 
 def load():

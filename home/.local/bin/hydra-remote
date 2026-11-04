@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# hydra-remote — phone-side shell control over the tailnet.
+# valkyx-remote — phone-side shell control over the tailnet.
 #
-# A WHITELIST, not a shell. Every verb maps to one fixed `qs -c hydra ipc call`
-# or one existing hydra-* helper. User input NEVER reaches an IPC string:
+# A WHITELIST, not a shell. Every verb maps to one fixed `qs -c valkyx ipc call`
+# or one existing valkyx-* helper. User input NEVER reaches an IPC string:
 # `password open "<label>|<path>"` writes a file, so that verb is not exposed here.
 #
-#   hydra-remote list                 show every verb
-#   hydra-remote <verb> [arg]         run one
+#   valkyx-remote list                 show every verb
+#   valkyx-remote <verb> [arg]         run one
 #
-# Reachable from the phone as: hydra-remote is invoked by the served page at
-# :8444 (see hydra-remote-web). Tailscale identity is the only auth.
+# Reachable from the phone as: valkyx-remote is invoked by the served page at
+# :8444 (see valkyx-remote-web). Tailscale identity is the only auth.
 set -uo pipefail
 export PATH="$PATH:/usr/local/bin:/usr/bin:$HOME/.local/bin"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
 # Shorthand for a shell IPC call. Each argument is quoted separately by exec, so
 # nothing is concatenated into a single string; $2+ must be a fixed literal here.
-ipc() { local t="$1" f="$2"; shift 2; qs -c hydra ipc call "$t" "$f" "$@" >/dev/null 2>&1; }
+ipc() { local t="$1" f="$2"; shift 2; qs -c valkyx ipc call "$t" "$f" "$@" >/dev/null 2>&1; }
 
 usage() { sed -n '3,8p' "$0" | sed 's/^# \{0,1\}//'; }
 
@@ -68,17 +68,17 @@ case "${1:-list}" in
   # Speaker/Headphones are one ACP profile slot; this is the documented one-command
   # fix for the silent-after-timeout state. Note the helper takes the NEED_ prefix:
   # the profile must be switched before the sink node exists, which is the whole point.
-  audio:sink)      if hydra-audio set-sink NEED_Speaker; then echo "sink=Speaker"; else echo "sink switch failed"; exit 1; fi ;;
+  audio:sink)      if valkyx-audio set-sink NEED_Speaker; then echo "sink=Speaker"; else echo "sink switch failed"; exit 1; fi ;;
 
   # ── input language (compositor xkb, not fcitx) ─────────────────────────────
-  im:toggle)       hydra-im toggle ;;
-  im:en)           hydra-im set us ;;
-  im:ar)           hydra-im set ara ;;
+  im:toggle)       valkyx-im toggle ;;
+  im:en)           valkyx-im set us ;;
+  im:ar)           valkyx-im set ara ;;
 
   # ── diagnostics ───────────────────────────────────────────────────────────
-  doctor)          hydra-doctor ;;
-  jobs)            hydra-jobs all ;;
-  queue:list)      q="$HOME/.local/state/hydra/queue"; { ls -1 "$q"/*.blocked 2>/dev/null | xargs -r -n1 basename | sed 's/^/STALLED  /'; ls -1t "$q" 2>/dev/null | head -20; } ;;
+  doctor)          valkyx-doctor ;;
+  jobs)            valkyx-jobs all ;;
+  queue:list)      q="$HOME/.local/state/valkyx/queue"; { ls -1 "$q"/*.blocked 2>/dev/null | xargs -r -n1 basename | sed 's/^/STALLED  /'; ls -1t "$q" 2>/dev/null | head -20; } ;;
 
   # ── remote desktop ───────────────────────────────────────────────────────────
   # The phone drives the real session: grim shows it, ydotool types at it.
@@ -196,7 +196,7 @@ o:24 p:25 q:16 r:19 s:31 t:20 u:22 v:47 w:17 x:45 y:21 z:44 \
   queue:add)
     text="${2-}"
     [ -n "$text" ] || { echo "usage: queue:add <task text>"; exit 2; }
-    q="$HOME/.local/state/hydra/queue"; mkdir -p "$q"
+    q="$HOME/.local/state/valkyx/queue"; mkdir -p "$q"
     pending=$(find "$q" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)
     [ "$pending" -lt 20 ] || { echo "queue full ($pending pending)"; exit 1; }
     # Filename is a strict [a-z0-9-] slug, so the path can never traverse. The
@@ -207,13 +207,13 @@ o:24 p:25 q:16 r:19 s:31 t:20 u:22 v:47 w:17 x:45 y:21 z:44 \
     printf '%s\n' "$text" > "$f" || exit 1
     echo "queued: $(basename "$f")"
     # The phone must not wait up to the 20-min timer tick to get started.
-    systemctl --user start --no-block hydra-agent-queue.service 2>/dev/null \
+    systemctl --user start --no-block valkyx-agent-queue.service 2>/dev/null \
       || echo "note: could not wake the drain unit, it runs on the next timer tick"
     ;;
   # No argument on purpose: the newest transcript is the only one a phone needs,
   # so there is no filename for a hostile argument to traverse into.
   queue:tail)
-    q="$HOME/.local/state/hydra/queue"
+    q="$HOME/.local/state/valkyx/queue"
     newest=$(ls -1t "$q"/*.out 2>/dev/null | head -1)
     [ -n "$newest" ] || { echo "no transcripts yet"; exit 1; }
     echo "== $(basename "$newest") =="
@@ -222,7 +222,7 @@ o:24 p:25 q:16 r:19 s:31 t:20 u:22 v:47 w:17 x:45 y:21 z:44 \
   layers)          hyprctl layers | grep -c quickshell ;;
 
   *)
-    echo "hydra-remote: unknown verb '$1'" >&2
-    echo "run 'hydra-remote list' for the whitelist" >&2
+    echo "valkyx-remote: unknown verb '$1'" >&2
+    echo "run 'valkyx-remote list' for the whitelist" >&2
     exit 2 ;;
 esac

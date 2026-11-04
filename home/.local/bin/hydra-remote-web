@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""hydra-remote-web — phone control surface for the HYDRA shell.
+"""valkyx-remote-web — phone control surface for the VALKYX shell.
 
 Binds 127.0.0.1 ONLY and is published with `tailscale serve`; never bind 0.0.0.0.
 
 Security model (do not weaken):
-  * The verb whitelist lives in `hydra-remote`. This server passes exactly ONE
+  * The verb whitelist lives in `valkyx-remote`. This server passes exactly ONE
     argument through and lets that script reject anything unknown, so the
     whitelist has a single home and cannot drift from this file.
   * No user input is ever concatenated into a shell string.
-  * CSRF: requires header X-Hydra-Token. A cross-origin HTML form cannot set a
+  * CSRF: requires header X-Valkyx-Token. A cross-origin HTML form cannot set a
     custom header, and no CORS headers are sent, so a random web page the phone
     visits cannot drive this even while it is signed in.
   * Tailscale identity is the outer auth (tailnet-only HTTPS).
 
-Usage: hydra-remote-web [--port N]
+Usage: valkyx-remote-web [--port N]
 """
 import argparse
 import hmac
@@ -28,9 +28,9 @@ import select
 import subprocess, threading, time
 import sys
 
-TOKEN_FILE = pathlib.Path.home() / ".local/state/hydra/remote-token"
-HELPER = str(pathlib.Path.home() / ".local/bin/hydra-remote")
-REMOTE_JSON = pathlib.Path.home() / ".config" / "hydra" / "remote.json"
+TOKEN_FILE = pathlib.Path.home() / ".local/state/valkyx/remote-token"
+HELPER = str(pathlib.Path.home() / ".local/bin/valkyx-remote")
+REMOTE_JSON = pathlib.Path.home() / ".config" / "valkyx" / "remote.json"
 
 # One-shot kick, set by POST /kick. The server cannot push, so applying new
 # defaults means making the phone reconnect; that is what re-reads them.
@@ -73,12 +73,12 @@ def load_remote_defaults():
 # '\n\n' became two real newlines inside a single-quoted JS literal, which is a
 # SyntaxError — and every HTTP-level check still passed, so the page just rendered
 # dead. Found by running `node --check` on the extracted <script>, which is now
-# what `hydra-hub-check` does on every health run.
+# what `valkyx-hub-check` does on every health run.
 PAGE = r"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>HYDRA remote</title>
+<title>VALKYX remote</title>
 <style>
 :root{color-scheme:dark}
 :root{color-scheme:dark;--a:#00A86B;--bg:#08090b;--s:#12161a;--b:#232a2f;--t:#e8eaea;--m:#7c8688}
@@ -293,7 +293,7 @@ body.tp #cdot.on{display:block}
 </div>
 
 <script>
-const TKEY='hydra.remote.token';
+const TKEY='valkyx.remote.token';
 const T=()=>document.getElementById('tok').value.trim();
 // Same origin as the /hub console page, so a token saved there is already here.
 // Once a token works the box gets out of the way — it is only needed the first
@@ -347,7 +347,7 @@ function authFailed(){
   // Drop the cookie too. It is scoped to the whole origin and the /video and
   // /stream paths authenticate from it, so a stale cookie outlives the token
   // fix-up and keeps 401ing the picture even after a fresh token is pasted.
-  document.cookie='hydra_token=; path=/; SameSite=Strict; Max-Age=0';
+  document.cookie='valkyx_token=; path=/; SameSite=Strict; Max-Age=0';
   streaming=false; videoOn=false;
   if(typeof VID!=='undefined'){ VID.hidden=true; VID.removeAttribute('src'); }
   if(typeof SCR!=='undefined'){ SCR.hidden=false; SCR.removeAttribute('src'); }
@@ -365,7 +365,7 @@ async function call(v,arg){
   const t0=performance.now();
   try{
     const r=await fetch('verb',{method:'POST',headers:{
-      'Content-Type':'application/json','X-Hydra-Token':T()},body:JSON.stringify(b)});
+      'Content-Type':'application/json','X-Valkyx-Token':T()},body:JSON.stringify(b)});
     const j=await r.json();
     noteRtt(performance.now()-t0);
     if(j.error==='bad token'){ authFailed(); return 'token expired - paste the new one'; }
@@ -511,7 +511,7 @@ async function grab(){
   try{
     const t0=performance.now();
     const r=await fetch('verb',{method:'POST',headers:{
-      'Content-Type':'application/json','X-Hydra-Token':T(),
+      'Content-Type':'application/json','X-Valkyx-Token':T(),
       'X-Link':lastReport||'-'},
       body:JSON.stringify({verb:'screen',arg:qual+(scale?','+scale:'')})});
     const sc=r.headers.get('X-Screen');
@@ -723,7 +723,7 @@ AUTO.onclick=()=>{
 // Video-path failures are invisible here: adb screencap is frozen on this phone,
 // so every step of the MSE handshake reports itself to the server journal.
 function report(m){ fetch('verb',{method:'POST',headers:{
-  'Content-Type':'application/json','X-Hydra-Token':T()},
+  'Content-Type':'application/json','X-Valkyx-Token':T()},
   body:JSON.stringify({verb:'diag',arg:String(m)})}).catch(()=>{}); }
 const VID=document.getElementById('vid');
 // Installed once for the life of the element, not once per stream. None of these
@@ -829,7 +829,7 @@ async function videoStart(){
   // why every reconnect got worse than the last.
   vc=new AbortController();
   let r;
-  try{ r=await fetch(vidURL(),{headers:{'X-Hydra-Token':T()},signal:vc.signal}); }
+  try{ r=await fetch(vidURL(),{headers:{'X-Valkyx-Token':T()},signal:vc.signal}); }
   catch(e){ if(e.name!=='AbortError') report('fetch: '+e.name); return; }
   // 401/403 here means the token, not the codec. Falling through to the MJPEG
   // poller used to be the only response, and that path 401s too -- so a dead
@@ -1113,7 +1113,7 @@ function surfaceMove(e){
   // fired one jump for the whole drag, so the picture only ever caught up after
   // you lifted -- and a fast flick scrolled by whatever the final delta happened
   // to be. Accumulate, convert whole notches, send on a floor of one POST per
-  // 55ms so a long drag cannot flood hydra-remote with spawns.
+  // 55ms so a long drag cannot flood valkyx-remote with spawns.
   drag.ax+=dx; drag.ay+=dy;
   drag.x=e.clientX; drag.y=e.clientY;
   flushScroll(drag,false);
@@ -1267,7 +1267,7 @@ document.getElementById('live').onclick=function(){
     // round-trip overhead — more than the capture itself ever cost.
     // The token rides a COOKIE, not a query string: an <img src> cannot send
     // headers, and a secret in the URL would land in the request log forever.
-    document.cookie='hydra_token='+encodeURIComponent(T())+'; path=/; SameSite=Strict';
+    document.cookie='valkyx_token='+encodeURIComponent(T())+'; path=/; SameSite=Strict';
     streaming=true;
     videoStart().catch(e=>{ report('videoStart failed: '+e);   // MSE missing or codec refused: JPEG frames
       stopVideo();                    // still stream, just without video smoothness
@@ -1280,7 +1280,7 @@ document.getElementById('live').onclick=function(){
     SCR.onerror=async()=>{
       if(streaming&&T()){
         try{
-          const h=await fetch('video?fps=1&w=64&h=48',{headers:{'X-Hydra-Token':T()}});
+          const h=await fetch('video?fps=1&w=64&h=48',{headers:{'X-Valkyx-Token':T()}});
           if(h.status===401||h.status===403){ authFailed(); return; }
         }catch(_){}
       }
@@ -1304,7 +1304,7 @@ refreshHub();
 // no longer exists. They join the keys pane instead.
 // ── remote keypad ───────────────────────────────────────────────────────────
 // Arrows, modifiers, navigation and the shell's own keybinds. Every name here is
-// one `hydra-remote key` ALREADY accepts, so the pad adds no verb and no server
+// one `valkyx-remote key` ALREADY accepts, so the pad adds no verb and no server
 // path: a keybind IS a chord, and the helper already splits the arg on '+'.
 //
 // Modifiers are STICKY, because a touchscreen cannot hold a key down: tap ctrl,
@@ -1356,7 +1356,7 @@ const padEl=$('pad');
 padGroup('modifier',MODS,'mod');
 padGroup('arrows',[['←','left'],['↑','up'],['↓','down'],['→','right']],'rep');
 padGroup('navigation',['home','end','pgup','pgdn','tab','enter','bsp','del','space','esc'],'rep');
-// The shell's own keybinds as chords (hydra-remote key already accepts these names).
+// The shell's own keybinds as chords (valkyx-remote key already accepts these names).
 padGroup('shell',[['term','super+enter'],['launch','super+space'],['files','super+e'],
   ['browser','super+b'],['code','super+c'],['settings','super+i'],['panel','super+s'],
   ['fullscreen','super+f'],['close','super+q'],['float','super+t'],['theme','super+shift+t'],
@@ -1364,7 +1364,7 @@ padGroup('shell',[['term','super+enter'],['launch','super+space'],['files','supe
   ['scratchpad','super+grave'],['power','super+x'],['prevws','super+comma'],['nextws','super+period']],'chord');
 padGroup('function',['f1','f2','f3','f4','f5','f6','f7','f8','f9','f10','f11','f12']);
 // Workspace chords labelled with workspace NAMES (that is what hyprctl wants).
-// Shell chords mirror hyprland.lua; names live in hydra-remote's kcode table.
+// Shell chords mirror hyprland.lua; names live in valkyx-remote's kcode table.
 padGroup('workspace',[['studio','super+1'],['create','super+2'],['code','super+3'],
   ['research','super+4'],['personal','super+5'],['game','super+6']],'chord');
 for(const [title,verbs] of GROUPS){
@@ -1382,12 +1382,12 @@ for(const [title,verbs] of GROUPS){
 # The desktop Remote console: same verbs, same /video MSE endpoint, a real
 # layout instead of the phone surface. Served when ?desktop=1 is present so the
 # phone page stays byte-for-byte what the phone already uses. ?embed=1 drops its
-# own topbar for when the Hydra-S Console chrome owns the frame.
+# own topbar for when the Valkyx-S Console chrome owns the frame.
 PAGE_DESKTOP = r"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>HYDRA remote - console</title>
+<title>VALKYX remote - console</title>
 <style>
 *{box-sizing:border-box}
 :root{
@@ -1462,7 +1462,7 @@ body.embed .tb{display:none}
 .rb:hover{color:var(--txt);border-color:var(--acc)}
 </style></head><body>
 <header class="tb">
-  <div class="brand">HYDRA&nbsp;SAMO&nbsp;LABS&nbsp;<b>// remote console</b></div>
+  <div class="brand">VALKYX&nbsp;SAMO&nbsp;LABS&nbsp;<b>// remote console</b></div>
   <span class="st" id="tbstate"><i></i>local session &middot; 100.71.210.6</span>
   <span class="sp"></span>
   <span class="st" id="tbfps">&mdash; fps</span>
@@ -1506,12 +1506,12 @@ let TOK='';
 const tm=/[#&]token=([^&]+)/.exec(location.hash);
 if(tm){
   TOK=decodeURIComponent(tm[1]);
-  try{localStorage.setItem('hydra.remote.token',TOK);}catch(e){}
+  try{localStorage.setItem('valkyx.remote.token',TOK);}catch(e){}
   history.replaceState(null,'',location.pathname+location.search+'#tab=remote');
 }else{
-  try{TOK=localStorage.getItem('hydra.remote.token')||'';}catch(e){}
+  try{TOK=localStorage.getItem('valkyx.remote.token')||'';}catch(e){}
 }
-document.cookie='hydra_token='+encodeURIComponent(TOK)+'; path=/; SameSite=Strict';
+document.cookie='valkyx_token='+encodeURIComponent(TOK)+'; path=/; SameSite=Strict';
 
 const LOG=$('log');
 function log(m,lv){
@@ -1530,7 +1530,7 @@ function log(m,lv){
 async function verb(v,arg){
   try{
     const r=await fetch('verb',{method:'POST',
-      headers:{'X-Hydra-Token':TOK,'Content-Type':'application/json'},
+      headers:{'X-Valkyx-Token':TOK,'Content-Type':'application/json'},
       body:JSON.stringify({verb:v,arg:arg||''})});
     const txt=(await r.text()).trim();
     log(v+(arg?' '+arg:'')+'  '+(txt||'HTTP '+r.status), r.ok?'ok':'err');
@@ -1570,7 +1570,7 @@ async function pump(ms,my){
   AB=new AbortController();
   let r;
   try{r=await fetch('video?fps='+FPS+'&br=4000',
-    {headers:{'X-Hydra-Token':TOK},signal:AB.signal});}
+    {headers:{'X-Valkyx-Token':TOK},signal:AB.signal});}
   catch(e){if(my===gen)log('stream aborted','err');return;}
   if(!r.ok||!r.body){log('stream HTTP '+r.status,'err');setLink('error');return;}
   badge(true);setLink('live','h264 / mse');
@@ -1684,7 +1684,7 @@ def token() -> str:
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
-    server_version = "hydra-remote"
+    server_version = "valkyx-remote"
     tok = ""
 
     def _send(self, code: int, body: bytes, ctype: str,
@@ -1711,7 +1711,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             # a secret to anything that could reach the port. Numbers are not
             # secret, but a new readable endpoint is the same shape of mistake.
             # Every response is Cache-Control: no-store, so this is never stale.
-            # ?desktop=1 is the Hydra-S Console's Remote tab; the phone keeps
+            # ?desktop=1 is the Valkyx-S Console's Remote tab; the phone keeps
             # the bare page. Both ride the same verbs and /video.
             if "desktop=1" in self.path:
                 self._send(200, PAGE_DESKTOP.encode(), "text/html; charset=utf-8")
@@ -1728,7 +1728,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # inconvenient while the whitelist was all fixed no-arg verbs. Once
         # queue:add made this surface execute code, handing out the token turned
         # "can reach :8444" into "can run an agent in $HOME". Read it once on the
-        # desktop (`cat ~/.local/state/hydra/remote-token`) and paste it into the
+        # desktop (`cat ~/.local/state/valkyx/remote-token`) and paste it into the
         # phone's token field; the page keeps it for the session.
         else:
             self._send(404, b"not found", "text/plain")
@@ -1746,7 +1746,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if not self._authed_cookie():
             self._send(401, b"bad token", "text/plain")
             return
-        # PC-side defaults from ~/.config/hydra/remote.json, read per request and
+        # PC-side defaults from ~/.config/valkyx/remote.json, read per request and
         # UNCACHED so a tweak lands on the next connection with no restart. The
         # query still wins, so the phone's own ?br= pin keeps working over it.
         d = load_remote_defaults()
@@ -1786,7 +1786,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         try:
             # PERSISTENT capture first. The old loop spawned one `grim` per frame,
             # and that process spawn really costs ~18.6ms on this box -- a 53.8fps
-            # ceiling no bitrate could buy past. hydra-cap is one long-lived
+            # ceiling no bitrate could buy past. valkyx-cap is one long-lived
             # wlr-screencopy client that paces itself and measured a sustained
             # 60.0fps (240/240 frames) with zero spawns.
             #
@@ -1795,7 +1795,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             # read HERE, synchronously, because ffmpeg needs -s before it starts.
             try:
                 cap = subprocess.Popen(
-                    ["$HOME/.local/bin/hydra-cap", "--fps=%d" % fps],
+                    ["$HOME/.local/bin/valkyx-cap", "--fps=%d" % fps],
                     stdout=subprocess.PIPE, bufsize=0)
                 hdr = b""
                 end = time.time() + 3.0
@@ -1807,9 +1807,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 if len(hdr) == 12 and hdr[:4] == b"HCAP":
                     W, H = struct.unpack("<II", hdr[4:12])
                     persistent = True
-                    sys.stderr.write("video: hydra-cap %dx%d @%dfps\n" % (W, H, fps))
+                    sys.stderr.write("video: valkyx-cap %dx%d @%dfps\n" % (W, H, fps))
             except OSError as e:
-                sys.stderr.write("video: hydra-cap unavailable: %s\n" % e)
+                sys.stderr.write("video: valkyx-cap unavailable: %s\n" % e)
             if not persistent and cap:
                 cap.kill()
                 cap = None
@@ -1865,7 +1865,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
             def feed():
                 if persistent:
-                    # Straight copy: hydra-cap already paces and repacks, so this
+                    # Straight copy: valkyx-cap already paces and repacks, so this
                     # thread does nothing but move bytes.
                     fsz = W * H * 4
                     while True:
@@ -1910,7 +1910,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             mark = time.perf_counter()
             # Read the pipe by fd with a poll, because a plain blocking
             # read(65536) has no way to notice that the pipeline is DEAD.
-            # feed() returns SILENTLY when hydra-cap's pipe closes -- no log, no
+            # feed() returns SILENTLY when valkyx-cap's pipe closes -- no log, no
             # exception -- and ffmpeg, starved of input, simply stops producing
             # output while staying alive. The read then blocks forever: the
             # handler never returns, the `finally` never runs, and BOTH ffmpeg
@@ -1933,7 +1933,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 # The kick flag, checked on every poll. select() already gives a
                 # 5s cadence, so this costs one bool test per poll and bounds
                 # kick latency to ~5s. Raising here runs the SAME finally that
-                # cleans up ffmpeg + hydra-cap, so a kick cannot become a leak --
+                # cleans up ffmpeg + valkyx-cap, so a kick cannot become a leak --
                 # which is precisely the failure this service already had once.
                 global KICK
                 if KICK:
@@ -1964,7 +1964,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         finally:
             # A leaked ffmpeg would keep the GPU busy and the pipe open forever,
             # and one per reconnect is how you get to twenty encoders. Same for
-            # hydra-cap: a persistent capture client that outlives its socket
+            # valkyx-cap: a persistent capture client that outlives its socket
             # keeps the GPU reading frames nobody will ever see.
             if ff and ff.poll() is None:
                 ff.kill()
@@ -2005,7 +2005,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 # throttle it eventually, but "eventually" is a hung tab.
                 fps = min(60, max(1, int(kv[4:])))
         self.send_response(200)
-        self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=hydra")
+        self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=valkyx")
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         # No Content-Length: the body never ends, so the browser keeps painting
@@ -2014,7 +2014,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         try:
             mons = json.loads(subprocess.run(["hyprctl", "monitors", "-j"],
                                              capture_output=True, text=True).stdout)
-            self.wfile.write(("--hydra %s\r\n" % f"{mons[0]['width']}x{mons[0]['height']}").encode())
+            self.wfile.write(("--valkyx %s\r\n" % f"{mons[0]['width']}x{mons[0]['height']}").encode())
             self.wfile.flush()
             sent = 0
             mark = time.perf_counter()
@@ -2030,7 +2030,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 if not jpg:
                     time.sleep(0.05)
                     continue
-                self.wfile.write(b"--hydra\r\nContent-Type: image/jpeg\r\n"
+                self.wfile.write(b"--valkyx\r\nContent-Type: image/jpeg\r\n"
                                  b"Content-Length: " + str(len(jpg)).encode() + b"\r\n\r\n")
                 self.wfile.write(jpg + b"\r\n")
                 self.wfile.flush()
@@ -2055,7 +2055,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def _authed_cookie(self) -> bool:
         raw = self.headers.get("Cookie") or ""
-        m = re.search(r"hydra_token=([^;]+)", raw)
+        m = re.search(r"valkyx_token=([^;]+)", raw)
         return bool(m and hmac.compare_digest(m.group(1).strip(), Handler.tok))
 
     def do_POST(self) -> None:  # noqa: N802
@@ -2063,7 +2063,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             # Same token gate as /verb. It only drops one stream, but an
             # unauthenticated caller must not be able to interrupt anyone's
             # session, so it is not exempt just because it is harmless.
-            if not secrets.compare_digest(self.headers.get("X-Hydra-Token", ""), self.tok):
+            if not secrets.compare_digest(self.headers.get("X-Valkyx-Token", ""), self.tok):
                 self._send(403, b'{"ok":false,"error":"bad token"}', "application/json")
                 return
             global KICK
@@ -2074,7 +2074,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if self.path != "/verb":
             self._send(404, b"not found", "text/plain")
             return
-        if not secrets.compare_digest(self.headers.get("X-Hydra-Token", ""), self.tok):
+        if not secrets.compare_digest(self.headers.get("X-Valkyx-Token", ""), self.tok):
             self._send(403, b'{"ok":false,"error":"bad token"}', "application/json")
             return
         try:
@@ -2096,7 +2096,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if not isinstance(arg, str) or len(arg) > 2000:
             self._send(400, b'{"ok":false,"error":"bad arg"}', "application/json")
             return
-        # The verb stays a bare identifier; hydra-remote owns the whitelist.
+        # The verb stays a bare identifier; valkyx-remote owns the whitelist.
         if not isinstance(verb, str) or not verb or len(verb) > 40:
             self._send(400, b'{"ok":false,"error":"bad verb"}', "application/json")
             return
@@ -2112,7 +2112,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send(200, b'{"ok":true}', "application/json")
                 return
             # the one verb handled here; every other verb still goes through
-            # hydra-remote, so the whitelist stays the single home for the surface.
+            # valkyx-remote, so the whitelist stays the single home for the surface.
             if verb == "screen":
                 # grim can encode JPEG ITSELF (-t jpeg). Forcing it through PNG
                 # first and re-encoding with magick cost 141ms/frame; grim's own
@@ -2166,9 +2166,9 @@ def main() -> None:
     args = ap.parse_args()
     Handler.tok = token()
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"hydra-remote-web on 127.0.0.1:{args.port}")
+    print(f"valkyx-remote-web on 127.0.0.1:{args.port}")
     # Never print the secret: stdout lands in the user journal, and a token in
-    # `journalctl --user -u hydra-remote-web` is a token in every future paste.
+    # `journalctl --user -u valkyx-remote-web` is a token in every future paste.
     print(f"token loaded ({len(Handler.tok)} chars); read with: cat {TOKEN_FILE}")
     srv.serve_forever()
 

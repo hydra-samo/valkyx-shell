@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Open the Hydra-S Console app window (siderail: Overview / Agents / Queue /
+# Open the Valkyx-S Console app window (siderail: Overview / Agents / Queue /
 # Streams / Flows / Automata / Studio / Settings), starting the local server first.
 set -euo pipefail
 
-systemctl --user start hydra-automata.service
+systemctl --user start valkyx-automata.service
 
 for _ in $(seq 1 25); do
   if curl -sf -o /dev/null --max-time 1 http://127.0.0.1:8445/console/; then break; fi
@@ -11,9 +11,9 @@ for _ in $(seq 1 25); do
 done
 
 # Token is read at launch, never baked into the world-readable .desktop entry.
-tok=$(tr -d '\n' < "$HOME/.local/state/hydra/remote-token")
+tok=$(tr -d '\n' < "$HOME/.local/state/valkyx/remote-token")
 exec /usr/bin/helium-browser \
   --app="http://127.0.0.1:8445/console/#token=${tok}" \
-  --class=HydraConsole \
-  --user-data-dir="$HOME/.local/share/hydra-console/profile" \
+  --class=ValkyxConsole \
+  --user-data-dir="$HOME/.local/share/valkyx-console/profile" \
   --no-first-run --no-default-browser-check

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-hub-check — prove the :8444 page's JavaScript actually parses.
+# valkyx-hub-check — prove the :8444 page's JavaScript actually parses.
 #
 # Why this exists: the served page is a Python string literal, so a JS escape like
 # '\n\n' can be eaten by Python and land in the browser as a real newline inside a
@@ -9,7 +9,7 @@
 # cheapest thing that actually sees it; there is no browser on this box.
 set -uo pipefail
 
-SRC="$HOME/.local/bin/hydra-remote-web"
+SRC="$HOME/.local/bin/valkyx-remote-web"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 

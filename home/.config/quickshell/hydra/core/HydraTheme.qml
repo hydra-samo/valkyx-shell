@@ -1,5 +1,5 @@
 pragma Singleton
-// HYDRA visual identity — the only place color/font values live.
+// VALKYX visual identity — the only place color/font values live.
 import QtQuick
 
 QtObject {
@@ -44,7 +44,7 @@ QtObject {
 
     // named themes — accent + bg family, applied live by the picker
     property var themes: [
-        { name: "Hydra", accent: "#00A86B", bg: "#0a1210", surface: "#101614", field: "#141d19", line: "#1a2420" },
+        { name: "Valkyx", accent: "#00A86B", bg: "#0a1210", surface: "#101614", field: "#141d19", line: "#1a2420" },
         { name: "Violet", accent: "#7C4DFF", bg: "#0d0a14", surface: "#141018", field: "#181420", line: "#221c2e" },
         { name: "Ocean", accent: "#2196F3", bg: "#0a1016", surface: "#10161c", field: "#141c24", line: "#1c2834" },
         { name: "Ember", accent: "#FF5252", bg: "#140a0a", surface: "#1a1010", field: "#221414", line: "#2e1c1c" },
@@ -55,7 +55,7 @@ QtObject {
     // Repeater CANNOT render a JS array of objects — `modelData` never arrives and
     // the delegate produces nothing at all, silently. Only a string array (or a real
     // ListModel) works. So every theme picker iterates this and resolves by name.
-    property var themeNames: ["Hydra", "Violet", "Ocean", "Ember", "Amber", "Cyan"]
+    property var themeNames: ["Valkyx", "Violet", "Ocean", "Ember", "Amber", "Cyan"]
     function themeByName(name) {
         for (const t of themes) if (t.name === name) return t
         return null
@@ -77,7 +77,7 @@ QtObject {
         "vivid": 0x88 / 255,    // .533 emphatic highlight
         "glass": 0x99 / 255     // .600 near-solid tint
     }
-    // named-alpha resolver. `tint(HydraTheme.accent, "fill")` — name is global
+    // named-alpha resolver. `tint(ValkyxTheme.accent, "fill")` — name is global
     // and theme-agnostic. Also accepts a raw 2-digit hex ("55") for one-offs;
     // NEVER pass a bare color+hex string concat — that is the olive bug.
     function tint(c, levelOrHex) {
@@ -96,7 +96,7 @@ QtObject {
         }
     }
 
-    // Apply an arbitrary palette entry (hydra preset OR omarchy catalog theme).
+    // Apply an arbitrary palette entry (valkyx preset OR omarchy catalog theme).
     // Same fields the picker/cycle use; `light` flips the adaptive text family.
     function applyEntry(e) {
         if (e.accent) accent = e.accent

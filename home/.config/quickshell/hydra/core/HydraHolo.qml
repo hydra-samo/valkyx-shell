@@ -1,7 +1,7 @@
-// HydraHolo — the holo UI's token singleton: the fixed emerald palette,
+// ValkyxHolo — the holo UI's token singleton: the fixed emerald palette,
 // the scanline layer's one opacity, and the type scale. The holo surface
 // is the BRAND surface: it does NOT follow the desktop theme presets, so the
-// palette is literals here, not aliases of HydraTheme. Registered in
+// palette is literals here, not aliases of ValkyxTheme. Registered in
 // core/qmldir; consumed via `import "../core"`.
 pragma Singleton
 import QtQuick
@@ -10,13 +10,13 @@ QtObject {
     // ── palette (theme-following identity) ──
     // The holo surface is a BRAND surface: it follows the desktop theme
     // (user override). Geometry (plexus/ring/brackets) is untouched — only
-    // color derives from HydraTheme.accent, so the default Hydra theme
+    // color derives from ValkyxTheme.accent, so the default Valkyx theme
     // renders exactly the old emerald. Amber/red stay reserved literals
     // (approval = the ONE warning, red = deny only).
-    readonly property color bg: HydraTheme.bg          // the glass field
-    readonly property color deep: Qt.darker(HydraTheme.accent, 3.0) // structural fills
-    readonly property color primary: HydraTheme.accent // borders, text, icons, active marks
-    readonly property color bright: Qt.lighter(HydraTheme.accent, 1.5) // hot states (thinking/tooling/waking)
+    readonly property color bg: ValkyxTheme.bg          // the glass field
+    readonly property color deep: Qt.darker(ValkyxTheme.accent, 3.0) // structural fills
+    readonly property color primary: ValkyxTheme.accent // borders, text, icons, active marks
+    readonly property color bright: Qt.lighter(ValkyxTheme.accent, 1.5) // hot states (thinking/tooling/waking)
     // amber/red are reserved for REAL warnings/errors only. The only warning
     // state is needs-approval; there is no error state in the state machine.
     readonly property color warning: "#D0A86A"
@@ -40,7 +40,7 @@ QtObject {
     // Multi-element glyphs are concatenated into ONE PathSvg `d` (subpaths);
     // <circle> elements are pre-converted to arc subpaths; <rect> bars to
     // sharp-corner subpaths (rx <= 1 vanishes at glyph size). Single source
-    // for every Holo icon — files read HydraHolo.iconPaths.<name>.
+    // for every Holo icon — files read ValkyxHolo.iconPaths.<name>.
     readonly property var iconPaths: ({
         chat: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719",
         news: "M15 18h-5 M18 14h-8 M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9a2 2 0 0 1 2-2h2 M10 6h8v4h-8Z",
@@ -59,7 +59,7 @@ QtObject {
     })
 
     // ── type scale (scale-1 px) ──
-    // Every use is Math.round(N * HydraState.fontScale); nothing renders
+    // Every use is Math.round(N * ValkyxState.fontScale); nothing renders
     // below 10px at scale 1. One scale for the whole holo UI — no fixed
     // sizes, no second regime.
     readonly property int fsMicro: 10   // labels, chips, metric readouts

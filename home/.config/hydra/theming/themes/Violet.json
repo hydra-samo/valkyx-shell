@@ -1,6 +1,6 @@
 {
   "name": "Violet",
-  "source": "hydra",
+  "source": "valkyx",
   "colors": {
     "accent": "#7C4DFF",
     "muted": "#9e90d9",
@@ -14,5 +14,5 @@
     "warning": "#d0a86a"
   },
   "wallpaper": null,
-  "style": "hydra"
+  "style": "valkyx"
 }

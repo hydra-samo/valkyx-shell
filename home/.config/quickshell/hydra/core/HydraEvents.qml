@@ -1,5 +1,5 @@
 pragma Singleton
-// HYDRA event bus — all reactive change moments.
+// VALKYX event bus — all reactive change moments.
 // Only signals that have actual emitters and/or consumers.
 import QtQuick
 

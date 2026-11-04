@@ -1,6 +1,6 @@
 {
   "name": "Amber",
-  "source": "hydra",
+  "source": "valkyx",
   "colors": {
     "accent": "#FF9800",
     "muted": "#d9b266",
@@ -14,5 +14,5 @@
     "warning": "#d0a86a"
   },
   "wallpaper": null,
-  "style": "hydra"
+  "style": "valkyx"
 }

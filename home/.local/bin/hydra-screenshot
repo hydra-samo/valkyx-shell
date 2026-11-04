@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-screenshot region|full — grim-based (no portal dependency)
+# valkyx-screenshot region|full — grim-based (no portal dependency)
 #
 # Hyprland 0.56.2 has an upstream screencopy regression: the compositor accepts the
 # capture and then never sends the frame's `ready()` (ext-image-copy-capture, broken
@@ -17,7 +17,7 @@ capture() {
   if ! timeout "$GRIM_TIMEOUT" grim "$@"; then
     rm -f "$file"
     echo "screencopy failed: grim did not complete in ${GRIM_TIMEOUT}s (known Hyprland 0.56 ext-image-copy-capture regression)" >&2
-    notify-send -a HYDRA "Screenshot" "FAILED — grim timed out (Hyprland 0.56 capture bug)" 2>/dev/null || true
+    notify-send -a VALKYX "Screenshot" "FAILED — grim timed out (Hyprland 0.56 capture bug)" 2>/dev/null || true
     exit 1
   fi
 }
@@ -25,7 +25,7 @@ capture() {
 case "$mode" in
   region) capture -g "$(slurp)" "$file" ;;
   full)   capture "$file" ;;
-  *) echo "usage: hydra-screenshot [region|full]" >&2; exit 64 ;;
+  *) echo "usage: valkyx-screenshot [region|full]" >&2; exit 64 ;;
 esac
 
-notify-send -a HYDRA "Screenshot" "saved ${file##*/}" 2>/dev/null || true
+notify-send -a VALKYX "Screenshot" "saved ${file##*/}" 2>/dev/null || true

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-logout-watchdog <session-id> — end the session, from outside it.
+# valkyx-logout-watchdog <session-id> — end the session, from outside it.
 #
 # Runs as a `systemd-run --user` unit under user@1000.service/app.slice/, a
 # sibling of session-N.scope, so it outlives the session it terminates. A plain
@@ -7,7 +7,7 @@
 #
 # There is deliberately no "clean exit" rung. Two were tried and both are dead:
 #   - hyprctl eval 'hl.dsp.exit()'  -> returns 0, exits nothing
-#   - hydra-dispatch exit         -> rc=7; 'exit' is not a dispatcher in this
+#   - valkyx-dispatch exit         -> rc=7; 'exit' is not a dispatcher in this
 #     Hyprland build (only exec/killwindow/moveactive exist in the binary)
 # They cost 10 wasted seconds of a frozen-looking desktop before failing.
 # loginctl terminate-session is the only rung that has ever worked here: rc=0,
@@ -19,7 +19,7 @@
 set -u
 
 sid="${1:-}"
-LOG="${XDG_STATE_HOME:-$HOME/.local/state}/hydra-power.log"
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/valkyx-power.log"
 note() { printf '%s logout    %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
 
 [ -n "$sid" ] || { note "watchdog: no session id given"; exit 1; }

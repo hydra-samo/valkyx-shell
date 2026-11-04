@@ -1,4 +1,4 @@
-// HYDRA SETTINGS — floating window, centered via top+left anchors.
+// VALKYX SETTINGS — floating window, centered via top+left anchors.
 // Fixed: was too tall for 768p (750/768 = 98% — Hyprland fought it).
 // Now 640px tall, exclusiveZone -1, Esc to close.
 import Quickshell
@@ -9,7 +9,7 @@ import "settings" as Pages
 
 PanelWindow {
     id: settings
-    visible: Core.HydraState.settingsOpen
+    visible: Core.ValkyxState.settingsOpen
 
     implicitWidth: 960; implicitHeight: 640
     anchors { top: true; left: true }
@@ -44,17 +44,17 @@ PanelWindow {
     Item {
         id: panelRoot
         anchors.fill: parent
-        opacity: Core.HydraState.settingsOpen ? 1 : 0
-        enabled: Core.HydraState.settingsOpen
-        focus: Core.HydraState.settingsOpen
-        Keys.onEscapePressed: Core.HydraState.settingsOpen = false
+        opacity: Core.ValkyxState.settingsOpen ? 1 : 0
+        enabled: Core.ValkyxState.settingsOpen
+        focus: Core.ValkyxState.settingsOpen
+        Keys.onEscapePressed: Core.ValkyxState.settingsOpen = false
 
         // glass background
         Rectangle {
             anchors.fill: parent
-            color: Core.HydraMaterials.panelGlass
-            radius: Core.HydraMetrics.rPanel
-            border.color: Core.HydraMaterials.border
+            color: Core.ValkyxMaterials.panelGlass
+            radius: Core.ValkyxMetrics.rPanel
+            border.color: Core.ValkyxMaterials.border
             border.width: 1
         }
 
@@ -97,8 +97,8 @@ PanelWindow {
             Text {
                 anchors.left: parent.left; anchors.leftMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
-                text: "\uDB80\uDED9  SETTINGS"; color: Core.HydraTheme.accent
-                font.family: Core.HydraTheme.fontMono; font.pixelSize: Math.round(11 * Core.HydraState.fontScale); font.letterSpacing: 2
+                text: "\uDB80\uDED9  SETTINGS"; color: Core.ValkyxTheme.accent
+                font.family: Core.ValkyxTheme.fontMono; font.pixelSize: Math.round(11 * Core.ValkyxState.fontScale); font.letterSpacing: 2
             }
 
             // close button (on top of drag area)
@@ -107,8 +107,8 @@ PanelWindow {
                 anchors.right: parent.right; anchors.rightMargin: 8
                 anchors.verticalCenter: parent.verticalCenter
                 color: "transparent"
-                Text { anchors.centerIn: parent; text: "\uDB80\uDD56"; color: closeH.containsMouse ? Core.HydraTheme.danger : Core.HydraTheme.muted; font.pixelSize: Math.round(11 * Core.HydraState.fontScale) }
-                MouseArea { id: closeH; anchors.fill: parent; hoverEnabled: true; onClicked: Core.HydraState.settingsOpen = false; cursorShape: Qt.PointingHandCursor }
+                Text { anchors.centerIn: parent; text: "\uDB80\uDD56"; color: closeH.containsMouse ? Core.ValkyxTheme.danger : Core.ValkyxTheme.muted; font.pixelSize: Math.round(11 * Core.ValkyxState.fontScale) }
+                MouseArea { id: closeH; anchors.fill: parent; hoverEnabled: true; onClicked: Core.ValkyxState.settingsOpen = false; cursorShape: Qt.PointingHandCursor }
             }
         }
 
@@ -134,17 +134,17 @@ PanelWindow {
                     width: 36; height: 36; radius: 8
                     anchors.horizontalCenter: parent.horizontalCenter
                     color: "transparent"
-                    border.color: settings.currentPage === modelData.page ? Core.HydraTheme.accent : "transparent"
+                    border.color: settings.currentPage === modelData.page ? Core.ValkyxTheme.accent : "transparent"
                     border.width: 1
                     Text {
                         anchors.centerIn: parent
                         text: modelData.icon
-                        color: settings.currentPage === modelData.page ? Core.HydraTheme.accent : Core.HydraTheme.muted
-                        font.family: Core.HydraTheme.fontMono; font.pixelSize: Math.round(14 * Core.HydraState.fontScale)
+                        color: settings.currentPage === modelData.page ? Core.ValkyxTheme.accent : Core.ValkyxTheme.muted
+                        font.family: Core.ValkyxTheme.fontMono; font.pixelSize: Math.round(14 * Core.ValkyxState.fontScale)
                     }
                     MouseArea {
                         id: navH; anchors.fill: parent; hoverEnabled: true
-                        onClicked: Core.HydraState.settingsPage = modelData.page
+                        onClicked: Core.ValkyxState.settingsPage = modelData.page
                         cursorShape: Qt.PointingHandCursor
                     }
                 }
@@ -154,8 +154,8 @@ PanelWindow {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "v0.9"; color: Core.HydraTheme.tint(Core.HydraTheme.muted, "44")
-                font.family: Core.HydraTheme.fontMono; font.pixelSize: Math.round(8 * Core.HydraState.fontScale)
+                text: "v0.9"; color: Core.ValkyxTheme.tint(Core.ValkyxTheme.muted, "44")
+                font.family: Core.ValkyxTheme.fontMono; font.pixelSize: Math.round(8 * Core.ValkyxState.fontScale)
             }
         }
 
@@ -163,7 +163,7 @@ PanelWindow {
         Rectangle {
             anchors.top: titleBar.bottom; anchors.bottom: parent.bottom
             anchors.left: navRail.right; anchors.leftMargin: 8
-            width: 1; color: Core.HydraMaterials.border
+            width: 1; color: Core.ValkyxMaterials.border
             anchors.topMargin: 6; anchors.bottomMargin: 12
         }
 
@@ -182,5 +182,5 @@ PanelWindow {
         }
 
     }
-    property int currentPage: Core.HydraState.settingsPage
+    property int currentPage: Core.ValkyxState.settingsPage
 }

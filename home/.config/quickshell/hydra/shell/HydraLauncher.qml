@@ -1,7 +1,7 @@
-// HYDRA Launcher — floating command surface, shell-native.
+// VALKYX Launcher — floating command surface, shell-native.
 // Replaces fuzzel: same rounded-rectangle panel, keyboard-native search,
-// app icons, and full accent reactivity through HydraTheme.
-// Data + launch logic live in hydra-launch (--list-json / --run).
+// app icons, and full accent reactivity through ValkyxTheme.
+// Data + launch logic live in valkyx-launch (--list-json / --run).
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
@@ -11,7 +11,7 @@ import "../core"
 
 PanelWindow {
     id: launcher
-    visible: HydraState.launcherOpen
+    visible: ValkyxState.launcherOpen
     focusable: true
     aboveWindows: true
     exclusiveZone: -1
@@ -30,7 +30,7 @@ PanelWindow {
         launcher.winY = Math.max(0, Math.round(sh * 0.22))
     }
     onScreenChanged: gear()
-    onVisibleChanged: { if (visible) { gear(); open(); focusPoll.start() } else { HydraState.launcherOpen = false; focusPoll.stop() } }
+    onVisibleChanged: { if (visible) { gear(); open(); focusPoll.start() } else { ValkyxState.launcherOpen = false; focusPoll.stop() } }
     // Re-assert keyboard focus on a retry timer: layershell re-maps can land AFTER
     // Qt.callLater fires (esp. right after boot), so a one-shot grab is dropped and
     // the launcher goes keyboard-dead until a click. Poll while visible, stop once
@@ -45,14 +45,14 @@ PanelWindow {
     onSectionChanged: if (visible) open()   // section swap while open → re-pull data
     // accent switch while open → re-pull so themed glyph icons follow
     Connections {
-        target: HydraState
+        target: ValkyxState
         function onThemeNameChanged() { if (visible) open() }
     }
     margins { left: launcher.winX; top: launcher.winY }
     implicitWidth: panelW
     implicitHeight: 460
 
-    // ── data: JSON from hydra-launch --list-json [theme] [section] ──
+    // ── data: JSON from valkyx-launch --list-json [theme] [section] ──
     property var allEntries: []
     property string query: ""
     property int current: -1
@@ -100,23 +100,23 @@ PanelWindow {
         current = -1
         dataReady = false
         listModel.clear()
-        listProc.command = ["hydra-launch", "--list-json", HydraState.themedName, section]
+        listProc.command = ["valkyx-launch", "--list-json", ValkyxState.themedName, section]
         listProc.running = true
         input.forceActiveFocus()
     }
     function openSection(s) {
         section = s
         sectionTitle = s === "game" ? "GAMES" : s === "clip" ? "CLIPBOARD" : s === "dir" ? "PROJECTS" : s === "emoji" ? "EMOJI" : ""
-        if (HydraState.launcherOpen) open()
-        else HydraState.launcherOpen = true
+        if (ValkyxState.launcherOpen) open()
+        else ValkyxState.launcherOpen = true
     }
     function close() {
-        HydraState.launcherOpen = false
+        ValkyxState.launcherOpen = false
     }
     function activate() {
         if (current < 0 || current >= listModel.count) return
         const e = listModel.get(current)
-        HydraState.exec("hydra-launch --run \"" + e.run.replace(/"/g, '\\"') + "\"")
+        ValkyxState.exec("valkyx-launch --run \"" + e.run.replace(/"/g, '\\"') + "\"")
         close()
     }
     // Debug: test if close alone works
@@ -127,7 +127,7 @@ PanelWindow {
         if (listModel.count === 0) return
         current = (current + d + listModel.count) % listModel.count
     }
-    // TEST HOOK (hydra-ui-test): the ACTUAL highlighted row, driven by
+    // TEST HOOK (valkyx-ui-test): the ACTUAL highlighted row, driven by
     // lv.currentIndex — NOT launcher.current. This is what catches binding-
     // destruction: if a handler assigned to lv.currentIndex and killed the
     // `currentIndex: launcher.current` binding, launcher.current still moves
@@ -147,8 +147,8 @@ PanelWindow {
         transformOrigin: Item.Top
         scale: 1
         opacity: 1
-        Behavior on scale { NumberAnimation { duration: HydraMotion.base; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: HydraMotion.base; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: ValkyxMotion.base; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: ValkyxMotion.base; easing.type: Easing.OutCubic } }
         Keys.onEscapePressed: close()
         Keys.onUpPressed: { launcher.move(-1); event.accepted = true }
         Keys.onDownPressed: { launcher.move(1); event.accepted = true }
@@ -172,24 +172,24 @@ PanelWindow {
         Rectangle {
             id: launcherBg
             anchors.fill: parent
-            radius: HydraMetrics.rPanel
-            color: HydraMaterials.panelGlass
-            border.color: HydraMaterials.border
+            radius: ValkyxMetrics.rPanel
+            color: ValkyxMaterials.panelGlass
+            border.color: ValkyxMaterials.border
             border.width: 1
         }
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: HydraMetrics.m
-            spacing: HydraMetrics.s
+            anchors.margins: ValkyxMetrics.m
+            spacing: ValkyxMetrics.s
 
             // ── search field ──
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
-                radius: HydraMetrics.rBtn
-                color: HydraMaterials.surface2
-                border.color: input.activeFocus ? HydraTheme.accent : HydraMaterials.borderFaint
+                radius: ValkyxMetrics.rBtn
+                color: ValkyxMaterials.surface2
+                border.color: input.activeFocus ? ValkyxTheme.accent : ValkyxMaterials.borderFaint
                 border.width: 1
 
                 RowLayout {
@@ -198,16 +198,16 @@ PanelWindow {
                     spacing: 10
                     Text {
                         text: "\uDB80\uDF49"
-                        color: input.activeFocus ? HydraTheme.accent : HydraTheme.muted
-                        font.family: HydraTheme.fontMono
-                        font.pixelSize: Math.round(14 * HydraState.fontScale)
+                        color: input.activeFocus ? ValkyxTheme.accent : ValkyxTheme.muted
+                        font.family: ValkyxTheme.fontMono
+                        font.pixelSize: Math.round(14 * ValkyxState.fontScale)
                     }
                     TextInput {
                         id: input
                         Layout.fillWidth: true
-                        color: HydraTheme.text
-                        font.family: HydraTheme.fontUI
-                        font.pixelSize: Math.round(15 * HydraState.fontScale)
+                        color: ValkyxTheme.text
+                        font.family: ValkyxTheme.fontUI
+                        font.pixelSize: Math.round(15 * ValkyxState.fontScale)
                         selectByMouse: true
                         // cursor only blinks while actually typing — no idle flicker
                         cursorVisible: text.length > 0
@@ -220,9 +220,9 @@ PanelWindow {
                     }
                     Text {
                         text: listModel.count + " results"
-                        color: HydraTheme.muted
-                        font.family: HydraTheme.fontUI
-                        font.pixelSize: Math.round(9 * HydraState.fontScale)
+                        color: ValkyxTheme.muted
+                        font.family: ValkyxTheme.fontUI
+                        font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                     }
                 }
             }
@@ -231,17 +231,17 @@ PanelWindow {
             RowLayout {
                 Layout.fillWidth: true
                 visible: sectionTitle !== ""
-                spacing: HydraMetrics.s
+                spacing: ValkyxMetrics.s
                 Text {
                     text: sectionTitle
-                    color: HydraTheme.accent
-                    font.family: HydraTheme.fontMono
-                    font.pixelSize: Math.round(10 * HydraState.fontScale)
+                    color: ValkyxTheme.accent
+                    font.family: ValkyxTheme.fontMono
+                    font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                 }
                 Rectangle {
                     Layout.fillWidth: true
                     height: 1
-                    color: HydraTheme.tint(HydraTheme.accent, "44")
+                    color: ValkyxTheme.tint(ValkyxTheme.accent, "44")
                 }
             }
 
@@ -270,9 +270,9 @@ PanelWindow {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: HydraMetrics.rBtn
-                        color: lv.currentIndex === index ? HydraMaterials.surface2 : "transparent"
-                        border.color: lv.currentIndex === index ? HydraMaterials.borderFaint : "transparent"
+                        radius: ValkyxMetrics.rBtn
+                        color: lv.currentIndex === index ? ValkyxMaterials.surface2 : "transparent"
+                        border.color: lv.currentIndex === index ? ValkyxMaterials.borderFaint : "transparent"
                         border.width: 1
 
                         // left-edge accent bar on the selected row (illogical-impulse pattern)
@@ -280,14 +280,14 @@ PanelWindow {
                             visible: lv.currentIndex === index
                             anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
                             width: 3
-                            color: HydraTheme.accent
+                            color: ValkyxTheme.accent
                             radius: 2
                         }
 
                         // app icon
                         Image {
                             anchors.left: parent.left
-                            anchors.leftMargin: HydraMetrics.m
+                            anchors.leftMargin: ValkyxMetrics.m
                             anchors.verticalCenter: parent.verticalCenter
                             width: 26; height: 26
                             source: icon
@@ -298,14 +298,14 @@ PanelWindow {
                         // name
                         Text {
                             anchors.left: parent.left
-                            anchors.leftMargin: HydraMetrics.l + 40
+                            anchors.leftMargin: ValkyxMetrics.l + 40
                             anchors.verticalCenter: parent.verticalCenter
                             text: name
-                            color: lv.currentIndex === index ? HydraTheme.text : HydraTheme.muted
-                            font.family: HydraTheme.fontUI
-                            font.pixelSize: Math.round(13 * HydraState.fontScale)
+                            color: lv.currentIndex === index ? ValkyxTheme.text : ValkyxTheme.muted
+                            font.family: ValkyxTheme.fontUI
+                            font.pixelSize: Math.round(13 * ValkyxState.fontScale)
                             elide: Text.ElideRight
-                            width: parent.width - HydraMetrics.l - 40 - HydraMetrics.l
+                            width: parent.width - ValkyxMetrics.l - 40 - ValkyxMetrics.l
                         }
 
                         MouseArea {
@@ -321,25 +321,25 @@ PanelWindow {
                     anchors.centerIn: parent
                     visible: listModel.count === 0
                     text: launcher.query ? "no results" : "loading…"
-                    color: HydraTheme.muted
-                    font.family: HydraTheme.fontUI
-                    font.pixelSize: Math.round(13 * HydraState.fontScale)
+                    color: ValkyxTheme.muted
+                    font.family: ValkyxTheme.fontUI
+                    font.pixelSize: Math.round(13 * ValkyxState.fontScale)
                 }
             }
 
             // ── footer hints ──
             RowLayout {
                 Layout.fillWidth: true
-                spacing: HydraMetrics.l
-                Text { text: "↵ launch"; color: HydraTheme.muted; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale) }
-                Text { text: "↑↓ navigate"; color: HydraTheme.muted; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale) }
-                Text { text: "esc close"; color: HydraTheme.muted; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale) }
+                spacing: ValkyxMetrics.l
+                Text { text: "↵ launch"; color: ValkyxTheme.muted; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale) }
+                Text { text: "↑↓ navigate"; color: ValkyxTheme.muted; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale) }
+                Text { text: "esc close"; color: ValkyxTheme.muted; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale) }
                 Item { Layout.fillWidth: true }
                 Text {
-                    text: "hydra › "
-                    color: HydraTheme.accent
-                    font.family: HydraTheme.fontMono
-                    font.pixelSize: Math.round(9 * HydraState.fontScale)
+                    text: "valkyx › "
+                    color: ValkyxTheme.accent
+                    font.family: ValkyxTheme.fontMono
+                    font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                 }
             }
         }

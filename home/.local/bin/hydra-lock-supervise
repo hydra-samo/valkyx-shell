@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# hydra-lock-supervise — take the session lock and stay alive as its supervisor.
+# valkyx-lock-supervise — take the session lock and stay alive as its supervisor.
 #
 # Must be run as a transient unit's main process, never as a plain background
-# job. hydra-lock returns ~4s after handing off (it watches the session-lock
+# job. valkyx-lock returns ~4s after handing off (it watches the session-lock
 # grant for a revoke), but hyprlock itself keeps running. If this script is the
 # unit's main process and it exits, systemd SIGKILLs everything left in the unit
 # cgroup — which killed the lock ~9s in, and a SIGKILLed hyprlock latches
@@ -13,7 +13,7 @@
 # resume has nothing to wait for) and the post-resume path.
 set -u
 
-LOG="${XDG_STATE_HOME:-$HOME/.local/state}/hydra-power.log"
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/valkyx-power.log"
 note() { printf '%s %-9s %s\n' "$(date -Iseconds)" "wakelock" "$*" >>"$LOG" 2>/dev/null; }
 
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
@@ -27,7 +27,7 @@ if [ -z "${WAYLAND_DISPLAY:-}" ]; then
     done
 fi
 
-$HOME/.local/bin/hydra-lock &
+$HOME/.local/bin/valkyx-lock &
 
 # Report how fast the lock mapped. Callers poll on the same signal, so a normal
 # run is ~150ms and this is diagnostic, not a gate.
@@ -40,7 +40,7 @@ done
 pgrep -x hyprlock >/dev/null 2>&1 && up=yes || up=no
 note "lock_up=$up after $((i * 50))ms"
 
-# Let hydra-lock finish its grant-watch and retry, then supervise until the user
+# Let valkyx-lock finish its grant-watch and retry, then supervise until the user
 # unlocks. Exiting here is the bug described at the top of this file.
 wait
 while pgrep -x hyprlock >/dev/null 2>&1; do

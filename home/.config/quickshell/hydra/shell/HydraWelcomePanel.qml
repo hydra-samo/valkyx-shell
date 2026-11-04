@@ -1,8 +1,8 @@
-// HYDRA Welcome — the reference card.
+// VALKYX Welcome — the reference card.
 //
 // Part of a pair; see the other file for the other half:
-//   HydraWelcomeGreeter.qml — the first-run fullscreen screen
-//   HydraWelcomePanel.qml   — the always-available reference card
+//   ValkyxWelcomeGreeter.qml — the first-run fullscreen screen
+//   ValkyxWelcomePanel.qml   — the always-available reference card
 //
 // They are two files because a QML document may only have ONE root object:
 // keeping both PanelWindows in one file is a hard "Syntax error" and the shell
@@ -21,8 +21,8 @@ import "../core/components"
 PanelWindow {
     id: welcome
 
-    visible: HydraState.welcomePanelOpen
-    focusable: HydraState.welcomePanelOpen
+    visible: ValkyxState.welcomePanelOpen
+    focusable: ValkyxState.welcomePanelOpen
     aboveWindows: true
     exclusiveZone: -1
     color: "transparent"
@@ -33,7 +33,7 @@ PanelWindow {
     // 700, not 640: with the info block in the right column the real content is
     // ~677. The old cap cropped the last switch. Bounded so it can never grow
     // past the 768px screen.
-    implicitHeight: Math.min(700, head.height + 1 + cols.height + HydraMetrics.xl * 2)
+    implicitHeight: Math.min(700, head.height + 1 + cols.height + ValkyxMetrics.xl * 2)
 
     property real winX: 0
     property real winY: 0
@@ -54,14 +54,14 @@ PanelWindow {
     }
 
     Connections {
-        target: HydraState
+        target: ValkyxState
         function onWelcomePanelOpenChanged() {
-            if (HydraState.welcomePanelOpen) {
+            if (ValkyxState.welcomePanelOpen) {
                 welcome.recenter()
                 welcome.focusPoll.start()
                 // uptime changes while the card is closed, so read the facts on
                 // every open rather than once at shell load
-                HydraState.sysInfo.running = true
+                ValkyxState.sysInfo.running = true
             }
         }
     }
@@ -70,24 +70,24 @@ PanelWindow {
     FocusScope {
         id: welcomeBody
         anchors.fill: parent
-        focus: HydraState.welcomePanelOpen
-        enabled: HydraState.welcomePanelOpen
-        opacity: HydraState.welcomePanelOpen ? 1 : 0
+        focus: ValkyxState.welcomePanelOpen
+        enabled: ValkyxState.welcomePanelOpen
+        opacity: ValkyxState.welcomePanelOpen ? 1 : 0
 
-        Keys.onEscapePressed: { HydraState.welcomePanelOpen = false; event.accepted = true }
+        Keys.onEscapePressed: { ValkyxState.welcomePanelOpen = false; event.accepted = true }
 
         Rectangle {
             anchors.fill: parent
-            radius: HydraMetrics.rPanel
-            color: HydraTheme.bgGlass
+            radius: ValkyxMetrics.rPanel
+            color: ValkyxTheme.bgGlass
             border.width: 1
-            border.color: HydraTheme.accent
+            border.color: ValkyxTheme.accent
 
             // Click-outside-to-close: the card shrinks to let the click through.
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
-                onClicked: HydraState.welcomePanelOpen = false
+                onClicked: ValkyxState.welcomePanelOpen = false
             }
 
             // ── header
@@ -102,20 +102,20 @@ PanelWindow {
                 Image {
                     id: mark
                     anchors.left: parent.left
-                    anchors.leftMargin: HydraMetrics.xl
+                    anchors.leftMargin: ValkyxMetrics.xl
                     anchors.verticalCenter: parent.verticalCenter
-                    source: "../data/hydra-mark_v4_white.svg"
+                    source: "../data/valkyx-mark_v4_white.svg"
                     sourceSize.width: 30; sourceSize.height: 30
                     width: 30; height: 30
                 }
 
                 Text {
                     anchors.left: mark.right
-                    anchors.leftMargin: HydraMetrics.m
+                    anchors.leftMargin: ValkyxMetrics.m
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "HYDRA LABS"
-                    color: HydraTheme.text
-                    font.family: HydraTheme.fontUI
+                    text: "VALKYX LABS"
+                    color: ValkyxTheme.text
+                    font.family: ValkyxTheme.fontUI
                     font.pixelSize: 14
                     font.weight: Font.DemiBold
                     font.letterSpacing: 2
@@ -123,50 +123,50 @@ PanelWindow {
 
                 Text {
                     anchors.left: mark.right
-                    anchors.leftMargin: HydraMetrics.m
+                    anchors.leftMargin: ValkyxMetrics.m
                     anchors.top: parent.top
                     anchors.topMargin: 26
                     text: "welcome"
-                    color: HydraTheme.muted
-                    font.family: HydraTheme.fontMono
+                    color: ValkyxTheme.muted
+                    font.family: ValkyxTheme.fontMono
                     font.pixelSize: 10
                 }
 
                 // the three tools, as buttons
                 Row {
                     anchors.right: parent.right
-                    anchors.rightMargin: HydraMetrics.xl
+                    anchors.rightMargin: ValkyxMetrics.xl
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: HydraMetrics.s
+                    spacing: ValkyxMetrics.s
 
                     component ToolBtn: Rectangle {
                         id: tb
                         property string label: ""
                         property string cmd: ""
-                        implicitWidth: tbText.width + HydraMetrics.m * 2
+                        implicitWidth: tbText.width + ValkyxMetrics.m * 2
                         implicitHeight: 26
-                        radius: HydraMetrics.rBtn
-                        color: ma.containsMouse ? HydraTheme.accent : "transparent"
+                        radius: ValkyxMetrics.rBtn
+                        color: ma.containsMouse ? ValkyxTheme.accent : "transparent"
                         border.width: 1
-                        border.color: HydraTheme.accent
+                        border.color: ValkyxTheme.accent
                         Text {
                             id: tbText
                             anchors.centerIn: parent
                             text: tb.label
-                            color: ma.containsMouse ? HydraTheme.textOnAccent : HydraTheme.accent
-                            font.family: HydraTheme.fontUI
+                            color: ma.containsMouse ? ValkyxTheme.textOnAccent : ValkyxTheme.accent
+                            font.family: ValkyxTheme.fontUI
                             font.pixelSize: 11
                         }
                         MouseArea {
                             id: ma
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: HydraState.exec(tb.cmd)
+                            onClicked: ValkyxState.exec(tb.cmd)
                         }
                     }
 
-                    ToolBtn { label: "Doctor"; cmd: "kitty --hold " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-doctor" }
-                    ToolBtn { label: "Update"; cmd: "kitty --hold " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-update" }
+                    ToolBtn { label: "Doctor"; cmd: "kitty --hold " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-doctor" }
+                    ToolBtn { label: "Update"; cmd: "kitty --hold " + StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-update" }
                 }
             }
 
@@ -176,7 +176,7 @@ PanelWindow {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 1
-                color: HydraTheme.line
+                color: ValkyxTheme.line
             }
 
             // ── two columns
@@ -185,7 +185,7 @@ PanelWindow {
                 anchors.top: rule.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.margins: HydraMetrics.xl
+                anchors.margins: ValkyxMetrics.xl
                 height: childrenRect.height
 
                 // LEFT: system + keybinds
@@ -193,13 +193,13 @@ PanelWindow {
                     id: leftCol
                     anchors.top: parent.top
                     anchors.left: parent.left
-                    width: (parent.width - HydraMetrics.xxl) / 2
+                    width: (parent.width - ValkyxMetrics.xxl) / 2
                     // 22 for the section title, then one 22px row + 5px spacing
                     // per keybind. No reference to the right column's ids: a
                     // cross-column id link silently moved this title mid-list.
                     height: childrenRect.height
 
-                    HydraSection { text: "keybinds"; x: 0; y: 0 }
+                    ValkyxSection { text: "keybinds"; x: 0; y: 0 }
 
 
                     Column {
@@ -212,81 +212,81 @@ PanelWindow {
                         // real binds, read out of the live config so this card
                         // can never drift from what Hyprland actually has
                         Repeater {
-                            model: HydraState.keybindList
+                            model: ValkyxState.keybindList
 
                             Row {
                                 required property var modelData
-                                spacing: HydraMetrics.m
+                                spacing: ValkyxMetrics.m
                                 width: leftCol.width
                                 Text {
                                     width: 132
                                     text: modelData.keys
-                                    color: HydraTheme.accent
-                                    font.family: HydraTheme.fontMono
+                                    color: ValkyxTheme.accent
+                                    font.family: ValkyxTheme.fontMono
                                     font.pixelSize: 11
                                     elide: Text.ElideRight
                                 }
                                 Text {
-                                    width: parent.width - 132 - HydraMetrics.m
+                                    width: parent.width - 132 - ValkyxMetrics.m
                                     text: modelData.what
-                                    color: HydraTheme.text
-                                    font.family: HydraTheme.fontUI
+                                    color: ValkyxTheme.text
+                                    font.family: ValkyxTheme.fontUI
                                     font.pixelSize: 11
                                     elide: Text.ElideRight
                                 }
                             }
                         }
                     }
-                    HydraSection {
+                    ValkyxSection {
                         text: "language"
                         x: 0
-                        y: kbCol.y + kbCol.height + HydraMetrics.xl
+                        y: kbCol.y + kbCol.height + ValkyxMetrics.xl
                     }
 
-                    // language: the real xkb layout, switched through hydra-im
+                    // language: the real xkb layout, switched through valkyx-im
                     Rectangle {
                         id: langRow
                         x: 0
-                        y: kbCol.y + kbCol.height + HydraMetrics.xl + 22
+                        y: kbCol.y + kbCol.height + ValkyxMetrics.xl + 22
                         width: parent.width
                         height: 40
-                        radius: HydraMetrics.rBtn
+                        radius: ValkyxMetrics.rBtn
                         color: "transparent"
                         border.width: 1
-                        border.color: HydraTheme.line
+                        border.color: ValkyxTheme.line
 
                         Text {
                             anchors.left: parent.left
-                            anchors.leftMargin: HydraMetrics.m
+                            anchors.leftMargin: ValkyxMetrics.m
                             anchors.verticalCenter: parent.verticalCenter
-                            text: HydraState.imLayout === "ara" ? "ع" : "EN"
-                            color: HydraTheme.accent
-                            font.family: HydraTheme.fontUI
+                            text: ValkyxState.imLayout === "ara" ? "ع" : "EN"
+                            color: ValkyxTheme.accent
+                            font.family: ValkyxTheme.fontUI
                             font.pixelSize: 15
                             font.weight: Font.DemiBold
                         }
                         Text {
                             anchors.left: parent.left
-                            anchors.leftMargin: HydraMetrics.m + 30
+                            anchors.leftMargin: ValkyxMetrics.m + 30
                             anchors.verticalCenter: parent.verticalCenter
-                            text: HydraState.imLayout === "ara" ? "Arabic" : "English (US)"
-                            color: HydraTheme.text
-                            font.family: HydraTheme.fontUI
+                            text: ValkyxState.imLayout === "ara" ? "Arabic" : "English (US)"
+                            color: ValkyxTheme.text
+                            font.family: ValkyxTheme.fontUI
                             font.pixelSize: 12
                         }
                         Text {
                             anchors.right: parent.right
-                            anchors.rightMargin: HydraMetrics.m
+                            anchors.rightMargin: ValkyxMetrics.m
                             anchors.verticalCenter: parent.verticalCenter
                             text: "switch  ⇧"
-                            color: HydraTheme.muted
-                            font.family: HydraTheme.fontMono
+                            color: ValkyxTheme.muted
+                            font.family: ValkyxTheme.fontMono
                             font.pixelSize: 10
                         }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: HydraState.imToggle.running = true
+                            onClicked: ValkyxState.imToggle.running = true
                         }
                     }
 
@@ -297,11 +297,11 @@ PanelWindow {
                     id: rightCol
                     anchors.top: parent.top
                     anchors.right: parent.right
-                    width: (parent.width - HydraMetrics.xxl) / 2
+                    width: (parent.width - ValkyxMetrics.xxl) / 2
                     // childrenRect is the real bottom of the tallest child, so the
                     // column tracks the switch list without a hardcoded row height.
                     height: childrenRect.height
-                    HydraSection { text: "this machine"; x: 0; y: 0 }
+                    ValkyxSection { text: "this machine"; x: 0; y: 0 }
 
                     Column {
                         id: infoCol
@@ -314,105 +314,105 @@ PanelWindow {
                             id: kv
                             property string k: ""
                             property string v: ""
-                            spacing: HydraMetrics.m
+                            spacing: ValkyxMetrics.m
                             Text {
                                 width: 96
                                 text: kv.k
-                                color: HydraTheme.muted
-                                font.family: HydraTheme.fontMono
+                                color: ValkyxTheme.muted
+                                font.family: ValkyxTheme.fontMono
                                 font.pixelSize: 11
                             }
                             Text {
                                 text: kv.v
-                                color: HydraTheme.text
-                                font.family: HydraTheme.fontMono
+                                color: ValkyxTheme.text
+                                font.family: ValkyxTheme.fontMono
                                 font.pixelSize: 11
                             }
                         }
 
-                        KV { k: "user";   v: HydraState.userName }
-                        KV { k: "host";   v: HydraState.hostName }
-                        KV { k: "kernel"; v: HydraState.kernelName }
-                        KV { k: "wm";     v: "Hyprland " + HydraState.hyprVersion }
-                        KV { k: "shell";  v: "hydra shell (quickshell)" }
-                        KV { k: "uptime"; v: HydraState.uptimeText }
+                        KV { k: "user";   v: ValkyxState.userName }
+                        KV { k: "host";   v: ValkyxState.hostName }
+                        KV { k: "kernel"; v: ValkyxState.kernelName }
+                        KV { k: "wm";     v: "Hyprland " + ValkyxState.hyprVersion }
+                        KV { k: "shell";  v: "valkyx shell (quickshell)" }
+                        KV { k: "uptime"; v: ValkyxState.uptimeText }
                     }
 
-                    HydraSection { text: "appearance"; x: 0; y: infoCol.y + infoCol.height + HydraMetrics.xl }
+                    ValkyxSection { text: "appearance"; x: 0; y: infoCol.y + infoCol.height + ValkyxMetrics.xl }
 
                     // theme swatches — the pickers iterate themeNames (strings),
-                    // never HydraTheme.themes (a JS array-of-objects, which this
+                    // never ValkyxTheme.themes (a JS array-of-objects, which this
                     // Qt build renders as nothing at all)
                     Flow {
                         id: swatches
                         x: 0
-                        y: infoCol.y + infoCol.height + HydraMetrics.xl + 22
+                        y: infoCol.y + infoCol.height + ValkyxMetrics.xl + 22
                         width: parent.width
-                        spacing: HydraMetrics.s
+                        spacing: ValkyxMetrics.s
 
                         Repeater {
-                            model: HydraTheme.themeNames
+                            model: ValkyxTheme.themeNames
 
                             Rectangle {
                                 required property string modelData
                                 required property int index
                                 width: 96; height: 30
-                                radius: HydraMetrics.rBtn
+                                radius: ValkyxMetrics.rBtn
                                 color: "transparent"
-                                border.width: HydraState.themedName === modelData ? 2 : 1
-                                border.color: HydraTheme.accent
+                                border.width: ValkyxState.themedName === modelData ? 2 : 1
+                                border.color: ValkyxTheme.accent
 
                                 Rectangle {
                                     anchors.left: parent.left
-                                    anchors.leftMargin: HydraMetrics.m
+                                    anchors.leftMargin: ValkyxMetrics.m
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 12; height: 12
                                     radius: 6
-                                    color: HydraTheme.themeByName(modelData).accent
+                                    color: ValkyxTheme.themeByName(modelData).accent
                                 }
                                 Text {
                                     anchors.left: parent.left
-                                    anchors.leftMargin: HydraMetrics.m + 20
+                                    anchors.leftMargin: ValkyxMetrics.m + 20
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: modelData
-                                    color: HydraTheme.text
-                                    font.family: HydraTheme.fontUI
+                                    color: ValkyxTheme.text
+                                    font.family: ValkyxTheme.fontUI
                                     font.pixelSize: 11
-                                    font.weight: HydraState.themedName === modelData ? Font.DemiBold : Font.Normal
+                                    font.weight: ValkyxState.themedName === modelData ? Font.DemiBold : Font.Normal
                                 }
                                 // selection ring in accent = the active indicator,
                                 // per the accent rules
                                 Rectangle {
                                     anchors.right: parent.right
-                                    anchors.rightMargin: HydraMetrics.s
+                                    anchors.rightMargin: ValkyxMetrics.s
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 6; height: 6
                                     radius: 3
-                                    visible: HydraState.themedName === modelData
-                                    color: HydraTheme.accent
+                                    visible: ValkyxState.themedName === modelData
+                                    color: ValkyxTheme.accent
                                 }
                                 MouseArea {
                                     id: swMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    onClicked: HydraState.applyTheme(modelData)
+                                    onClicked: ValkyxState.applyTheme(modelData)
                                 }
                             }
                         }
                     }
 
 
-                    HydraSection {
+                    ValkyxSection {
                         text: "what's on"
                         x: 0
-                        y: swatches.y + swatches.height + HydraMetrics.xl
+                        y: swatches.y + swatches.height + ValkyxMetrics.xl
                     }
 
                     Column {
                         x: 0
-                        y: swatches.y + swatches.height + HydraMetrics.xl + 22
+                        y: swatches.y + swatches.height + ValkyxMetrics.xl + 22
                         width: parent.width
-                        spacing: HydraMetrics.s
+                        spacing: ValkyxMetrics.s
 
                         // every switch drives a REAL setting. No decorative
                         // toggles: a switch that does nothing is a lie.
@@ -432,8 +432,8 @@ PanelWindow {
                                 anchors.left: parent.left
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: r2.label
-                                color: HydraTheme.text
-                                font.family: HydraTheme.fontUI
+                                color: ValkyxTheme.text
+                                font.family: ValkyxTheme.fontUI
                                 font.pixelSize: 12
                             }
                             Text {
@@ -441,8 +441,8 @@ PanelWindow {
                                 anchors.leftMargin: 190
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: r2.note
-                                color: HydraTheme.muted
-                                font.family: HydraTheme.fontMono
+                                color: ValkyxTheme.muted
+                                font.family: ValkyxTheme.fontMono
                                 font.pixelSize: 10
                             }
 
@@ -455,14 +455,14 @@ PanelWindow {
                                 radius: 10
                                 color: "transparent"
                                 border.width: 1
-                                border.color: r2.on ? HydraTheme.accent : HydraTheme.line
+                                border.color: r2.on ? ValkyxTheme.accent : ValkyxTheme.line
 
                                 Rectangle {
                                     width: 12; height: 12; radius: 6
-                                    color: r2.on ? HydraTheme.accent : HydraTheme.muted
+                                    color: r2.on ? ValkyxTheme.accent : ValkyxTheme.muted
                                     x: r2.on ? parent.width - width - 3 : 3
                                     y: (parent.height - height) / 2
-                                    Behavior on x { NumberAnimation { duration: HydraMotion.fast; easing.type: HydraMotion.curveOut } }
+                                    Behavior on x { NumberAnimation { duration: ValkyxMotion.fast; easing.type: ValkyxMotion.curveOut } }
                                 }
                                 MouseArea {
                                     anchors.fill: parent
@@ -477,31 +477,31 @@ PanelWindow {
                         // acts on idle.
                         Row2 {
                             label: "Blur"
-                            on: HydraState.blurEnabled
+                            on: ValkyxState.blurEnabled
                             note: "translucency"
-                            onToggled: HydraState.toggleBlur()
+                            onToggled: ValkyxState.toggleBlur()
                         }
                         Row2 {
                             label: "Greet on startup"
-                            on: HydraState.greetingEnabled
+                            on: ValkyxState.greetingEnabled
                             note: "hello at login"
                             // Assigns the STATE, never this row's own `on`: writing
                             // to `on` would break the binding above and leave the
                             // switch painted the wrong way after the next reload.
                             // onGreetingEnabledChanged saves it.
-                            onToggled: HydraState.greetingEnabled = !HydraState.greetingEnabled
+                            onToggled: ValkyxState.greetingEnabled = !ValkyxState.greetingEnabled
                         }
                         Row2 {
                             label: "Do not disturb"
-                            on: HydraState.isOn("dnd")
+                            on: ValkyxState.isOn("dnd")
                             note: "notifications"
-                            onToggled: HydraState.toggleKey("dnd")
+                            onToggled: ValkyxState.toggleKey("dnd")
                         }
                         Row2 {
                             label: "Caffeine"
-                            on: !HydraState.isOn("caffeine")
+                            on: !ValkyxState.isOn("caffeine")
                             note: "idle lock off"
-                            onToggled: HydraState.toggleKey("caffeine")
+                            onToggled: ValkyxState.toggleKey("caffeine")
                         }
                     }
                 }

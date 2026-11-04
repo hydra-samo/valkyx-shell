@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hydra-gamesession - suspend background services for the duration of a game.
+# valkyx-gamesession - suspend background services for the duration of a game.
 #
 # Wired to Lutris's per-game `prelaunch_command`. Lutris starts this when the
 # game launches and terminates it when the game exits.
@@ -7,12 +7,12 @@
 # Robustness: a clean signal (TERM/INT/HUP) restores immediately. A hard kill
 # (SIGKILL) or power loss cannot run any trap, so a marker file is written on
 # suspend and a login-time service restores from it. See:
-#   ~/.config/systemd/user/hydra-gamesession-recover.service
+#   ~/.config/systemd/user/valkyx-gamesession-recover.service
 set -uo pipefail
 
-CONF="${HYDRA_GAMESESSION_CONF:-$HOME/.config/hydra/gamesession.conf}"
+CONF="${VALKYX_GAMESESSION_CONF:-$HOME/.config/valkyx/gamesession.conf}"
 RUNDIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-MARKER="$RUNDIR/hydra-gamesession.suspended"
+MARKER="$RUNDIR/valkyx-gamesession.suspended"
 RESTORED=0
 
 log() { printf 'gamesession: %s\n' "$*" >&2; }

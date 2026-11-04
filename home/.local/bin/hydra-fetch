@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# HYDRA fastfetch wrapper — image logo in kitty, ASCII fallback elsewhere
+# VALKYX fastfetch wrapper — image logo in kitty, ASCII fallback elsewhere
 case "$TERM" in
     xterm-kitty)
         exec fastfetch
         ;;
     *)
-        exec fastfetch --logo file --logo $HOME/.config/fastfetch/hydra_logo.txt
+        exec fastfetch --logo file --logo $HOME/.config/fastfetch/valkyx_logo.txt
         ;;
 esac

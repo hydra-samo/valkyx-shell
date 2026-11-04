@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=HYDRA Console
+Name=VALKYX Console
 Comment=Content uploads, atmosphere & agent (standalone app window)
-Exec=/usr/bin/helium-browser --app=http://127.0.0.1:1717/dashboard --class=HYDRAStudioDash --user-data-dir=$HOME/.local/share/hydra-studio/console-profile --no-first-run --no-default-browser-check
-Icon=hydra-logo
+Exec=/usr/bin/helium-browser --app=http://127.0.0.1:1717/dashboard --class=VALKYXStudioDash --user-data-dir=$HOME/.local/share/valkyx-studio/console-profile --no-first-run --no-default-browser-check
+Icon=valkyx-logo
 Terminal=false
 Categories=Development;
-StartupWMClass=HYDRAStudioDash
+StartupWMClass=VALKYXStudioDash
 X-KDE-StartupNotify=false

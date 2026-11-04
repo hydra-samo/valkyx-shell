@@ -1,5 +1,5 @@
-// HYDRA Toggle — glassmorphic on/off switch.
-// Usage: HydraToggle { checked: true; onToggled: doSomething() }
+// VALKYX Toggle — glassmorphic on/off switch.
+// Usage: ValkyxToggle { checked: true; onToggled: doSomething() }
 import QtQuick
 import ".."
 
@@ -9,11 +9,11 @@ Rectangle {
     property bool checked: false
     signal toggled(bool checked)
 
-    color: checked ? HydraTheme.tint(HydraTheme.muted, "66") : HydraTheme.tint(HydraTheme.muted, "33")
+    color: checked ? ValkyxTheme.tint(ValkyxTheme.muted, "66") : ValkyxTheme.tint(ValkyxTheme.muted, "33")
 
     Rectangle {
         x: toggle.checked ? 22 : 2; y: 2; width: 20; height: 20; radius: 10
-        color: HydraTheme.text
+        color: ValkyxTheme.text
     }
 
     MouseArea {

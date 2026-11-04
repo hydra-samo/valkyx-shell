@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# hydra-wifi-connect <ssid> <security> — connect via nmcli, prompting for the
+# valkyx-wifi-connect <ssid> <security> — connect via nmcli, prompting for the
 # password in the shell's own masked prompt when the network is secured.
 #
 # The prompt has been three things: `fuzzel -d --password`, then `zenity --password`
 # (correct, but the last foreign GTK surface left in the session), now
-# shell/HydraPassword.qml. It cannot be a launcher SECTION: a launcher is
+# shell/ValkyxPassword.qml. It cannot be a launcher SECTION: a launcher is
 # search-and-select, a WiFi password is one masked field.
 #
 # Handshake: this script picks a private tmpfs path and asks the shell to prompt.
 # The shell writes the secret there (":" means cancelled) and this script polls.
 set -uo pipefail
 
-ssid="${1:?usage: hydra-wifi-connect <ssid> [security]}"
+ssid="${1:?usage: valkyx-wifi-connect <ssid> [security]}"
 sec="${2:-}"
 
 if [ "$sec" = "" ] || [ "$sec" = "--" ]; then
@@ -20,18 +20,18 @@ if [ "$sec" = "" ] || [ "$sec" = "--" ]; then
 fi
 
 if ! command -v qs >/dev/null 2>&1; then
-    printf 'hydra-wifi-connect: shell not available, cannot prompt for a password\n' >&2
+    printf 'valkyx-wifi-connect: shell not available, cannot prompt for a password\n' >&2
     exit 1
 fi
 
 # Not pre-created: the shell must be the only writer, so "file exists and is
 # non-empty" unambiguously means the user answered. A cancelled prompt writes the
 # ":" sentinel, which is also non-empty — so both outcomes end the wait at once.
-target="$(mktemp -u "${XDG_RUNTIME_DIR:-/tmp}/hydra-pass.XXXXXXXX")"
+target="$(mktemp -u "${XDG_RUNTIME_DIR:-/tmp}/valkyx-pass.XXXXXXXX")"
 trap 'rm -f "$target"' EXIT
 
-if ! qs -c hydra ipc call password open "Join ${ssid}|${target}" >/dev/null 2>&1; then
-    printf 'hydra-wifi-connect: could not reach the shell to prompt (is it running?)\n' >&2
+if ! qs -c valkyx ipc call password open "Join ${ssid}|${target}" >/dev/null 2>&1; then
+    printf 'valkyx-wifi-connect: could not reach the shell to prompt (is it running?)\n' >&2
     exit 1
 fi
 

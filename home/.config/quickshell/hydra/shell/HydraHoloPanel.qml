@@ -1,12 +1,12 @@
-// HydraHoloPanel — the workbench's reusable overlay panel: a fixed 620x460 glass
+// ValkyxHoloPanel — the workbench's reusable overlay panel: a fixed 620x460 glass
 // card with the HUD's two-bracket frame, a heading + status line, the four
 // non-content states (loading / empty / error / offline) and a slot for the
-// caller's scrollable list. Open/close travel uses HydraMotion tokens only —
+// caller's scrollable list. Open/close travel uses ValkyxMotion tokens only —
 // no literal durations, no raw curves.
 //
 // Usage (children arrive via the default property, parented to the slot):
 //
-//     HydraHoloPanel {
+//     ValkyxHoloPanel {
 //         title: "SYSTEM"
 //         status: "GET /api/system · 5 ROWS"
 //         state: "content"          // loading | empty | error | offline | content
@@ -45,19 +45,19 @@ Item {
     opacity: 0
     scale: 0.96
     transformOrigin: Item.Center
-    Behavior on opacity { NumberAnimation { duration: HydraMotion.panel; easing.type: HydraMotion.curveSnap } }
-    Behavior on scale { NumberAnimation { duration: HydraMotion.panel; easing.type: HydraMotion.curveSnap } }
+    Behavior on opacity { NumberAnimation { duration: ValkyxMotion.panel; easing.type: ValkyxMotion.curveSnap } }
+    Behavior on scale { NumberAnimation { duration: ValkyxMotion.panel; easing.type: ValkyxMotion.curveSnap } }
     Component.onCompleted: { opacity = 1; scale = 1 }
 
     Rectangle {
         id: card
         anchors.fill: parent
-        radius: HydraMetrics.rTile
-        color: HydraHolo.bg
-        border.color: HydraMaterials.border
+        radius: ValkyxMetrics.rTile
+        color: ValkyxHolo.bg
+        border.color: ValkyxMaterials.border
         border.width: 1
-        Behavior on border.color { ColorAnimation { duration: HydraMotion.fast } }
-        Behavior on color { ColorAnimation { duration: HydraMotion.fast } }
+        Behavior on border.color { ColorAnimation { duration: ValkyxMotion.fast } }
+        Behavior on color { ColorAnimation { duration: ValkyxMotion.fast } }
         // swallow clicks so they reach nothing, not the dim behind
         MouseArea { anchors.fill: parent }
 
@@ -68,8 +68,8 @@ Item {
                 width: 14; height: 14
                 x: (index % 2 === 0) ? 5 : card.width - 19
                 y: (index === 0) ? 5 : card.height - 19
-                Rectangle { width: 14; height: 2; color: HydraHolo.primary; x: 0; y: (index === 0) ? 0 : 12 }
-                Rectangle { width: 2; height: 14; color: HydraHolo.primary; x: (index % 2 === 0) ? 0 : 12; y: 0 }
+                Rectangle { width: 14; height: 2; color: ValkyxHolo.primary; x: 0; y: (index === 0) ? 0 : 12 }
+                Rectangle { width: 2; height: 14; color: ValkyxHolo.primary; x: (index % 2 === 0) ? 0 : 12; y: 0 }
             }
         }
 
@@ -100,10 +100,10 @@ Item {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     text: panel.title
-                        color: HydraHolo.primary
-                        font.family: HydraTheme.fontMono
-                        font.pixelSize: Math.round(HydraHolo.fsSm * HydraState.fontScale)
-                        font.letterSpacing: Math.round(HydraHolo.fsSm * 0.3 * HydraState.fontScale)
+                        color: ValkyxHolo.primary
+                        font.family: ValkyxTheme.fontMono
+                        font.pixelSize: Math.round(ValkyxHolo.fsSm * ValkyxState.fontScale)
+                        font.letterSpacing: Math.round(ValkyxHolo.fsSm * 0.3 * ValkyxState.fontScale)
                     }
                     MouseArea {
                         anchors.fill: parent
@@ -133,10 +133,10 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: panel.status !== ""
                     text: panel.status
-                    color: HydraTheme.muted
-                    font.family: HydraTheme.fontMono
-                    font.pixelSize: Math.round(HydraHolo.fsMicro * HydraState.fontScale)
-                    font.letterSpacing: Math.round(HydraHolo.fsMicro * 0.16 * HydraState.fontScale)
+                    color: ValkyxTheme.muted
+                    font.family: ValkyxTheme.fontMono
+                    font.pixelSize: Math.round(ValkyxHolo.fsMicro * ValkyxState.fontScale)
+                    font.letterSpacing: Math.round(ValkyxHolo.fsMicro * 0.16 * ValkyxState.fontScale)
                 }
                 Item {
                     width: 24; height: 24
@@ -148,12 +148,12 @@ Item {
                         anchors.centerIn: parent
                         antialiasing: true
                         ShapePath {
-                            strokeColor: HydraTheme.muted
+                            strokeColor: ValkyxTheme.muted
                             strokeWidth: 2
                             fillColor: "transparent"
                             capStyle: ShapePath.RoundCap
                             joinStyle: ShapePath.RoundJoin
-                            PathSvg { path: HydraHolo.iconPaths.x }
+                            PathSvg { path: ValkyxHolo.iconPaths.x }
                         }
                     }
                     MouseArea { anchors.fill: parent; onClicked: panel.closed() }
@@ -183,19 +183,19 @@ Item {
                     visible: panel.state !== "content"
                     text: panel.stateText()
                     color: (panel.state === "error" || panel.state === "offline")
-                        ? HydraHolo.warning : HydraTheme.muted
-                    font.family: HydraTheme.fontMono
-                    font.pixelSize: Math.round(HydraHolo.fsSm * HydraState.fontScale)
-                    font.letterSpacing: Math.round(HydraHolo.fsSm * 0.2 * HydraState.fontScale)
+                        ? ValkyxHolo.warning : ValkyxTheme.muted
+                    font.family: ValkyxTheme.fontMono
+                    font.pixelSize: Math.round(ValkyxHolo.fsSm * ValkyxState.fontScale)
+                    font.letterSpacing: Math.round(ValkyxHolo.fsSm * 0.2 * ValkyxState.fontScale)
                 }
             }
 
             Text {
                 text: "ESC — CLOSE"
-                color: HydraTheme.muted
-                font.family: HydraTheme.fontMono
-                font.pixelSize: Math.round(HydraHolo.fsMicro * HydraState.fontScale)
-                font.letterSpacing: Math.round(HydraHolo.fsMicro * 0.24 * HydraState.fontScale)
+                color: ValkyxTheme.muted
+                font.family: ValkyxTheme.fontMono
+                font.pixelSize: Math.round(ValkyxHolo.fsMicro * ValkyxState.fontScale)
+                font.letterSpacing: Math.round(ValkyxHolo.fsMicro * 0.24 * ValkyxState.fontScale)
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
             }

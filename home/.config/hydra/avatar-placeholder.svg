@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <!-- Generic placeholder avatar — replace with your own profile picture -->
-  <!-- Save your avatar as ~/.config/hydra/avatar-circle.png to override -->
+  <!-- Save your avatar as ~/.config/valkyx/avatar-circle.png to override -->
   <rect width="512" height="512" fill="#0d1310" rx="256"/>
   <circle cx="256" cy="200" r="90" fill="#1a2420"/>
   <path d="M 166 290 Q 256 290 256 290 Q 346 290 346 290 L 346 420 Q 346 460 346 460 L 166 460 Q 166 460 166 460 L 166 290 Z" fill="#1a2420"/>
   <circle cx="256" cy="290" r="40" fill="#00a86b"/>
   <path d="M 256 330 Q 256 370 216 370 Q 176 370 176 330 Q 176 290 256 290 Q 336 290 336 330 Q 336 370 296 370 Q 256 370 256 330 Z" fill="#0d1310"/>
   <text x="256" y="480" font-family="sans-serif" font-size="14" fill="#666" text-anchor="middle">YOUR AVATAR</text>
-  <text x="256" y="498" font-family="sans-serif" font-size="12" fill="#444" text-anchor="middle">Replace ~/.config/hydra/avatar-circle.png</text>
+  <text x="256" y="498" font-family="sans-serif" font-size="12" fill="#444" text-anchor="middle">Replace ~/.config/valkyx/avatar-circle.png</text>
 </svg>

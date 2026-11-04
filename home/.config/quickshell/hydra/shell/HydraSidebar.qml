@@ -1,4 +1,4 @@
-// HYDRA Sidebar — control center, iNiR-style.
+// VALKYX Sidebar — control center, iNiR-style.
 // Floating island (16px margins, 24px radius, 360 wide), ghost/borderless cards,
 // generous 24px internal padding, soft pill sliders. All functional capsules kept:
 // quick toggles, brightness/volume, theme, workspace, wifi/bt/caffeine drawers,
@@ -13,13 +13,13 @@ import "../core"
 PanelWindow {
     id: root
 
-    visible: HydraState.panelOpen
+    visible: ValkyxState.panelOpen
     anchors { right: true; top: true; bottom: true }
     // iNiR floating island — generous margin off the edge
     margins { top: 16; bottom: 16; right: 16 }
 
-    implicitWidth: HydraMetrics.sidebarW
-    exclusiveZone: HydraMetrics.sidebarW + 16
+    implicitWidth: ValkyxMetrics.sidebarW
+    exclusiveZone: ValkyxMetrics.sidebarW + 16
     color: "transparent"
     focusable: true
 
@@ -28,18 +28,18 @@ PanelWindow {
     property bool btOpen: false
     property bool cafOpen: false
     property bool tsOpen: false
-    function close() { exiting = true; HydraState.panelOpen = false }
-    onVisibleChanged: if (visible) { exiting = false; HydraState.refreshNotifs() }
+    function close() { exiting = true; ValkyxState.panelOpen = false }
+    onVisibleChanged: if (visible) { exiting = false; ValkyxState.refreshNotifs() }
 
     function tsSubtitle() {
-        if (!HydraState.tsUp) return "Off"
-        const on = HydraState.tsPeers.filter(p => p.online).length
-        const tot = HydraState.tsPeers.length
-        return !tot ? HydraState.tsSelfIp : "self " + HydraState.tsSelfName + "  " + HydraState.tsSelfIp + "  ·  " + on + "/" + tot + " online"
+        if (!ValkyxState.tsUp) return "Off"
+        const on = ValkyxState.tsPeers.filter(p => p.online).length
+        const tot = ValkyxState.tsPeers.length
+        return !tot ? ValkyxState.tsSelfIp : "self " + ValkyxState.tsSelfName + "  " + ValkyxState.tsSelfIp + "  ·  " + on + "/" + tot + " online"
     }
 
     function caffeineLabel() {
-        const m = HydraState.caffeineMin
+        const m = ValkyxState.caffeineMin
         if (m === -1) return "On (never idle)"
         if (m === 0) return "Off"
         return "On for " + m + " min"
@@ -50,12 +50,12 @@ PanelWindow {
         property bool on: false
         signal toggled()
         width: 44; height: 24; radius: 12
-        color: on ? HydraTheme.accent : HydraTheme.tint(HydraTheme.muted, "2e")
-        border.color: on ? HydraMaterials.borderActive : "transparent"; border.width: 1
+        color: on ? ValkyxTheme.accent : ValkyxTheme.tint(ValkyxTheme.muted, "2e")
+        border.color: on ? ValkyxMaterials.borderActive : "transparent"; border.width: 1
         Rectangle {
             x: on ? width - 21 : 2; width: 18; height: 18; radius: 9
             anchors.verticalCenter: parent.verticalCenter
-            color: HydraTheme.text
+            color: ValkyxTheme.text
         }
         MouseArea { anchors.fill: parent; onClicked: toggled(); cursorShape: Qt.PointingHandCursor }
     }
@@ -73,34 +73,34 @@ PanelWindow {
         // rather than as two unrelated fat lines. 20% over the old 36.
         height: 44
         radius: 22
-        color: HydraMaterials.surface0
+        color: ValkyxMaterials.surface0
         Rectangle {
             width: Math.max(parent.height, parent.width * (slider.value / 100))
             height: parent.height; radius: parent.radius
-            color: HydraTheme.accent
+            color: ValkyxTheme.accent
             // The value is optimistic (setVolume/setBrightness write volPct before
             // the command lands), so without this the fill SNAPS to the new width
             // and then jitters back when the 1s poller corrects it.
             Behavior on width {
-                NumberAnimation { duration: HydraMotion.fast; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: ValkyxMotion.fast; easing.type: Easing.OutCubic }
             }
         }
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: HydraMetrics.m + 2; anchors.rightMargin: HydraMetrics.m
+            anchors.leftMargin: ValkyxMetrics.m + 2; anchors.rightMargin: ValkyxMetrics.m
             Text {
                 text: slider.glyphOpen ? "\uDB80\uDD40" : slider.glyph
-                font.family: HydraTheme.fontMono
-                font.pixelSize: Math.round(15 * HydraState.fontScale)
-                color: HydraTheme.textOnAccent
+                font.family: ValkyxTheme.fontMono
+                font.pixelSize: Math.round(15 * ValkyxState.fontScale)
+                color: ValkyxTheme.textOnAccent
                 rotation: slider.glyphOpen ? 180 : 0
             }
             Item { Layout.fillWidth: true }
             Text {
                 text: Math.round(slider.value) + "%"
-                font.family: HydraTheme.fontUI
-                font.pixelSize: Math.round(11 * HydraState.fontScale)
-                color: HydraTheme.muted
+                font.family: ValkyxTheme.fontUI
+                font.pixelSize: Math.round(11 * ValkyxState.fontScale)
+                color: ValkyxTheme.muted
             }
         }
         MouseArea {
@@ -120,7 +120,7 @@ PanelWindow {
     component CapsuleModule: Item {
         id: cap
         property string icon: ""
-        property color iconColor: HydraTheme.muted
+        property color iconColor: ValkyxTheme.muted
         property string title: ""
         property string subtitle: ""
         property bool subVisible: subtitle.length > 0
@@ -130,45 +130,45 @@ PanelWindow {
         width: parent ? parent.width : 340
         Rectangle {
             anchors.fill: parent
-            radius: HydraMetrics.radiusMd
-            color: HydraMaterials.surface2
+            radius: ValkyxMetrics.radiusMd
+            color: ValkyxMaterials.surface2
             Rectangle {
                 visible: cap.loud
                 anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
                 width: 3
-                color: HydraTheme.accent
+                color: ValkyxTheme.accent
                 radius: 2
             }
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: HydraMetrics.m; anchors.rightMargin: HydraMetrics.m
-                spacing: HydraMetrics.s
+                anchors.leftMargin: ValkyxMetrics.m; anchors.rightMargin: ValkyxMetrics.m
+                spacing: ValkyxMetrics.s
                 Item {
                     Layout.preferredWidth: 30; Layout.preferredHeight: 24
                     Text {
                         anchors.centerIn: parent; text: cap.icon
-                        color: cap.loud ? HydraTheme.accent : cap.iconColor
-                        font.family: HydraTheme.fontMono; font.pixelSize: Math.round(15 * HydraState.fontScale)
+                        color: cap.loud ? ValkyxTheme.accent : cap.iconColor
+                        font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(15 * ValkyxState.fontScale)
                     }
                 }
                 Column {
                     Layout.fillWidth: true
                     spacing: 1
                     Text {
-                        text: cap.title; color: HydraTheme.text
-                        font.family: HydraTheme.fontUI; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                        text: cap.title; color: ValkyxTheme.text
+                        font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                     }
                     Text {
                         visible: cap.subVisible
-                        text: cap.subtitle; color: HydraTheme.muted; elide: Text.ElideRight
+                        text: cap.subtitle; color: ValkyxTheme.muted; elide: Text.ElideRight
                         width: parent.width
-                        font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                        font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                     }
                 }
                 Row {
                     id: controlArea
                     Layout.preferredWidth: 172
-                    spacing: HydraMetrics.xs
+                    spacing: ValkyxMetrics.xs
                 }
             }
         }
@@ -185,8 +185,8 @@ PanelWindow {
         signal toggled
         signal clicked
         height: 44; radius: 17
-        color: active ? HydraTheme.accent : HydraMaterials.surface2
-        border.color: isOpen ? HydraMaterials.borderActive : "transparent"; border.width: 1
+        color: active ? ValkyxTheme.accent : ValkyxMaterials.surface2
+        border.color: isOpen ? ValkyxMaterials.borderActive : "transparent"; border.width: 1
         // vertical separator dividing the toggle zone (left) from the glyph/drawer zone (right)
         Rectangle {
             anchors.top: parent.top; anchors.bottom: parent.bottom
@@ -200,20 +200,20 @@ PanelWindow {
             anchors.fill: parent; spacing: 2
             Text {
                 Layout.leftMargin: 10
-                text: pill.icon; color: pill.active ? HydraTheme.textOnAccent : HydraTheme.text
-                font.family: HydraTheme.fontMono; font.pixelSize: Math.round(12 * HydraState.fontScale)
+                text: pill.icon; color: pill.active ? ValkyxTheme.textOnAccent : ValkyxTheme.text
+                font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(12 * ValkyxState.fontScale)
             }
             Text {
                 Layout.fillWidth: true
                 text: pill.label; elide: Text.ElideRight
-                color: pill.active ? HydraTheme.textOnAccent : HydraTheme.muted
-                font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale)
+                color: pill.active ? ValkyxTheme.textOnAccent : ValkyxTheme.muted
+                font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
             }
             Text {
                 Layout.rightMargin: 8
                 text: pill.drawerGlyph
-                color: pill.isOpen ? HydraTheme.textOnAccent : (pill.active ? HydraTheme.textOnAccent : HydraTheme.muted)
-                font.family: HydraTheme.fontMono; font.pixelSize: Math.round(11 * HydraState.fontScale)
+                color: pill.isOpen ? ValkyxTheme.textOnAccent : (pill.active ? ValkyxTheme.textOnAccent : ValkyxTheme.muted)
+                font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(11 * ValkyxState.fontScale)
                 rotation: pill.isOpen ? 180 : 0
             }
         }
@@ -230,17 +230,17 @@ PanelWindow {
     Rectangle {
         id: panelBody
         anchors.fill: parent
-        radius: HydraMetrics.radiusXl
-        color: HydraMaterials.panelGlass
-        border.color: HydraMaterials.borderFaint
+        radius: ValkyxMetrics.radiusXl
+        color: ValkyxMaterials.panelGlass
+        border.color: ValkyxMaterials.borderFaint
         border.width: 1
         focus: true
         Keys.onEscapePressed: root.close()
         transformOrigin: Item.Right
         scale: 1
         opacity: 1
-        Behavior on scale { NumberAnimation { duration: HydraMotion.panel; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: HydraMotion.panel; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: ValkyxMotion.panel; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: ValkyxMotion.panel; easing.type: Easing.OutCubic } }
         onVisibleChanged: {
             if (visible) {
                 scale = 0.95
@@ -260,7 +260,7 @@ PanelWindow {
             id: heroCard
             anchors { top: parent.top; left: parent.left; right: parent.right }
             height: heroBannerH + 48
-            radius: HydraMetrics.radiusXl
+            radius: ValkyxMetrics.radiusXl
             color: "transparent"
             clip: true
             readonly property int heroBannerH: 96
@@ -270,13 +270,13 @@ PanelWindow {
                 id: heroBanner
                 anchors { top: parent.top; left: parent.left; right: parent.right }
                 height: heroCard.heroBannerH
-                radius: HydraMetrics.radiusXl
-                color: HydraTheme.field
+                radius: ValkyxMetrics.radiusXl
+                color: ValkyxTheme.field
                 Image {
                     id: heroImg
                     anchors.fill: parent
                     source: (function() {
-                        const p = HydraState.activeMediaPath
+                        const p = ValkyxState.activeMediaPath
                         if (!p) return ""
                         return WallpaperStore.kindOf(p) === "image"
                             ? "file://" + p
@@ -295,7 +295,7 @@ PanelWindow {
                     visible: false
                     Rectangle {
                         anchors.fill: parent
-                        radius: HydraMetrics.radiusXl
+                        radius: ValkyxMetrics.radiusXl
                         color: "white"
                     }
                 }
@@ -323,22 +323,22 @@ PanelWindow {
                 height: 48
             }
 
-            // brand — hydra cobra logo, vertically centered with the name/subtitle block
+            // brand — valkyx cobra logo, vertically centered with the name/subtitle block
             Rectangle {
                 id: heroAvatar
-                x: HydraMetrics.m
+                x: ValkyxMetrics.m
                 anchors.verticalCenter: footerRail.verticalCenter
                 width: 34; height: 34
                 color: "transparent"
                 layer.enabled: true
                 layer.effect: MultiEffect {
-                    colorizationColor: HydraTheme.accent
+                    colorizationColor: ValkyxTheme.accent
                     colorization: 1.0
                 }
                 Image {
                     anchors.fill: parent
                     anchors.margins: 3
-                    source: "file://StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/hypr/assets/hydra-logo.png""
+                    source: "file://StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/hypr/assets/valkyx-logo.png""
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     cache: false
@@ -347,56 +347,56 @@ PanelWindow {
 
             // identity — bold name + username·context·uptime, right of avatar in the footer
             Column {
-                x: HydraMetrics.m + 34 + HydraMetrics.s
+                x: ValkyxMetrics.m + 34 + ValkyxMetrics.s
                 anchors.verticalCenter: footerRail.verticalCenter
-                width: parent.width - (HydraMetrics.m + 34 + HydraMetrics.s) - 70
+                width: parent.width - (ValkyxMetrics.m + 34 + ValkyxMetrics.s) - 70
                 spacing: 2
-                Text { text: "HYDRA"; color: HydraTheme.text; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(14 * HydraState.fontScale); font.bold: true; elide: Text.ElideRight; width: parent.width }
-                Text { text: HydraState.uptimeLine; color: HydraTheme.muted; font.family: HydraTheme.fontMono; font.pixelSize: Math.round(9 * HydraState.fontScale); elide: Text.ElideRight; width: parent.width }
+                Text { text: "VALKYX"; color: ValkyxTheme.text; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(14 * ValkyxState.fontScale); font.bold: true; elide: Text.ElideRight; width: parent.width }
+                Text { text: ValkyxState.uptimeLine; color: ValkyxTheme.muted; font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(9 * ValkyxState.fontScale); elide: Text.ElideRight; width: parent.width }
             }
 
             // header actions — power + settings, right-aligned in the footer band
             Row {
-                anchors.right: parent.right; anchors.rightMargin: HydraMetrics.s
+                anchors.right: parent.right; anchors.rightMargin: ValkyxMetrics.s
                 anchors.verticalCenter: footerRail.verticalCenter
-                spacing: HydraMetrics.s
+                spacing: ValkyxMetrics.s
                 Rectangle {
                     width: 26; height: 26; radius: 13
-                    color: powHead.containsMouse ? HydraMaterials.surface2 : "transparent"
-                    Behavior on color { ColorAnimation { duration: HydraMotion.fast } }
+                    color: powHead.containsMouse ? ValkyxMaterials.surface2 : "transparent"
+                    Behavior on color { ColorAnimation { duration: ValkyxMotion.fast } }
                     Text {
                         anchors.centerIn: parent
                         text: "\uDB81\uDC25"
-                        font.family: HydraTheme.fontMono
-                        font.pixelSize: Math.round(12 * HydraState.fontScale)
-                        color: HydraTheme.muted
+                        font.family: ValkyxTheme.fontMono
+                        font.pixelSize: Math.round(12 * ValkyxState.fontScale)
+                        color: ValkyxTheme.muted
                     }
                     MouseArea {
                         id: powHead
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: { root.close(); HydraState.powerOpen = true }
+                        onClicked: { root.close(); ValkyxState.powerOpen = true }
                     }
                 }
                 Rectangle {
                     id: gearBtn
                     width: 26; height: 26; radius: 13
-                    color: gearHover.containsMouse ? HydraMaterials.surface2 : "transparent"
-                    Behavior on color { ColorAnimation { duration: HydraMotion.fast } }
+                    color: gearHover.containsMouse ? ValkyxMaterials.surface2 : "transparent"
+                    Behavior on color { ColorAnimation { duration: ValkyxMotion.fast } }
                     Text {
                         anchors.centerIn: parent
                         text: "\uDB81\uDC93"
-                        font.family: HydraTheme.fontMono
-                        font.pixelSize: Math.round(12 * HydraState.fontScale)
-                        color: HydraTheme.muted
+                        font.family: ValkyxTheme.fontMono
+                        font.pixelSize: Math.round(12 * ValkyxState.fontScale)
+                        color: ValkyxTheme.muted
                     }
                     MouseArea {
                         id: gearHover
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: { root.close(); HydraState.settingsOpen = true }
+                        onClicked: { root.close(); ValkyxState.settingsOpen = true }
                     }
                 }
             }
@@ -405,7 +405,7 @@ PanelWindow {
             Connections {
                 target: WallpaperStore
                 function onPosterGenerated(path) {
-                    if (path === WallpaperStore.cachedPosterPath(HydraState.activeMediaPath)) {
+                    if (path === WallpaperStore.cachedPosterPath(ValkyxState.activeMediaPath)) {
                         const s = heroImg.source
                         heroImg.source = ""
                         heroImg.source = s
@@ -420,10 +420,10 @@ PanelWindow {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             anchors.top: heroCard.bottom
-            anchors.leftMargin: HydraMetrics.xl   // iNiR signature: 24px internal padding
-            anchors.rightMargin: HydraMetrics.xl
-            anchors.bottomMargin: HydraMetrics.xl
-            anchors.topMargin: HydraMetrics.l
+            anchors.leftMargin: ValkyxMetrics.xl   // iNiR signature: 24px internal padding
+            anchors.rightMargin: ValkyxMetrics.xl
+            anchors.bottomMargin: ValkyxMetrics.xl
+            anchors.topMargin: ValkyxMetrics.l
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             contentHeight: bodyCol.implicitHeight
@@ -431,47 +431,47 @@ PanelWindow {
             Column {
                 id: bodyCol
                 width: parent.width
-                spacing: HydraMetrics.l
+                spacing: ValkyxMetrics.l
 
                 // ── quick pills: Wi-Fi / Bluetooth / Caffeine + one shared drawer ──
                 Column {
                     width: parent.width
-                    spacing: HydraMetrics.s
+                    spacing: ValkyxMetrics.s
 
                     Row {
                         width: parent.width
-                        spacing: HydraMetrics.s
+                        spacing: ValkyxMetrics.s
                         PillCapsule {
-                            width: (parent.width - 3 * HydraMetrics.s) / 4
-                            icon: HydraState.isOn("wifi") ? HydraState.wifiIcon(HydraState.wifiSig) : "\uDB81\uDDAA"; label: "Wi-Fi"
-                            active: HydraState.isOn("wifi")
+                            width: (parent.width - 3 * ValkyxMetrics.s) / 4
+                            icon: ValkyxState.isOn("wifi") ? ValkyxState.wifiIcon(ValkyxState.wifiSig) : "\uDB81\uDDAA"; label: "Wi-Fi"
+                            active: ValkyxState.isOn("wifi")
                             isOpen: netOpen
-                            onToggled: HydraState.toggleKey("wifi")
-                            onClicked: { netOpen = !netOpen; btOpen = false; cafOpen = false; if (netOpen) HydraState.refreshWifi() }
+                            onToggled: ValkyxState.toggleKey("wifi")
+                            onClicked: { netOpen = !netOpen; btOpen = false; cafOpen = false; if (netOpen) ValkyxState.refreshWifi() }
                         }
                         PillCapsule {
-                            width: (parent.width - 3 * HydraMetrics.s) / 4
+                            width: (parent.width - 3 * ValkyxMetrics.s) / 4
                             icon: "\uDB80\uDCAF"; label: "Bluetooth"
-                            active: HydraState.isOn("bt")
+                            active: ValkyxState.isOn("bt")
                             isOpen: btOpen
-                            onToggled: HydraState.toggleKey("bt")
-                            onClicked: { btOpen = !btOpen; netOpen = false; cafOpen = false; if (btOpen) HydraState.refreshBt() }
+                            onToggled: ValkyxState.toggleKey("bt")
+                            onClicked: { btOpen = !btOpen; netOpen = false; cafOpen = false; if (btOpen) ValkyxState.refreshBt() }
                         }
                         PillCapsule {
-                            width: (parent.width - 3 * HydraMetrics.s) / 4
+                            width: (parent.width - 3 * ValkyxMetrics.s) / 4
                             icon: "󰅶"; label: "Caffeine"
-                            active: HydraState.caffeineMin !== 0
+                            active: ValkyxState.caffeineMin !== 0
                             isOpen: cafOpen
-                            onToggled: HydraState.setCaffeine(HydraState.caffeineMin !== 0 ? 0 : -1)
+                            onToggled: ValkyxState.setCaffeine(ValkyxState.caffeineMin !== 0 ? 0 : -1)
                             onClicked: { cafOpen = !cafOpen; netOpen = false; btOpen = false }
                         }
                         PillCapsule {
-                            width: (parent.width - 3 * HydraMetrics.s) / 4
+                            width: (parent.width - 3 * ValkyxMetrics.s) / 4
                             icon: "\uDB80\uDE96"; label: "Game"
-                            active: HydraState.gameModeOn
+                            active: ValkyxState.gameModeOn
                             drawerGlyph: ""
-                            onToggled: HydraState.toggleGameMode()
-                            onClicked: HydraState.toggleGameMode()
+                            onToggled: ValkyxState.toggleGameMode()
+                            onClicked: ValkyxState.toggleGameMode()
                         }
                     }
 
@@ -482,87 +482,87 @@ PanelWindow {
                         clip: true
                         Rectangle {
                             id: netDrawer
-                            width: parent.width; height: Math.max(40, Math.min(116, 6 + HydraState.wifiList.length * 27) + 8)
+                            width: parent.width; height: Math.max(40, Math.min(116, 6 + ValkyxState.wifiList.length * 27) + 8)
                             visible: netOpen
-                            radius: HydraMetrics.radiusMd
-                            color: HydraMaterials.surface2
+                            radius: ValkyxMetrics.radiusMd
+                            color: ValkyxMaterials.surface2
                             ListView {
                                 anchors.fill: parent; anchors.margins: 4
-                                model: HydraState.wifiList
+                                model: ValkyxState.wifiList
                                 clip: true
                                 delegate: Rectangle {
                                     id: wifiRow
                                     required property var modelData
                                     width: ListView.view.width; height: 27; radius: 7
-                                    color: rowH.containsMouse ? HydraMaterials.surface0 : (modelData.use ? HydraTheme.accentDim : "transparent")
-                                    MouseArea { id: rowH; anchors.fill: parent; hoverEnabled: true; onClicked: HydraState.exec("hydra-wifi-connect \"" + modelData.ssid + "\" \"" + modelData.sec + "\""); cursorShape: Qt.PointingHandCursor }
+                                    color: rowH.containsMouse ? ValkyxMaterials.surface0 : (modelData.use ? ValkyxTheme.accentDim : "transparent")
+                                    MouseArea { id: rowH; anchors.fill: parent; hoverEnabled: true; onClicked: ValkyxState.exec("valkyx-wifi-connect \"" + modelData.ssid + "\" \"" + modelData.sec + "\""); cursorShape: Qt.PointingHandCursor }
                                     Row {
                                         anchors.verticalCenter: parent.verticalCenter; spacing: 6
                                         Text {
                                             text: modelData.use ? "\uDB80\uDD2C" : (modelData.sec ? "\uDB80\uDF3E" : "\uDB81\uDDA9")
-                                            color: modelData.use ? HydraTheme.accent : HydraTheme.muted
-                                            font.family: HydraTheme.fontMono; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                                            color: modelData.use ? ValkyxTheme.accent : ValkyxTheme.muted
+                                            font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                                         }
                                         Text {
                                             text: modelData.ssid; elide: Text.ElideMiddle
-                                            color: HydraTheme.text
-                                            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                            color: ValkyxTheme.text
+                                            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                                         }
                                         Text {
-                                            text: HydraState.wifiIcon(modelData.sig)
-                                            color: HydraTheme.muted; font.family: HydraTheme.fontMono; font.pixelSize: Math.round(9 * HydraState.fontScale)
+                                            text: ValkyxState.wifiIcon(modelData.sig)
+                                            color: ValkyxTheme.muted; font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                                         }
                                     }
                                 }
                             }
                             Text {
-                                visible: HydraState.wifiList.length === 0
+                                visible: ValkyxState.wifiList.length === 0
                                 anchors.centerIn: parent; text: "Scanning…"
-                                color: HydraTheme.muted; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                color: ValkyxTheme.muted; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                             }
                         }
                         Rectangle {
                             id: btDrawer
-                            width: parent.width; height: Math.max(40, Math.min(116, 6 + HydraState.btDevices.length * 27) + 8)
+                            width: parent.width; height: Math.max(40, Math.min(116, 6 + ValkyxState.btDevices.length * 27) + 8)
                             visible: btOpen
-                            radius: HydraMetrics.radiusMd
-                            color: HydraMaterials.surface2
+                            radius: ValkyxMetrics.radiusMd
+                            color: ValkyxMaterials.surface2
                             ListView {
                                 anchors.fill: parent; anchors.margins: 4
-                                model: HydraState.btDevices
+                                model: ValkyxState.btDevices
                                 clip: true
                                 delegate: Rectangle {
                                     id: btRow
                                     required property var modelData
                                     width: ListView.view.width; height: 27; radius: 7
-                                    color: rowBh.containsMouse ? HydraMaterials.surface0 : (modelData.connected ? HydraTheme.accentDim : "transparent")
-                                    MouseArea { id: rowBh; anchors.fill: parent; hoverEnabled: true; onClicked: HydraState.toggleBtDevice(modelData.mac, modelData.connected); cursorShape: Qt.PointingHandCursor }
+                                    color: rowBh.containsMouse ? ValkyxMaterials.surface0 : (modelData.connected ? ValkyxTheme.accentDim : "transparent")
+                                    MouseArea { id: rowBh; anchors.fill: parent; hoverEnabled: true; onClicked: ValkyxState.toggleBtDevice(modelData.mac, modelData.connected); cursorShape: Qt.PointingHandCursor }
                                     Row {
                                         anchors.verticalCenter: parent.verticalCenter; spacing: 6
                                         Text {
                                             text: modelData.connected ? "\uDB80\uDD2C" : "\uDB80\uDCAF"
-                                            color: modelData.connected ? HydraTheme.accent : HydraTheme.muted
-                                            font.family: HydraTheme.fontMono; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                                            color: modelData.connected ? ValkyxTheme.accent : ValkyxTheme.muted
+                                            font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                                         }
                                         Text {
-                                            text: modelData.name; elide: Text.ElideMiddle; color: HydraTheme.text
-                                            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                            text: modelData.name; elide: Text.ElideMiddle; color: ValkyxTheme.text
+                                            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                                         }
                                     }
                                 }
                             }
                             Text {
-                                visible: HydraState.btDevices.length === 0
+                                visible: ValkyxState.btDevices.length === 0
                                 anchors.centerIn: parent; text: "No paired devices"
-                                color: HydraTheme.muted; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                color: ValkyxTheme.muted; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                             }
                         }
                         Rectangle {
                             id: cafDrawer
                             width: parent.width; height: 36
                             visible: cafOpen
-                            radius: HydraMetrics.radiusMd
-                            color: HydraMaterials.surface2
+                            radius: ValkyxMetrics.radiusMd
+                            color: ValkyxMaterials.surface2
                             Row {
                                 anchors.fill: parent; anchors.margins: 3
                                 spacing: 4
@@ -575,10 +575,10 @@ PanelWindow {
                                         required property var modelData
                                         width: (parent.width - 5 * 4) / 6; height: 26; radius: 8
                                         anchors.verticalCenter: parent.verticalCenter
-                                        color: hC.containsMouse ? HydraMaterials.surface0 : (HydraState.caffeineMin === modelData.min ? HydraTheme.accentDim : "transparent")
-                                        border.color: HydraState.caffeineMin === modelData.min ? HydraMaterials.borderActive : "transparent"; border.width: 1
-                                        Text { anchors.centerIn: parent; text: modelData.label; color: HydraState.caffeineMin === modelData.min ? HydraTheme.text : HydraTheme.muted; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale) }
-                                        MouseArea { id: hC; anchors.fill: parent; hoverEnabled: true; onClicked: HydraState.setCaffeine(modelData.min); cursorShape: Qt.PointingHandCursor }
+                                        color: hC.containsMouse ? ValkyxMaterials.surface0 : (ValkyxState.caffeineMin === modelData.min ? ValkyxTheme.accentDim : "transparent")
+                                        border.color: ValkyxState.caffeineMin === modelData.min ? ValkyxMaterials.borderActive : "transparent"; border.width: 1
+                                        Text { anchors.centerIn: parent; text: modelData.label; color: ValkyxState.caffeineMin === modelData.min ? ValkyxTheme.text : ValkyxTheme.muted; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale) }
+                                        MouseArea { id: hC; anchors.fill: parent; hoverEnabled: true; onClicked: ValkyxState.setCaffeine(modelData.min); cursorShape: Qt.PointingHandCursor }
                                     }
                                 }
                             }
@@ -589,36 +589,36 @@ PanelWindow {
                 // ── audio & display (soft pill sliders + audio I/O drawer) ──
                 Column {
                     width: parent.width
-                    spacing: HydraMetrics.s
+                    spacing: ValkyxMetrics.s
 
                     Rectangle {
                         width: parent.width
-                        height: sliderCol.implicitHeight + 2 * HydraMetrics.m
-                        radius: HydraMetrics.radiusMd
-                        color: HydraMaterials.surface2
+                        height: sliderCol.implicitHeight + 2 * ValkyxMetrics.m
+                        radius: ValkyxMetrics.radiusMd
+                        color: ValkyxMaterials.surface2
                         property bool audioOpen: false
-                        Behavior on height { NumberAnimation { duration: HydraMotion.transition; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: ValkyxMotion.transition; easing.type: Easing.OutCubic } }
 
                         Column {
                             id: sliderCol
                             anchors.fill: parent
-                            anchors.margins: HydraMetrics.m
-                            spacing: HydraMetrics.m
+                            anchors.margins: ValkyxMetrics.m
+                            spacing: ValkyxMetrics.m
 
                             PillSlider {
                                 width: parent.width
                                 glyph: "\uDB81\uDDA8"
-                                value: HydraState.briPct
-                                onMoved: (pct) => HydraState.setBrightness(pct)
+                                value: ValkyxState.briPct
+                                onMoved: (pct) => ValkyxState.setBrightness(pct)
                             }
                             PillSlider {
                                 width: parent.width
-                                glyph: HydraState.volPct === 0 ? "\uDB81\uDD81" : HydraState.volPct < 33 ? "\uDB81\uDD7F" : HydraState.volPct < 66 ? "\uDB81\uDD80" : "\uDB81\uDD7E"
-                                value: HydraState.volPct
+                                glyph: ValkyxState.volPct === 0 ? "\uDB81\uDD81" : ValkyxState.volPct < 33 ? "\uDB81\uDD7F" : ValkyxState.volPct < 66 ? "\uDB81\uDD80" : "\uDB81\uDD7E"
+                                value: ValkyxState.volPct
                                 glyphClickable: true
                                 glyphOpen: parent.parent.audioOpen
                                 onGlyphClicked: parent.parent.audioOpen = !parent.parent.audioOpen
-                                onMoved: (pct) => HydraState.setVolume(pct)
+                                onMoved: (pct) => ValkyxState.setVolume(pct)
                             }
 
                             // audio I/O drawer — drops from the volume glyph (no standalone card)
@@ -628,58 +628,58 @@ PanelWindow {
                                 spacing: 2
 
                                 Repeater {
-                                    model: HydraState.audioSinks
+                                    model: ValkyxState.audioSinks
                                     Rectangle {
                                         required property var modelData
                                         width: parent.width; height: 26; radius: 7
-                                        color: rowS.containsMouse ? HydraMaterials.surface0 : (modelData.default ? HydraTheme.accentDim : "transparent")
+                                        color: rowS.containsMouse ? ValkyxMaterials.surface0 : (modelData.default ? ValkyxTheme.accentDim : "transparent")
                                         MouseArea {
                                             id: rowS; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                            onClicked: { parent.parent.parent.parent.audioOpen = false; HydraState.setAudioOutput(modelData.id) }
+                                            onClicked: { parent.parent.parent.parent.audioOpen = false; ValkyxState.setAudioOutput(modelData.id) }
                                         }
                                         Row {
                                             width: parent.width
                                             anchors.verticalCenter: parent.verticalCenter; spacing: 6; leftPadding: 6
                                             Text {
                                                 text: modelData.default ? "\uDB80\uDD2C" : "\uDB81\uDD7E"
-                                                color: modelData.default ? HydraTheme.accent : HydraTheme.muted
-                                                font.family: HydraTheme.fontMono; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                                                color: modelData.default ? ValkyxTheme.accent : ValkyxTheme.muted
+                                                font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                                             }
                                             Text {
                                                 width: parent.width - 66
                                                 text: modelData.label; elide: Text.ElideMiddle
-                                                color: HydraTheme.text; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                                color: ValkyxTheme.text; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                                             }
                                         }
                                     }
                                 }
                                 Rectangle { width: parent.width; height: 1; color: "transparent" }
                                 Text {
-                                    text: "Input"; color: HydraTheme.muted
-                                    font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale); font.bold: true
+                                    text: "Input"; color: ValkyxTheme.muted
+                                    font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale); font.bold: true
                                 }
                                 Repeater {
-                                    model: HydraState.audioSources
+                                    model: ValkyxState.audioSources
                                     Rectangle {
                                         required property var modelData
                                         width: parent.width; height: 26; radius: 7
-                                        color: rowI.containsMouse ? HydraMaterials.surface0 : (modelData.default ? HydraTheme.accentDim : "transparent")
+                                        color: rowI.containsMouse ? ValkyxMaterials.surface0 : (modelData.default ? ValkyxTheme.accentDim : "transparent")
                                         MouseArea {
                                             id: rowI; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                            onClicked: { parent.parent.parent.parent.audioOpen = false; HydraState.setAudioInput(modelData.id) }
+                                            onClicked: { parent.parent.parent.parent.audioOpen = false; ValkyxState.setAudioInput(modelData.id) }
                                         }
                                         Row {
                                             width: parent.width
                                             anchors.verticalCenter: parent.verticalCenter; spacing: 6; leftPadding: 6
                                             Text {
                                                 text: modelData.default ? "\uDB80\uDD2C" : "\uDB80\uDF6C"
-                                                color: modelData.default ? HydraTheme.accent : HydraTheme.muted
-                                                font.family: HydraTheme.fontMono; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                                                color: modelData.default ? ValkyxTheme.accent : ValkyxTheme.muted
+                                                font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                                             }
                                             Text {
                                                 width: parent.width - 66
                                                 text: modelData.label; elide: Text.ElideMiddle
-                                                color: HydraTheme.text; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                                color: ValkyxTheme.text; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                                             }
                                         }
                                     }
@@ -691,7 +691,7 @@ PanelWindow {
                 // ── notifications (inline, tappable rows — jump to their app/dir) ──
                 Column {
                     width: parent.width
-                    spacing: HydraMetrics.s
+                    spacing: ValkyxMetrics.s
 
                     // header — left: bell + title | right: count badge + clear
                     Item {
@@ -702,12 +702,12 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 7
                             Text {
-                                text: "\uDB80\uDC9A"; color: HydraTheme.accent
-                                font.family: HydraTheme.fontMono; font.pixelSize: Math.round(12 * HydraState.fontScale)
+                                text: "\uDB80\uDC9A"; color: ValkyxTheme.accent
+                                font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(12 * ValkyxState.fontScale)
                             }
                             Text {
-                                text: "Notifications"; color: HydraTheme.text
-                                font.family: HydraTheme.fontUI; font.pixelSize: Math.round(10 * HydraState.fontScale); font.bold: true
+                                text: "Notifications"; color: ValkyxTheme.text
+                                font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(10 * ValkyxState.fontScale); font.bold: true
                             }
                         }
 
@@ -716,33 +716,33 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 8
                             Rectangle {
-                                visible: HydraState.notifList.length > 0
+                                visible: ValkyxState.notifList.length > 0
                                 width: 20; height: 20; radius: 10
-                                color: HydraTheme.accent
+                                color: ValkyxTheme.accent
                                 anchors.verticalCenter: parent.verticalCenter
                                 Text {
                                     anchors.centerIn: parent
-                                    text: HydraState.notifList.length
-                                    color: HydraTheme.textOnAccent
-                                    font.family: HydraTheme.fontMono; font.bold: true
-                                    font.pixelSize: Math.round(9 * HydraState.fontScale)
+                                    text: ValkyxState.notifList.length
+                                    color: ValkyxTheme.textOnAccent
+                                    font.family: ValkyxTheme.fontMono; font.bold: true
+                                    font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                                 }
                             }
                             Item {
                                 width: 20; height: 20
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "\uDB80\uDD56"; color: clearH.containsMouse ? HydraTheme.accent : HydraTheme.muted
-                                    font.family: HydraTheme.fontMono; font.pixelSize: Math.round(11 * HydraState.fontScale)
-                                    Behavior on color { ColorAnimation { duration: HydraMotion.fast } }
+                                    text: "\uDB80\uDD56"; color: clearH.containsMouse ? ValkyxTheme.accent : ValkyxTheme.muted
+                                    font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(11 * ValkyxState.fontScale)
+                                    Behavior on color { ColorAnimation { duration: ValkyxMotion.fast } }
                                 }
-                                MouseArea { id: clearH; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: HydraState.clearNotifs() }
+                                MouseArea { id: clearH; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ValkyxState.clearNotifs() }
                             }
                         }
                     }
 
                     Repeater {
-                        model: HydraState.notifList.slice(0, 4)
+                        model: ValkyxState.notifList.slice(0, 4)
                         Item {
                             required property var modelData
                             required property int index
@@ -751,15 +751,15 @@ PanelWindow {
                             Rectangle {
                                 id: nBg
                                 anchors.fill: parent; radius: 8
-                                color: rowN.containsMouse ? HydraMaterials.surface2 : HydraMaterials.surface0
-                                Behavior on color { ColorAnimation { duration: HydraMotion.fast } }
+                                color: rowN.containsMouse ? ValkyxMaterials.surface2 : ValkyxMaterials.surface0
+                                Behavior on color { ColorAnimation { duration: ValkyxMotion.fast } }
                             }
                             MouseArea {
                                 id: rowN
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: HydraState.openNotification(index)
+                                onClicked: ValkyxState.openNotification(index)
                             }
                             Row {
                                 anchors.fill: parent
@@ -768,13 +768,13 @@ PanelWindow {
                                 Rectangle {
                                     width: 24; height: 24; radius: 7
                                     anchors.verticalCenter: parent.verticalCenter
-                                    color: HydraMaterials.surface0
+                                    color: ValkyxMaterials.surface0
                                     Text {
                                         anchors.centerIn: parent
                                         text: (modelData.app || "?").charAt(0).toUpperCase()
-                                        color: HydraTheme.accent
-                                        font.family: HydraTheme.fontUI; font.bold: true
-                                        font.pixelSize: Math.round(10 * HydraState.fontScale)
+                                        color: ValkyxTheme.accent
+                                        font.family: ValkyxTheme.fontUI; font.bold: true
+                                        font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                                     }
                                 }
                                 Column {
@@ -783,13 +783,13 @@ PanelWindow {
                                     spacing: 1
                                     Text {
                                         text: modelData.app || "System"; elide: Text.ElideRight
-                                        color: HydraTheme.accent; font.family: HydraTheme.fontUI; font.bold: true
-                                        font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                        color: ValkyxTheme.accent; font.family: ValkyxTheme.fontUI; font.bold: true
+                                        font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                                     }
                                     Text {
                                         text: modelData.summary; elide: Text.ElideRight
-                                        color: HydraTheme.text; font.family: HydraTheme.fontUI
-                                        font.pixelSize: Math.round(9 * HydraState.fontScale); maximumLineCount: 1
+                                        color: ValkyxTheme.text; font.family: ValkyxTheme.fontUI
+                                        font.pixelSize: Math.round(9 * ValkyxState.fontScale); maximumLineCount: 1
                                     }
                                 }
                             }
@@ -797,17 +797,17 @@ PanelWindow {
                     }
 
                     Text {
-                        visible: HydraState.notifList.length === 0
-                        text: "All clear"; color: HydraTheme.muted
+                        visible: ValkyxState.notifList.length === 0
+                        text: "All clear"; color: ValkyxTheme.muted
                         anchors.horizontalCenter: parent.horizontalCenter
-                        font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale)
+                        font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                         padding: 6
                     }
                     Text {
-                        visible: HydraState.notifList.length > 4
-                        text: "+ " + (HydraState.notifList.length - 4) + " more"; color: HydraTheme.muted
+                        visible: ValkyxState.notifList.length > 4
+                        text: "+ " + (ValkyxState.notifList.length - 4) + " more"; color: ValkyxTheme.muted
                         anchors.horizontalCenter: parent.horizontalCenter
-                        font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                        font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                         padding: 4
                     }
                 }
@@ -815,14 +815,14 @@ PanelWindow {
                 // ── tailscale (click the header to draw down the peer list; toggle mesh) ──
                 Rectangle {
                     width: parent.width
-                    height: tsCol.implicitHeight + 2 * HydraMetrics.m
-                    radius: HydraMetrics.radiusMd
-                    color: HydraMaterials.surface2
+                    height: tsCol.implicitHeight + 2 * ValkyxMetrics.m
+                    radius: ValkyxMetrics.radiusMd
+                    color: ValkyxMaterials.surface2
                     Column {
                         id: tsCol
                         anchors.fill: parent
-                        anchors.margins: HydraMetrics.m
-                        spacing: HydraMetrics.xs
+                        anchors.margins: ValkyxMetrics.m
+                        spacing: ValkyxMetrics.xs
 
                         Item {
                             width: parent.width
@@ -830,32 +830,32 @@ PanelWindow {
                             RowLayout {
                                 id: tsHead
                                 width: parent.width
-                                spacing: HydraMetrics.s
+                                spacing: ValkyxMetrics.s
                                 Item {
                                     Layout.preferredWidth: 22; Layout.preferredHeight: 18
                                     Text {
                                         anchors.centerIn: parent; text: "\uDB81\uDC8B"
-                                        color: !HydraState.tsUp ? HydraTheme.danger :
-                                               HydraState.tsPeers.some(p => p.online) ? HydraTheme.accent : HydraTheme.muted
-                                        font.family: HydraTheme.fontMono; font.pixelSize: Math.round(15 * HydraState.fontScale)
+                                        color: !ValkyxState.tsUp ? ValkyxTheme.danger :
+                                               ValkyxState.tsPeers.some(p => p.online) ? ValkyxTheme.accent : ValkyxTheme.muted
+                                        font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(15 * ValkyxState.fontScale)
                                     }
                                 }
                                 Column {
                                     Layout.fillWidth: true
                                     spacing: 1
                                     Text {
-                                        text: "Tailscale"; color: HydraTheme.text
-                                        font.family: HydraTheme.fontUI; font.pixelSize: Math.round(10 * HydraState.fontScale)
+                                        text: "Tailscale"; color: ValkyxTheme.text
+                                        font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(10 * ValkyxState.fontScale)
                                     }
                                     Text {
-                                        text: tsSubtitle(); color: HydraTheme.muted; elide: Text.ElideRight
+                                        text: tsSubtitle(); color: ValkyxTheme.muted; elide: Text.ElideRight
                                         width: parent.width
-                                        font.pixelSize: Math.round(8 * HydraState.fontScale); font.family: HydraTheme.fontUI
+                                        font.pixelSize: Math.round(8 * ValkyxState.fontScale); font.family: ValkyxTheme.fontUI
                                     }
                                 }
                                 Text {
-                                    text: "\uDB80\uDD40"; color: HydraTheme.muted
-                                    font.family: HydraTheme.fontMono; font.pixelSize: Math.round(11 * HydraState.fontScale)
+                                    text: "\uDB80\uDD40"; color: ValkyxTheme.muted
+                                    font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(11 * ValkyxState.fontScale)
                                     rotation: tsOpen ? 180 : 0
                                 }
                             }
@@ -875,7 +875,7 @@ PanelWindow {
                             visible: tsOpen
                         }
                         Repeater {
-                            model: HydraState.tsPeers
+                            model: ValkyxState.tsPeers
                             visible: tsOpen
                             Row {
                                 required property var modelData
@@ -885,14 +885,14 @@ PanelWindow {
                                 Rectangle {
                                     width: 8; height: 8; radius: 4
                                     anchors.verticalCenter: parent.verticalCenter
-                                    color: modelData.online ? HydraTheme.accent : HydraTheme.tint(HydraTheme.muted, "66")
+                                    color: modelData.online ? ValkyxTheme.accent : ValkyxTheme.tint(ValkyxTheme.muted, "66")
                                 }
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: parent.width - 150
                                     text: modelData.name
-                                    color: modelData.online ? HydraTheme.text : HydraTheme.muted
-                                    font.family: HydraTheme.fontUI; font.pixelSize: Math.round(9 * HydraState.fontScale)
+                                    color: modelData.online ? ValkyxTheme.text : ValkyxTheme.muted
+                                    font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(9 * ValkyxState.fontScale)
                                     elide: Text.ElideRight
                                 }
                                 Text {
@@ -900,37 +900,37 @@ PanelWindow {
                                     width: 46
                                     text: modelData.online ? "" : "off"
                                     horizontalAlignment: Text.AlignRight
-                                    color: HydraTheme.muted
-                                    font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                    color: ValkyxTheme.muted
+                                    font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                                 }
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 66
                                     horizontalAlignment: Text.AlignRight
                                     text: modelData.ip
-                                    color: HydraTheme.tint(HydraTheme.muted, "99")
-                                    font.family: HydraTheme.fontMono; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                                    color: ValkyxTheme.tint(ValkyxTheme.muted, "99")
+                                    font.family: ValkyxTheme.fontMono; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                                     elide: Text.ElideRight
                                 }
                             }
                         }
                         Text {
-                            visible: tsOpen && HydraState.tsPeers.length === 0
-                            text: "No peers"; color: HydraTheme.muted
-                            font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale)
+                            visible: tsOpen && ValkyxState.tsPeers.length === 0
+                            text: "No peers"; color: ValkyxTheme.muted
+                            font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale)
                         }
                         RowLayout {
                             width: parent.width
                             visible: tsOpen
-                            spacing: HydraMetrics.s
+                            spacing: ValkyxMetrics.s
                             Text {
-                                text: "Mesh"; color: HydraState.tsUp ? HydraTheme.accent : HydraTheme.muted
-                                font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale); font.bold: true
+                                text: "Mesh"; color: ValkyxState.tsUp ? ValkyxTheme.accent : ValkyxTheme.muted
+                                font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale); font.bold: true
                             }
                             Item { Layout.fillWidth: true }
                             TogglePill {
-                                on: HydraState.tsUp
-                                onToggled: HydraState.setTailscale(!HydraState.tsUp)
+                                on: ValkyxState.tsUp
+                                onToggled: ValkyxState.setTailscale(!ValkyxState.tsUp)
                             }
                         }
                     }
@@ -945,11 +945,11 @@ PanelWindow {
                 // value here would be wrong. Highlight stays on the saved choice so you
                 // can still see which AC profile comes back when you plug in.
                 icon: "\uDB81\uDCC5"; title: "Power profile"
-                subtitle: (HydraState.acSource === "battery" && HydraState.powerProfileLive !== HydraState.powerProfile
-                        ? HydraState.powerProfileLive + " (on battery)"
-                        : HydraState.powerProfileLive)
+                subtitle: (ValkyxState.acSource === "battery" && ValkyxState.powerProfileLive !== ValkyxState.powerProfile
+                        ? ValkyxState.powerProfileLive + " (on battery)"
+                        : ValkyxState.powerProfileLive)
                 Row {
-                    spacing: HydraMetrics.s
+                    spacing: ValkyxMetrics.s
                     Repeater {
                         model: [
                             { key: "power-saver", label: "Silent" },
@@ -958,12 +958,12 @@ PanelWindow {
                         ]
                         Rectangle {
                             required property var modelData
-                            readonly property bool active: HydraState.powerProfile === modelData.key
+                            readonly property bool active: ValkyxState.powerProfile === modelData.key
                             width: 52; height: 24; radius: 8
-                            color: hP.containsMouse ? HydraMaterials.surface0 : (active ? HydraMaterials.surface0 : "transparent")
-                            border.color: active ? HydraMaterials.borderActive : "transparent"; border.width: 1
-                            Text { anchors.centerIn: parent; text: modelData.label; color: active ? HydraTheme.text : HydraTheme.muted; font.family: HydraTheme.fontUI; font.pixelSize: Math.round(8 * HydraState.fontScale) }
-                            MouseArea { id: hP; anchors.fill: parent; hoverEnabled: true; onClicked: HydraState.setPowerProfile(modelData.key); cursorShape: Qt.PointingHandCursor }
+                            color: hP.containsMouse ? ValkyxMaterials.surface0 : (active ? ValkyxMaterials.surface0 : "transparent")
+                            border.color: active ? ValkyxMaterials.borderActive : "transparent"; border.width: 1
+                            Text { anchors.centerIn: parent; text: modelData.label; color: active ? ValkyxTheme.text : ValkyxTheme.muted; font.family: ValkyxTheme.fontUI; font.pixelSize: Math.round(8 * ValkyxState.fontScale) }
+                            MouseArea { id: hP; anchors.fill: parent; hoverEnabled: true; onClicked: ValkyxState.setPowerProfile(modelData.key); cursorShape: Qt.PointingHandCursor }
                         }
                     }
                 }

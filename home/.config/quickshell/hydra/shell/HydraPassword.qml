@@ -1,4 +1,4 @@
-// HYDRA Password Prompt — masked single-field dialog.
+// VALKYX Password Prompt — masked single-field dialog.
 //
 // This replaces `fuzzel -d --password` and `zenity --password`. The GTK dialog was
 // the last foreign surface left in the session: correct behaviour, wrong language.
@@ -6,7 +6,7 @@
 // password is one masked field — so this is its own small surface rather than a
 // launcher section.
 //
-// Structure follows HydraPowerMenu exactly, because that file encodes every rule
+// Structure follows ValkyxPowerMenu exactly, because that file encodes every rule
 // this compositor needs:
 //   visible stays `true` forever (a `visible:false` layershell window gets ORPHANED
 //   by Hyprland as `pid: -1` and keeps holding the seat input grab),
@@ -21,8 +21,8 @@ import "../core" as Core
 PanelWindow {
     id: pw
 
-    visible: Core.HydraState.passwordOpen
-    focusable: Core.HydraState.passwordOpen
+    visible: Core.ValkyxState.passwordOpen
+    focusable: Core.ValkyxState.passwordOpen
     aboveWindows: true
     exclusiveZone: -1
     color: "transparent"
@@ -41,9 +41,9 @@ PanelWindow {
     onScreenChanged: gear()
 
     Connections {
-        target: Core.HydraState
+        target: Core.ValkyxState
         function onPasswordOpenChanged() {
-            if (Core.HydraState.passwordOpen) { pw.gear(); pw.focusTries = 0; pw.focusPoll.start() }
+            if (Core.ValkyxState.passwordOpen) { pw.gear(); pw.focusTries = 0; pw.focusPoll.start() }
             else { pw.focusPoll.stop() }
         }
     }
@@ -73,14 +73,14 @@ PanelWindow {
     Process {
         id: writer
         running: false
-        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/hydra-pass-write", Core.HydraState.passwordTarget, pw.sent]
+        command: [StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/bin/valkyx-pass-write", Core.ValkyxState.passwordTarget, pw.sent]
     }
     property string sent: ""
 
     function settle(value: string) {
         sent = value
-        Core.HydraState.passwordOpen = false
-        Core.HydraState.passwordText = ""
+        Core.ValkyxState.passwordOpen = false
+        Core.ValkyxState.passwordText = ""
         writer.running = true
     }
     function submit() { settle(field.text) }
@@ -89,9 +89,9 @@ PanelWindow {
     FocusScope {
         id: body
         anchors.fill: parent
-        focus: Core.HydraState.passwordOpen
-        enabled: Core.HydraState.passwordOpen
-        opacity: Core.HydraState.passwordOpen ? 1 : 0
+        focus: Core.ValkyxState.passwordOpen
+        enabled: Core.ValkyxState.passwordOpen
+        opacity: Core.ValkyxState.passwordOpen ? 1 : 0
 
         Keys.onEscapePressed: { pw.cancel(); event.accepted = true }
         Keys.onReturnPressed: { pw.submit(); event.accepted = true }
@@ -99,48 +99,48 @@ PanelWindow {
 
         Rectangle {
             anchors.fill: parent
-            radius: Core.HydraMetrics.rPanel
-            color: Core.HydraTheme.tint(Core.HydraTheme.surface, "mid")
+            radius: Core.ValkyxMetrics.rPanel
+            color: Core.ValkyxTheme.tint(Core.ValkyxTheme.surface, "mid")
             border.width: 1
-            border.color: Core.HydraTheme.accent
+            border.color: Core.ValkyxTheme.accent
         }
 
         Text {
             id: title
-            x: Core.HydraMetrics.xl
-            y: Core.HydraMetrics.l
-            color: Core.HydraTheme.text
-            font.family: Core.HydraTheme.fontUI
-            font.pixelSize: Core.HydraMetrics.fsLg
+            x: Core.ValkyxMetrics.xl
+            y: Core.ValkyxMetrics.l
+            color: Core.ValkyxTheme.text
+            font.family: Core.ValkyxTheme.fontUI
+            font.pixelSize: Core.ValkyxMetrics.fsLg
             font.weight: Font.DemiBold
-            text: Core.HydraState.passwordLabel.length > 0 ? Core.HydraState.passwordLabel : "Password"
+            text: Core.ValkyxState.passwordLabel.length > 0 ? Core.ValkyxState.passwordLabel : "Password"
         }
 
         // Masked field. `echoMode: TextInput.Password` is the whole reason this
         // surface exists — nothing in the launcher can express it.
         Rectangle {
             id: box
-            x: Core.HydraMetrics.xl
-            y: title.y + title.height + Core.HydraMetrics.l
-            width: parent.width - Core.HydraMetrics.xl * 2
+            x: Core.ValkyxMetrics.xl
+            y: title.y + title.height + Core.ValkyxMetrics.l
+            width: parent.width - Core.ValkyxMetrics.xl * 2
             height: 38
-            radius: Core.HydraMetrics.rBtn
-            color: Core.HydraTheme.tint(Core.HydraTheme.bg, "rest")
+            radius: Core.ValkyxMetrics.rBtn
+            color: Core.ValkyxTheme.tint(Core.ValkyxTheme.bg, "rest")
             border.width: 1
-            border.color: field.activeFocus ? Core.HydraTheme.accent : Core.HydraTheme.line
+            border.color: field.activeFocus ? Core.ValkyxTheme.accent : Core.ValkyxTheme.line
 
             TextInput {
                 id: field
                 anchors.fill: parent
-                anchors.leftMargin: Core.HydraMetrics.l
-                anchors.rightMargin: Core.HydraMetrics.l
+                anchors.leftMargin: Core.ValkyxMetrics.l
+                anchors.rightMargin: Core.ValkyxMetrics.l
                 verticalAlignment: TextInput.AlignVCenter
                 echoMode: TextInput.Password
                 passwordCharacter: "•"
                 passwordMaskDelay: 0
-                color: Core.HydraTheme.text
-                font.family: Core.HydraTheme.fontUI
-                font.pixelSize: Core.HydraMetrics.fsMd
+                color: Core.ValkyxTheme.text
+                font.family: Core.ValkyxTheme.fontUI
+                font.pixelSize: Core.ValkyxMetrics.fsMd
                 selectByMouse: true
                 clip: true
                 onAccepted: pw.submit()
@@ -148,23 +148,23 @@ PanelWindow {
         }
 
         Row {
-            x: parent.width - Core.HydraMetrics.xl - cancel.width - Core.HydraMetrics.s - ok.width
-            y: box.y + box.height + Core.HydraMetrics.l
-            spacing: Core.HydraMetrics.s
+            x: parent.width - Core.ValkyxMetrics.xl - cancel.width - Core.ValkyxMetrics.s - ok.width
+            y: box.y + box.height + Core.ValkyxMetrics.l
+            spacing: Core.ValkyxMetrics.s
 
             Rectangle {
                 id: cancel
                 width: 84; height: 30
-                radius: Core.HydraMetrics.rBtn
+                radius: Core.ValkyxMetrics.rBtn
                 color: "transparent"
                 border.width: 1
-                border.color: Core.HydraTheme.line
+                border.color: Core.ValkyxTheme.line
                 Text {
                     anchors.centerIn: parent
                     text: "Cancel"
-                    color: Core.HydraTheme.muted
-                    font.family: Core.HydraTheme.fontUI
-                    font.pixelSize: Core.HydraMetrics.fsSm
+                    color: Core.ValkyxTheme.muted
+                    font.family: Core.ValkyxTheme.fontUI
+                    font.pixelSize: Core.ValkyxMetrics.fsSm
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -176,14 +176,14 @@ PanelWindow {
             Rectangle {
                 id: ok
                 width: 96; height: 30
-                radius: Core.HydraMetrics.rBtn
-                color: Core.HydraTheme.accent
+                radius: Core.ValkyxMetrics.rBtn
+                color: Core.ValkyxTheme.accent
                 Text {
                     anchors.centerIn: parent
                     text: "Connect"
-                    color: Core.HydraTheme.bg
-                    font.family: Core.HydraTheme.fontUI
-                    font.pixelSize: Core.HydraMetrics.fsSm
+                    color: Core.ValkyxTheme.bg
+                    font.family: Core.ValkyxTheme.fontUI
+                    font.pixelSize: Core.ValkyxMetrics.fsSm
                     font.weight: Font.DemiBold
                 }
                 MouseArea {
