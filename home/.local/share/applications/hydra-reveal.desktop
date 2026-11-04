@@ -1,6 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Reveal in File Manager
-NoDisplay=true
-Exec=$HOME/.local/bin/hydra-reveal %U
-MimeType=inode/directory;

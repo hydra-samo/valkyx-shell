@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=AXORA Welcome Report
+GenericName=Shell report
+Comment=Terminal report: wordmark, system facts and shell health
+Exec=kitty --hold -e $HOME/.local/bin/axora-welcome
+Icon=axora
+Terminal=false
+Categories=System;
+Keywords=axora;welcome;report;system;
+NoDisplay=false
+StartupNotify=true

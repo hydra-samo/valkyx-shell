@@ -1,6 +1,6 @@
-# HYDRA SHELL — IMAGE & SETTINGS CATALOG
+# AXORA SHELL — IMAGE & SETTINGS CATALOG
 
-This document catalogs the Hydra Samo Hyprland shell as it exists on this host,
+This document catalogs the Axora Hyprland shell as it exists on this host,
 including the **Super+I settings panel** (5 pages), the sidebar control center,
 SDDM greeter, lock screen, and every shell component. Image paths are placeholders
 — screenshots or AI-generated images can be dropped in at the listed locations.
@@ -9,7 +9,7 @@ SDDM greeter, lock screen, and every shell component. Image paths are placeholde
 
 ## A. SYSTEM INVENTORY — what's already installed on this host
 
-Host: Arch Linux, user `hydrasamo`, 1,859 total pacman packages.
+Host: Arch Linux, user `axorasamo`, 1,859 total pacman packages.
 
 ### Display server & graphics
 | Package | Version | Status | Role |
@@ -40,7 +40,7 @@ Host: Arch Linux, user `hydrasamo`, 1,859 total pacman packages.
 ### Display manager
 | Package | Version | Status | Role |
 |---------|---------|--------|------|
-| sddm | 0.21.0-8 | ✅ | Display manager (Hydra theme) |
+| sddm | 0.21.0-8 | ✅ | Display manager (Axora theme) |
 | qt6-base / qt6-declarative / qt6-svg / qt6-wayland | installed | ✅ | SDDM QML greeter runtime |
 | qt6-5compat / qt6-multimedia / qt6-tools | installed | ✅ | Qt6 compat & multimedia |
 | qt6-imageformats / qt6-shadertools / qt6-speech | installed | ✅ | Qt6 image/shader/speech |
@@ -57,9 +57,9 @@ Host: Arch Linux, user `hydrasamo`, 1,859 total pacman packages.
 | Package | Version | Status | Role |
 |---------|---------|--------|------|
 | bash | installed | ✅ | Shell |
-| zsh | installed | ✅ | Shell (default for hydrasamo) |
+| zsh | installed | ✅ | Shell (default for axorasamo) |
 | starship | installed | ✅ | Cross-shell prompt |
-| fastfetch | 2.70.0-1.1 | ✅ | System info tool (used by hydra-fetch) |
+| fastfetch | 2.70.0-1.1 | ✅ | System info tool (used by axora-fetch) |
 
 ### Audio
 | Package | Version | Status | Role |
@@ -128,7 +128,7 @@ Host: Arch Linux, user `hydrasamo`, 1,859 total pacman packages.
 
 ## B. SETTINGS PANEL CATALOG — Super+I keybind
 
-The settings panel opens with `Super+I` → `qs -c hydra ipc call settings toggle`.
+The settings panel opens with `Super+I` → `qs -c axora ipc call settings toggle`.
 
 **Window:** Floating glass panel, 960×640 px, centered on screen, draggable title bar,
 Esc to close, exclusive zone −1 (floats above windows).
@@ -154,10 +154,10 @@ Version "v0.9" shown at bottom of nav rail.
 
 **Controls:**
 - **Wallpaper** — full-width blurred hero (blurMax 48, saturation 0.15, dark scrim 0.45, vignette) of the active wallpaper; click opens full skew/grid selector (Super+W). Online Wallhaven (SFW) search with thumb grid + "Load more".
-- **Theme** — 6 Hydra accent swatches (Amber, Cyan, Ember, Hydra, Ocean, Violet) applied live via `applyTheme()`.
-- **Effects** — Blur toggle (HydraState.blurEnabled).
-- **Motion** — Reduced motion toggle (HydraState.reducedMotion).
-- **Font scale** — slider 0.8× → 1.5× (HydraState.fontScale), persists via `savePersisted()`.
+- **Theme** — 6 Axora accent swatches (Amber, Cyan, Ember, Axora, Ocean, Violet) applied live via `applyTheme()`.
+- **Effects** — Blur toggle (AxoraState.blurEnabled).
+- **Motion** — Reduced motion toggle (AxoraState.reducedMotion).
+- **Font scale** — slider 0.8× → 1.5× (AxoraState.fontScale), persists via `savePersisted()`.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -190,7 +190,7 @@ Image placeholder: `catalog/images/settings-appearance.png`
 **Controls:**
 - Resolution info (`Screen.width × Screen.height`)
 - Refresh rate ("60 Hz")
-- **Night Light** — toggle (3500K), `HydraState.isOn("night")`
+- **Night Light** — toggle (3500K), `AxoraState.isOn("night")`
 - **Scale** — 100% / 125% / 150% / 200% chips (wlr-randr scale, placeholder handler)
 
 ```
@@ -259,7 +259,7 @@ Image placeholder: `catalog/images/settings-keyboard.png`
 - **Sensitivity** — slider −1.0 → +1.0 (`hyprctl eval 'hl.config({input = {sensitivity = ...}})'`)
 - **Acceleration profile** — Flat / Adaptive chips
 - **Natural scrolling** — toggle
-- **Cursor** — theme swatches from `HydraTheme.themeNames` with cursor preview (`setCursor()`)
+- **Cursor** — theme swatches from `AxoraTheme.themeNames` with cursor preview (`setCursor()`)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -290,9 +290,9 @@ Image placeholder: `catalog/images/settings-mouse.png`
 **File:** `SettingsSessionPage.qml`
 
 **Controls:**
-- **System info** — HYDRA SAMO LABS branding, Hyprland version, battery %, network status
+- **System info** — AXORA LABS branding, Hyprland version, battery %, network status
 - **Greeting** — "Greet me on startup" toggle (`greetingEnabled`), shows "hello, again" / "first run"
-- **Power** — 4 buttons: Lock (`hydra-lock`), Logout (`hydra-power-action logout`), Reboot (`systemctl reboot`), Shutdown (`systemctl poweroff`, danger color)
+- **Power** — 4 buttons: Lock (`axora-lock`), Logout (`axora-power-action logout`), Reboot (`systemctl reboot`), Shutdown (`systemctl poweroff`, danger color)
 - **Battery** — battery percentage bar with low (<20%) danger color
 
 ```
@@ -301,8 +301,8 @@ Image placeholder: `catalog/images/settings-mouse.png`
 ├──────────┬──────────────────────────────────────────────┤
 │ ⚡       │  SESSION                                     │
 │          │  ┌─────────────────────────────────────┐    │
-│          │  │ ⭐ HYDRA SAMO LABS                   │    │
-│          │  │ Hyprland 0.56 · HYDRA-S   🔋 78%    │    │
+│          │  │ ⭐ AXORA LABS                   │    │
+│          │  │ Hyprland 0.56 · AXORA-S   🔋 78%    │    │
 │          │  │                 🌐 connected          │    │
 │          │  └─────────────────────────────────────┘    │
 │          │                                               │
@@ -335,40 +335,40 @@ Create `catalog/images/` and populate with screenshots or AI-generated images:
 | `catalog/images/settings-session.png` | Session/power page (Super+I → ⚡) |
 | `catalog/images/settings-panel-overview.png` | Full settings window with nav rail |
 | `catalog/images/sidebar-panel.png` | Sidebar control center (Super+S) |
-| `catalog/images/sddm-greeter.png` | SDDM Hydra greeter login screen |
+| `catalog/images/sddm-greeter.png` | SDDM Axora greeter login screen |
 | `catalog/images/hyprlock-screen.png` | Hyprlock lock screen |
 | `catalog/images/hyprland-workspace.png` | Hyprland workspace overview |
-| `catalog/images/welcome-panel.png` | Hydra welcome panel (Super+Shift+W) |
-| `catalog/images/power-menu.png` | Hydra power menu |
+| `catalog/images/welcome-panel.png` | Axora welcome panel (Super+Shift+W) |
+| `catalog/images/power-menu.png` | Axora power menu |
 
 ---
 
 ## D. SHELL COMPONENTS INVENTORY
 
-### Scripts in `$HOME/.local/bin/` (92 hydra scripts)
-hydra, hydra-ai, hydra-alt-tab, hydra-audio, hydra-auto-prime, hydra-awww-daemon,
-hydra-backup, hydra-caffeine, hydra-cap, hydra-class-icon, hydra-clipboard,
-hydra-color, hydra-console, hydra-copy, hydra-cursor, hydra-dash, hydra-diagnose,
-hydra-dispatch, hydra-doctor, hydra-ds4-bt-test, hydra-ds4-pegasus, hydra-ds4-tv,
-hydra-emoji, hydra-env, hydra-fetch, hydra-figlet, hydra-fix, hydra-focus,
-hydra-gamemode, hydra-gamesession, hydra-gamesession-recover, hydra-gen-icons,
-hydra-gen-theme, hydra-gpu, hydra-gpu-ppwatch.sh, hydra-gta-crashlog,
-hydra-gtk-icons, hydra-holo-window, hydra-hub-check, hydra-im, hydra-jarvis-rollback,
-hydra-jobs, hydra-launch, hydra-live-wallpaper, hydra-local-brain, hydra-lock,
-hydra-lock-chip-sys, hydra-lock-chip-weather, hydra-lock-supervise, hydra-logout,
-hydra-logout-watchdog, hydra-memory, hydra-mic-gain, hydra-notify,
-hydra-obsidian-ai, hydra-opencode-ttyd, hydra-palette, hydra-pass-write,
-hydra-pegasus-theme, hydra-pointer, hydra-power, hydra-power-action,
-hydra-power-apply.sh, hydra-power-menu, hydra-project, hydra-record, hydra-remote,
-hydra-remote-tv, hydra-remote-web, hydra-remote-web-wrap, hydra-reveal,
-hydra-screenshot, hydra-shell-dev, hydra-shell-live, hydra-shell-reload,
-hydra-shell-sync, hydra-shell-toggle, hydra-tailscale-status, hydra-ui-test,
-hydra-update, hydra-vid2edit, hydra-wallfavs, hydra-wallhues, hydra-wallpaper,
-hydra-weather, hydra-welcome, hydra-wifi-connect, hydra-ws, hydra-ws-windows
+### Scripts in `$HOME/.local/bin/` (92 axora scripts)
+axora, axora-ai, axora-alt-tab, axora-audio, axora-auto-prime, axora-awww-daemon,
+axora-backup, axora-caffeine, axora-cap, axora-class-icon, axora-clipboard,
+axora-color, axora-console, axora-copy, axora-cursor, axora-dash, axora-diagnose,
+axora-dispatch, axora-doctor, axora-ds4-bt-test, axora-ds4-pegasus, axora-ds4-tv,
+axora-emoji, axora-env, axora-fetch, axora-figlet, axora-fix, axora-focus,
+axora-gamemode, axora-gamesession, axora-gamesession-recover, axora-gen-icons,
+axora-gen-theme, axora-gpu, axora-gpu-ppwatch.sh, axora-gta-crashlog,
+axora-gtk-icons, axora-holo-window, axora-hub-check, axora-im, axora-jarvis-rollback,
+axora-jobs, axora-launch, axora-live-wallpaper, axora-local-brain, axora-lock,
+axora-lock-chip-sys, axora-lock-chip-weather, axora-lock-supervise, axora-logout,
+axora-logout-watchdog, axora-memory, axora-mic-gain, axora-notify,
+axora-obsidian-ai, axora-opencode-ttyd, axora-palette, axora-pass-write,
+axora-pegasus-theme, axora-pointer, axora-power, axora-power-action,
+axora-power-apply.sh, axora-power-menu, axora-project, axora-record, axora-remote,
+axora-remote-tv, axora-remote-web, axora-remote-web-wrap, axora-reveal,
+axora-screenshot, axora-shell-dev, axora-shell-live, axora-shell-reload,
+axora-shell-sync, axora-shell-toggle, axora-tailscale-status, axora-ui-test,
+axora-update, axora-vid2edit, axora-wallfavs, axora-wallhues, axora-wallpaper,
+axora-weather, axora-welcome, axora-wifi-connect, axora-ws, axora-ws-windows
 
 ### Desktop files (`$HOME/.local/share/applications/`)
-hydra-cam-tune, hydra-console, hydra-dashboard, hydra-doctor, hydra-games,
-hydra-reveal, hydra-site, hydra-update, hydra-welcome-report, hydra-welcome
+axora-cam-tune, axora-console, axora-dashboard, axora-doctor, axora-games,
+axora-reveal, axora-site, axora-update, axora-welcome-report, axora-welcome
 
 ### Keybinds reference (mod = Super)
 | Keybind | Action |
@@ -412,28 +412,28 @@ hydra-reveal, hydra-site, hydra-update, hydra-welcome-report, hydra-welcome
 | Scroll_Lock / Ctrl+Space | Input method toggle |
 
 ### Quickshell shell components
-- `HydraSettings.qml` — settings panel (Super+I)
-- `HydraSidebar.qml` — sidebar control center (Super+S)
-- `HydraWelcomePanel.qml` — welcome panel (Super+Shift+W)
-- `HydraPowerMenu.qml` — power menu (Super+X)
-- `HydraLauncher.qml` — app launcher (Super+Space)
-- `HydraDock.qml` — dock
-- `HydraAssistantUi.qml` — assistant UI
-- `HydraHoloPanel.qml` — holo panel
-- `HydraJarvisHud.qml` — Jarvis HUD
-- `HydraReactor.qml` — reactor
+- `AxoraSettings.qml` — settings panel (Super+I)
+- `AxoraSidebar.qml` — sidebar control center (Super+S)
+- `AxoraWelcomePanel.qml` — welcome panel (Super+Shift+W)
+- `AxoraPowerMenu.qml` — power menu (Super+X)
+- `AxoraLauncher.qml` — app launcher (Super+Space)
+- `AxoraDock.qml` — dock
+- `AxoraAssistantUi.qml` — assistant UI
+- `AxoraHoloPanel.qml` — holo panel
+- `AxoraJarvisHud.qml` — Jarvis HUD
+- `AxoraReactor.qml` — reactor
 - `TopHud.qml` — top HUD
 
-### Dotfiles repo structure (`/home/hydrasamo/repos/hydra-dotfiles`)
+### Dotfiles repo structure (`/home/axorasamo/repos/axora-dotfiles`)
 ```
 home/.config/hypr/          hyprland.lua, hyprlock.conf, hypridle.conf, assets/
-home/.config/hydra/         power-profile, state.json, theming/, env/
-home/.local/bin/            92 hydra scripts
+home/.config/axora/         power-profile, state.json, theming/, env/
+home/.local/bin/            92 axora scripts
 home/.local/share/          desktop files, backgrounds, icons, emoji
 home/Pictures/Wallpapers/   35 wallpapers
 home/.bashrc .zshrc .profile| shell rc files ($HOME-portable)
-etc/sddm.conf.d/hydra.conf  | SDDM greeter config
-usr/share/sddm/themes/hydra/| SDDM QML theme (Main.qml, assets)
+etc/sddm.conf.d/axora.conf  | SDDM greeter config
+usr/share/sddm/themes/axora/| SDDM QML theme (Main.qml, assets)
 install.sh                  | dotfiles deploy script
 install-machine.sh          | full machine preparer (this script)
 README.md                   | documentation
@@ -444,11 +444,11 @@ README.md                   | documentation
 ## E. INSTALLER
 
 `install-machine.sh` — prepares any Arch machine (bare TTY or existing GUI) into the
-complete Hydra shell. Runs as root, prompts for password once, detects missing
+complete Axora shell. Runs as root, prompts for password once, detects missing
 packages, installs them, enables services, deploys dotfiles.
 
 Run: `sudo ./install-machine.sh`
 
 ---
 
-*Generated from the live Hydra Samo host. Image placeholders await screenshots or AI generation.*
+*Generated from the live Axora host. Image placeholders await screenshots or AI generation.*

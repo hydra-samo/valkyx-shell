@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+# axora-jobs — scheduled maintenance + unattended agent runner.
+#
+# One script, not one unit per job. Every job is read-only or self-gating and
+# writes a result file; nothing mutates system state without a rollback.
+# Result files: ~/.local/state/axora/jobs/<name>.log   (never stdout-only)
+#
+#   axora-jobs health     shell static check          -> journald on failure
+# Notifications go to stdout/stderr, which the timer unit captures into the user
+# journal. Do NOT use systemd-cat: /run/systemd/journal holds only dev-log here, no
+# live socket, so it always fails rc=1 ("Failed to execute process"). Verified.
+#   axora-jobs orphans    pacman -Qtdq, REPORT ONLY  -> orphans.txt
+#   axora-jobs drift      live quickshell vs sandbox mirror
+#   axora-jobs doctor     axora-doctor snapshot       -> doctor.log
+#   axora-jobs sweep      prune unreferenced ~/.cache/axora/* older than 30d
+#   axora-jobs agents     drain ~/.local/state/axora/queue/*.md via opencode
+#   axora-jobs all        every read-only job above (NOT agents)
+#
+# Design constraints (see Documents/unified-docs/shell/MAJOR-FEATURES.md §1):
+#   * never a sleep loop — systemd --on-calendar does the scheduling
+#   * never holds the seat's input grab: no PanelWindow, no zenity, no prompt
+#   * anything that mutates must be idempotent and safe to run twice
+set -uo pipefail
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/axora"
+JOB_DIR="$STATE_DIR/jobs"
+QUEUE_DIR="$STATE_DIR/queue"
+LOG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/axora"
+SHELL_DIR="$HOME/.config/quickshell/axora"
+SANDBOX_HYPR="$HOME/axora-sandbox/system/hypr"
+OC="$HOME/.opencode/bin/opencode"
+export PATH="$PATH:/usr/local/bin:/usr/bin:$HOME/.local/bin"
+
+mkdir -p "$JOB_DIR" "$QUEUE_DIR"
+
+log()  { printf '%s %s\n' "$(date +%F' '%T)" "$*"; }
+fail() { printf '%s FAIL %s\n' "$(date +%F' '%T)" "$*" >&2; }
+
+# Desktop ping. The queue is headless, so without this you only learn the outcome by
+# going and looking. Verified: notify-send reaches mako from a systemd USER unit with
+# no extra env, because WAYLAND_DISPLAY=wayland-1 and XDG_RUNTIME_DIR=/run/user/1000
+# are already in the user manager environment (`systemctl --user show-environment`).
+# Check delivery with `makoctl list` — it prints "Notification N: <summary>" and NOT
+# the body, so grepping the list for the message text is a false negative.
+notify() { command -v notify-send >/dev/null 2>&1 && \
+           notify-send -t 8000 "AXORA agent" "$*" >/dev/null 2>&1; return 0; }
+
+# ── health ────────────────────────────────────────────────────────────────────
+# axora-ui-test --static is a pure file scan: binding-destruction, exec() barename
+# resolution and 5 anti-slop rules. Non-zero exit means the shell tree is broken.
+job_health() {
+  local rc=0
+  if out=$(axora-ui-test --static 2>&1); then
+    log "static check passed"
+  else
+    rc=$?
+    fail "static check failed (rc=$rc)"
+    printf '%s\n' "$out"
+  fi
+  # The :8444 page is a Python string literal feeding a browser. A JS escape eaten
+  # by Python is a page-wide SyntaxError that every HTTP check still passes, so it
+  # gets its own check rather than riding along in the UI scan.
+  if axora-hub-check; then
+    log "hub page JS parses"
+  else
+    rc=1
+  fi
+  return $rc
+}
+
+# ── orphans ───────────────────────────────────────────────────────────────────
+# Report only. NEVER auto-remove: an unattended job that deletes packages is how
+# you discover a broken desktop from a phone.
+job_orphans() {
+  local n
+  if ! command -v pacman >/dev/null; then log "pacman absent, skipping"; return 0; fi
+  pacman -Qtdq 2>/dev/null | sort > "$STATE_DIR/orphans.txt" || true
+  n=$(wc -l < "$STATE_DIR/orphans.txt")
+  log "orphans: $n (report only, nothing removed)"
+  return 0
+}
+
+# ── drift ─────────────────────────────────────────────────────────────────────
+# Known gap: axora-shell-sync only syncs shell/, so nothing syncs system/hypr and
+# that mirror drifts. Compare, never overwrite — the mirror has no source of truth.
+job_drift() {
+  [ -d "$SANDBOX_HYPR" ] || { log "no sandbox mirror at $SANDBOX_HYPR — nothing to compare"; return 0; }
+  local d
+  d=$(diff -rq "$HOME/.config/hypr" "$SANDBOX_HYPR" 2>&1) || true
+  if [ -z "$d" ]; then
+    log "hypr config in sync with mirror"
+  else
+    log "DRIFT vs mirror:"
+    printf '%s\n' "$d"
+  fi
+}
+
+# ── doctor ────────────────────────────────────────────────────────────────────
+job_doctor() {
+  command -v axora-doctor >/dev/null || { log "axora-doctor absent"; return 0; }
+  axora-doctor >> "$JOB_DIR/doctor.log" 2>&1 || log "axora-doctor returned non-zero"
+  log "doctor snapshot appended to $JOB_DIR/doctor.log"
+}
+
+# ── sweep ─────────────────────────────────────────────────────────────────────
+# Only entries under ~/.cache/axora older than 30 days, and never anything
+# referenced by state.json.
+job_sweep() {
+  [ -d "$LOG_DIR" ] || { log "no $LOG_DIR"; return 0; }
+  local keep=()
+  while IFS= read -r k; do [ -n "$k" ] && keep+=("$(basename "$k")"); done \
+    < <(python3 -c 'import json,sys
+try: d=json.load(open(sys.argv[1]))
+except Exception: d={}
+for v in d.values():
+    if isinstance(v,str) and "/" in v: print(v)
+' "$HOME/.config/axora/state.json" 2>/dev/null)
+  local n=0 f
+  while IFS= read -r f; do
+    local b; b=$(basename "$f")
+    local skip=0
+    for k in "${keep[@]+"${keep[@]}"}"; do [ "$b" = "$k" ] && skip=1; done
+    [ "$skip" = 1 ] && { log "keeping referenced $b"; continue; }
+    rm -rf "$f" && n=$((n+1))
+  done < <(find "$LOG_DIR" -maxdepth 1 -mindepth 1 -mtime +30 2>/dev/null)
+  log "swept $n cache entries older than 30d"
+}
+
+# ── agents ────────────────────────────────────────────────────────────────────
+# Drain the task queue. Each queue/*.md is one task; it runs headlessly on a free
+# 1M-context model and the result lands next to it. Move, don't delete: the .done
+# file is the record. Failures move to .failed so one bad task can't block the queue.
+#
+# STALL DETECTION — this is the part Herdr sells and the rest of the stack lacks.
+# A blocked agent is one whose .out has not grown for STALL_SECS. Measured facts that
+# shape this design:
+#   * `opencode run` does NOT hang on a permission prompt. With no TTY it prints
+#     "permission requested: … auto-rejecting" and continues (~10 s). So permission
+#     prompts are not the stall case, and adding --auto would buy nothing here.
+#   * The agent's stdout is appended live, so file growth is the only trustworthy
+#     liveness signal available without hooks.
+#   * ponytail: silence is NOT broken. A long build, a slow download, or a provider
+#     retry is silent but healthy. STALL_SECS is deliberately conservative (10 min);
+#     it raises a flag for a human, it never kills anything. Ceiling: a genuinely
+#     silent-but-working task still trips the flag. Replace with a provider hook or an
+#     `opencode` server-side event stream if that ever matters.
+AGENT_MODEL="${AXORA_AGENT_MODEL:-opencode/space-bunny-free}"
+STALL_SECS="${AXORA_STALL_SECS:-600}"
+POLL_SECS=30
+
+# watch_task <pid> <base> <name> — poll until the pid exits, raising a .blocked
+# marker whenever output goes quiet for STALL_SECS. Removes the marker on recovery,
+# so the marker means "quiet right now", not "quiet once".
+watch_task() {
+  local pid="$1" base="$2" name="$3"
+  local last_size=0 quiet=0 size
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep "$POLL_SECS"
+    size=$(stat -c %s "$base.out" 2>/dev/null || echo 0)
+    if [ "$size" -eq "$last_size" ]; then
+      quiet=$((quiet + POLL_SECS))
+      if [ "$quiet" -ge "$STALL_SECS" ] && [ ! -e "$base.blocked" ]; then
+        : > "$base.blocked"
+        log "STALLED $name : no output for ${quiet}s — needs a look"
+        notify "stalled: $name (silent ${quiet}s)"
+      fi
+    else
+      if [ -e "$base.blocked" ]; then
+        rm -f "$base.blocked"
+        log "recovered $name : output resumed"
+      fi
+      quiet=0
+    fi
+    last_size="$size"
+  done
+}
+
+job_agents() {
+  command -v "$OC" >/dev/null 2>&1 || { fail "opencode not found at $OC"; return 1; }
+  shopt -s nullglob
+  local tasks=("$QUEUE_DIR"/*.md)
+  [ ${#tasks[@]} -eq 0 ] && { log "queue empty"; return 0; }
+  local work="${AXORA_AGENT_CWD:-$HOME}"
+  for t in "${tasks[@]}"; do
+    local base="${t%.md}"
+    local name; name=$(basename "$base")
+    log "running agent: $name (model=$AGENT_MODEL, cwd=$work)"
+    # No --agent here: axora-worker is mode:subagent, and `opencode run` silently
+    # falls back to build for a subagent name ("is a subagent, not a primary agent").
+    # The prompt/permissions of a subagent only apply when a PARENT dispatches it via
+    # the task tool; for an unattended queue run, pin the model and take build's
+    # permissions. Verified: passing --agent axora-worker here just prints a warning.
+    ( cd "$work" && exec timeout 3600 "$OC" run -m "$AGENT_MODEL" "$(cat "$t")" ) > "$base.out" 2>&1 &
+    local pid=$!
+    watch_task "$pid" "$base" "$name"
+    wait "$pid"; local rc=$?
+    rm -f "$base.blocked"
+    if [ "$rc" -eq 0 ]; then
+      mv "$t" "$base.done"
+      log "ok: $name"
+      notify "done: $name"
+    else
+      mv "$t" "$base.failed"
+      log "FAILED rc=$rc : $name"
+      notify "failed: $name (rc=$rc)"
+    fi
+  done
+  return 0
+}
+
+case "${1:-all}" in
+  health)  job_health  ;;
+  orphans) job_orphans ;;
+  drift)   job_drift   ;;
+  doctor)  job_doctor  ;;
+  sweep)   job_sweep   ;;
+  agents)  job_agents  ;;
+  all)     job_health; job_orphans; job_drift; job_sweep ;;
+  *)       echo "usage: axora-jobs {health|orphans|drift|doctor|sweep|agents|all}" >&2; exit 2 ;;
+esac

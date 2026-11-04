@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AXORA LABS
+Comment=Live local portfolio (standalone app window)
+Exec=/usr/bin/helium-browser --app=http://127.0.0.1:1717/ --class=AXORAStudioSite --user-data-dir=$HOME/.local/share/axora-studio/site-profile --no-first-run --no-default-browser-check
+Icon=axora
+Terminal=false
+Categories=Development;
+StartupWMClass=AXORAStudioSite
+X-KDE-StartupNotify=false

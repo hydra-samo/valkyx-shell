@@ -1,0 +1,3 @@
+module axora-core-components
+AxoraSection 1.0 AxoraSection.qml
+AxoraToggle 1.0 AxoraToggle.qml

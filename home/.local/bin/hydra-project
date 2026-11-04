@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# hydra-project — open the shell launcher pre-filtered to projects (accent-reactive)
-exec qs -c hydra ipc call launcher open dir

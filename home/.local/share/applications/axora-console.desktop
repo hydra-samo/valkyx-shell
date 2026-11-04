@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Axora-S Console
+Comment=Master console — Automata, Remote and Studio in one window
+Exec=$HOME/.local/bin/axora-console
+Icon=axora
+Terminal=false
+Categories=Development;Utility;
+StartupWMClass=AxoraConsole
+X-KDE-StartupNotify=false

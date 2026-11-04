@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AXORA GAMES
+Comment=Scan, extract, vault and register games for the AXORA library
+Exec=$HOME/axora-games/run
+Icon=axora
+Terminal=false
+Categories=Game;Utility;
+StartupWMClass=axora-games
+StartupNotify=true

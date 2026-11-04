@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Reveal in File Manager
+NoDisplay=true
+Exec=$HOME/.local/bin/axora-reveal %U
+MimeType=inode/directory;

@@ -1,0 +1,8 @@
+#!/bin/sh
+# axora-notify — put a message on the notification channel(s) the phone sees.
+#   axora-notify "Title" "Body" --level done --source council
+#   axora-notify -t "Title" -b "Body" -l error
+#   echo "body" | axora-notify -t "Title"
+#   axora-notify --recent 20
+# Spool: ~/.local/state/axora-assistant/notifications.jsonl (see notify.py).
+exec /usr/bin/python3 "$HOME/axora-assistant/notify.py" "$@"

@@ -1,0 +1,17 @@
+#!/bin/sh
+# axora-local-brain — uncensored 2B multimodal brain on the MX450 (Vulkan, full GPU offload).
+# Model: noctrex/Huihui-Qwen3-VL-2B-Instruct-abliterated-GGUF Q4_K_M (uncensored, vision-capable)
+# llama.cpp's CUDA builds need libcudart 11/12 (this box has CUDA 13), so we use the
+# Vulkan backend pinned to the NVIDIA device — same GPU, full offload, works today.
+B=$HOME/.lmstudio/extensions/backends/llama.cpp-linux-x86_64-vulkan-avx2-2.54.0
+M=$HOME/Picturesm/vl/Huihui-Qwen3-VL-2B-Instruct-abliterated-Q4_K_M.gguf
+
+# Vision projector only loads when it fits; 2 GB VRAM can't hold projector+model,
+# so text runs fully offloaded and the camera stays on the QML live feed.
+exec env LD_LIBRARY_PATH="$B" "$B/llama-server" \
+    -m "$M" \
+    --device Vulkan1 \
+    -ngl 99 \
+    --ctx-size 4096 \
+    --host 127.0.0.1 \
+    --port 8080

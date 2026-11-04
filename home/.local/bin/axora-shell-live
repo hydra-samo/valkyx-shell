@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# axora-shell-live — exit SANDBOX: restores shell + hypr + gtk + mako to live copies.
+# (replacement: axora-env live)
+exec $HOME/.local/bin/axora-env live

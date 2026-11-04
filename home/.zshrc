@@ -92,13 +92,13 @@ alias ocs="opencode session list"
 # Experiential Labs gateway key (source of truth: ~/.config/opencode/explabs.env, mode 600)
 export EXPLABS_API_KEY=$(sed -n 's/^EXPLABS_API_KEY=//p' ~/.config/opencode/explabs.env)
 
-# HYDRA dotfiles (bare repo of $HOME)
+# AXORA dotfiles (bare repo of $HOME)
 
-# HYDRA fetch on every new terminal session (image logo in kitty, ASCII elsewhere)
+# AXORA fetch on every new terminal session (image logo in kitty, ASCII elsewhere)
 # Skip: tmux panes (already shown), dumb/console terminals, non-interactive/non-tty shells
-if [[ -o interactive ]] && [[ -t 0 ]] && [[ -z "$TMUX" ]] && [[ "$TERM" != dumb ]] && command -v hydra-fetch >/dev/null 2>&1; then
+if [[ -o interactive ]] && [[ -t 0 ]] && [[ -z "$TMUX" ]] && [[ "$TERM" != dumb ]] && command -v axora-fetch >/dev/null 2>&1; then
     clear
-    hydra-fetch
+    axora-fetch
 fi
 
 # Added by LM Studio CLI tool (lms)

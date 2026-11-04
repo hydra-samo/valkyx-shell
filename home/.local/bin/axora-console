@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Open the Axora-S Console app window (siderail: Overview / Agents / Queue /
+# Streams / Flows / Automata / Studio / Settings), starting the local server first.
+set -euo pipefail
+
+systemctl --user start axora-automata.service
+
+for _ in $(seq 1 25); do
+  if curl -sf -o /dev/null --max-time 1 http://127.0.0.1:8445/console/; then break; fi
+  sleep 0.2
+done
+
+# Token is read at launch, never baked into the world-readable .desktop entry.
+tok=$(tr -d '\n' < "$HOME/.local/state/axora/remote-token")
+exec /usr/bin/helium-browser \
+  --app="http://127.0.0.1:8445/console/#token=${tok}" \
+  --class=AxoraConsole \
+  --user-data-dir="$HOME/.local/share/axora-console/profile" \
+  --no-first-run --no-default-browser-check

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=AXORA Welcome
+GenericName=Session welcome
+Comment=Keybinds, theme, language and shell health
+Exec=qs -c axora ipc call welcome open
+Icon=axora
+Terminal=false
+Categories=System;
+Keywords=axora;welcome;keybinds;settings;startup;system;
+X-Axora-Cli=axora-welcome
+NoDisplay=false
+StartupNotify=true

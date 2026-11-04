@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Hydra dotfiles installer — caelestia/serpentium style.
+# Axora dotfiles installer — caelestia/serpentium style.
 #
 # Single source of truth lives in this repo. This script deploys repo files to
 # their system locations. It never deletes anything on the host; existing files
-# are backed up with a .hydra-bak-<timestamp> suffix before being overwritten.
+# are backed up with a .axora-bak-<timestamp> suffix before being overwritten.
 #
 #   ./install.sh          # user part ($HOME) + asks for sudo for system parts
 #   sudo ./install.sh     # ERROR: do not run as root (uses sudo internally)
@@ -19,8 +19,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$SCRIPT_DIR"
 
-info()  { printf '[hydra-dotfiles] %s\n' "$*"; }
-warn()  { printf '[hydra-dotfiles] warn: %s\n' "$*" >&2; }
+info()  { printf '[axora-dotfiles] %s\n' "$*"; }
+warn()  { printf '[axora-dotfiles] warn: %s\n' "$*" >&2; }
 
 # Back up an existing file/dir/symlink before overwriting, so the host stays intact.
 backup() {
@@ -28,8 +28,8 @@ backup() {
   if [ -e "$target" ] || [ -L "$target" ]; then
     local ts
     ts="$(date +%Y%m%d%H%M%S)"
-    mv "$target" "${target}.hydra-bak-${ts}"
-    info "backed up existing $target -> ${target}.hydra-bak-${ts}"
+    mv "$target" "${target}.axora-bak-${ts}"
+    info "backed up existing $target -> ${target}.axora-bak-${ts}"
   fi
 }
 
@@ -56,35 +56,35 @@ shopt -u dotglob
 info "home dotfiles deployed"
 
 # ============================================================
-# 2. SDDM theme -> /usr/share/sddm/themes/hydra  (sudo)
+# 2. SDDM theme -> /usr/share/sddm/themes/axora  (sudo)
 # ============================================================
-info "installing SDDM theme to /usr/share/sddm/themes/hydra"
+info "installing SDDM theme to /usr/share/sddm/themes/axora"
 if need_sudo; then
-  sudo mkdir -p /usr/share/sddm/themes/hydra
+  sudo mkdir -p /usr/share/sddm/themes/axora
   # clear previous install then copy fresh
-  sudo rm -rf /usr/share/sddm/themes/hydra
-  sudo cp -r "$REPO/usr/share/sddm/themes/hydra/." /usr/share/sddm/themes/hydra/
-  sudo find /usr/share/sddm/themes/hydra -type d -exec chmod 755 {} +
-  sudo find /usr/share/sddm/themes/hydra -type f -exec chmod 644 {} +
+  sudo rm -rf /usr/share/sddm/themes/axora
+  sudo cp -r "$REPO/usr/share/sddm/themes/axora/." /usr/share/sddm/themes/axora/
+  sudo find /usr/share/sddm/themes/axora -type d -exec chmod 755 {} +
+  sudo find /usr/share/sddm/themes/axora -type f -exec chmod 644 {} +
   info "SDDM theme installed"
 fi
 
 # ============================================================
-# 3. SDDM greeter config -> /etc/sddm.conf.d/hydra.conf  (sudo)
+# 3. SDDM greeter config -> /etc/sddm.conf.d/axora.conf  (sudo)
 # ============================================================
-info "installing SDDM config to /etc/sddm.conf.d/hydra.conf"
+info "installing SDDM config to /etc/sddm.conf.d/axora.conf"
 if need_sudo; then
   sudo mkdir -p /etc/sddm.conf.d
   backup_sudo() {
-    if [ -e "/etc/sddm.conf.d/hydra.conf" ] || [ -L "/etc/sddm.conf.d/hydra.conf" ]; then
+    if [ -e "/etc/sddm.conf.d/axora.conf" ] || [ -L "/etc/sddm.conf.d/axora.conf" ]; then
       local ts
       ts="$(date +%Y%m%d%H%M%S)"
-      sudo mv "/etc/sddm.conf.d/hydra.conf" "/etc/sddm.conf.d/hydra.conf.hydra-bak-${ts}"
+      sudo mv "/etc/sddm.conf.d/axora.conf" "/etc/sddm.conf.d/axora.conf.axora-bak-${ts}"
     fi
   }
   backup_sudo
-  sudo cp "$REPO/etc/sddm.conf.d/hydra.conf" /etc/sddm.conf.d/hydra.conf
-  sudo chmod 644 /etc/sddm.conf.d/hydra.conf
+  sudo cp "$REPO/etc/sddm.conf.d/axora.conf" /etc/sddm.conf.d/axora.conf
+  sudo chmod 644 /etc/sddm.conf.d/axora.conf
   info "SDDM config installed"
 fi
 
@@ -95,7 +95,7 @@ info "installation complete"
 echo
 echo "Next steps:"
 echo "  - Restart Hyprland / log out and back in for shell changes to apply."
-echo "  - For SDDM: select the 'Hydra' greeter in sddm.conf.d, then restart sddm."
+echo "  - For SDDM: select the 'Axora' greeter in sddm.conf.d, then restart sddm."
 
 echo "  - The script did not delete anything on your host; overwritten files are"
-echo "    saved with a .hydra-bak-<timestamp> suffix."
+echo "    saved with a .axora-bak-<timestamp> suffix."

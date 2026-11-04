@@ -16,26 +16,26 @@ __pycache__/
 .venv-tts/
 
 # Backups made by the installer
-*.hydra-bak-*/
+*.axora-bak-*/
 
 # ── Personal data (never commit) ──────────────────────────────────────────
 # Personal avatar / profile picture — replace with your own at
-# ~/.config/hydra/avatar-circle.png (or avatar-placeholder.svg fallback)
-home/.config/hydra/avatar-circle.png
-home/.config/hydra/avatar-*.png
-home/.config/hydra/avatar-*.jpg
-home/.config/hydra/*.face*
+# ~/.config/axora/avatar-circle.png (or avatar-placeholder.svg fallback)
+home/.config/axora/avatar-circle.png
+home/.config/axora/avatar-*.png
+home/.config/axora/avatar-*.jpg
+home/.config/axora/*.face*
 
 # Personal wallpaper — replace with your own at
-# ~/.local/share/backgrounds/hydra-samo-wallpaper.png
-home/.local/share/backgrounds/hydra-samo-wallpaper.png
-home/.local/share/backgrounds/hydra-samo-wallpaper.jpg
-home/.local/share/backgrounds/hydra-samo-wallpaper.jpeg
+# ~/.local/share/backgrounds/axora-wallpaper.png
+home/.local/share/backgrounds/axora-wallpaper.png
+home/.local/share/backgrounds/axora-wallpaper.jpg
+home/.local/share/backgrounds/axora-wallpaper.jpeg
 
 # Personal state / usage data (contains greetOnce, fontScale, etc.)
-home/.config/hydra/state.json
-home/.config/hydra/state.dev.json
-home/.config/hydra/power-profile
+home/.config/axora/state.json
+home/.config/axora/state.dev.json
+home/.config/axora/power-profile
 
 # ── Secrets / environment (never commit) ───────────────────────────────────
 .env
@@ -50,10 +50,10 @@ home/.config/hydra/power-profile
 *password*
 
 # Personal remote config (may contain endpoints/tokens)
-home/.config/hydra/remote.json
+home/.config/axora/remote.json
 
 # Cache / runtime data
 home/.cache/
-home/.local/share/hydra-memory/
-home/.local/share/hydra-automata/
-home/.local/share/hydra-console/
+home/.local/share/axora-memory/
+home/.local/share/axora-automata/
+home/.local/share/axora-console/

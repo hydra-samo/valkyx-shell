@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# axora-shell-toggle — DISABLED (removed Sep 13). The dock tile that flipped the
+# live shell out to the sandbox is gone — live is permanent. Poke the sandbox
+# shell standalone with: qs -c axora-dev
+exit 1

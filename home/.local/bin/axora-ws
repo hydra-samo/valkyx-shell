@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# axora-ws <next|prev> [move] — deterministic prev/next over the canonical six.
+# (Hyprland's m-1/m+1 misbehaves on sparse negative-ID named workspaces.)
+set -euo pipefail
+
+dir="${1:-next}"
+action="${2:-workspace}"
+
+mapfile -t list < <(printf '%s\n' "01 studio" "02 create" "03 code" "04 research" "05 personal" "06 game")
+n=${#list[@]}
+
+# Get current workspace name — handle both "ID 1" (unnamed) and "ID -1337 (01 studio)"
+cur=$(hyprctl activeworkspace | sed -n 's/.*(\([^)]*\)).*/\1/p' | head -1)
+# If no parens match, grab the ID number after "workspace ID"
+[[ -z "$cur" ]] && cur=$(hyprctl activeworkspace | grep -oP 'workspace ID \K[0-9-]+')
+
+idx=-1
+for i in "${!list[@]}"; do
+  [[ "${list[$i]}" == "$cur" ]] && idx=$i && break
+done
+
+# If not on a canonical workspace, go to the first one
+if [ "$idx" -lt 0 ]; then
+  if [ "$dir" = next ]; then
+    axora-dispatch workspace "name:${list[0]}"
+  else
+    axora-dispatch workspace "name:${list[$((n-1))]}"
+  fi
+  exit 0
+fi
+
+if [ "$dir" = next ]; then idx=$(( (idx + 1) % n )); else idx=$(( (idx + n - 1) % n )); fi
+target="name:${list[$idx]}"
+
+if [ "$action" = move ]; then
+  axora-dispatch movetoworkspace "$target"
+else
+  axora-dispatch workspace "$target"
+fi

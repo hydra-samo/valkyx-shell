@@ -7,7 +7,7 @@ Rectangle {
     id: root
     color: "#0a1210"
     property bool loginFailedFlag: false
-    readonly property string loginUser: sddm.user || "hydrasamo"
+    readonly property string loginUser: sddm.user || "axorasamo"
 
     function hexToRgba(hex, alpha) {
         var h = (hex && String(hex).replace("#", "")) || "00A86B"
@@ -63,7 +63,7 @@ Rectangle {
         Text {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 2
-            text: "HYDRA SAMO"
+            text: "AXORA"
             color: root.ink
             font.family: "Space Grotesk"
             font.pixelSize: 56

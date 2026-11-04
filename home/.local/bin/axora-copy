@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# axora-copy [-t TITLE] SRC DST [7z-filters...] — copy or extract with a Hyprland progress popup.
+# Falls back to plain terminal output when no display is available.
+set -euo pipefail
+
+title="AXORA transfer"
+if [[ ${1:-} == "-t" ]]; then title="$2"; shift 2; fi
+src=${1:?usage: axora-copy [-t title] SRC DST [7z-filters...]}
+dst=${2:?missing DST}
+shift 2
+
+pct() { stdbuf -oL awk '{ gsub(/\r/,"\n"); n=$1; gsub(/[^0-9]/,"",n); if (n ~ /^[0-9]+$/) { print n; fflush() } }'; }
+
+if [[ ! -t 1 && ( -n ${DISPLAY:-} || -n ${WAYLAND_DISPLAY:-} ) ]]; then
+    case "${src,,}" in
+        *.zip|*.7z|*.rar) worker() { mkdir -p "$dst"; 7z x "$src" -o"$dst" -y -bso0 -bsp1 "$@" | pct; } ;;
+        *)                worker() { mkdir -p "$dst"; rsync -a --info=progress2 "$src" "$dst/" | pct; } ;;
+    esac
+    # Use mako notification instead of zenity for Hyprland-native progress
+    worker | while IFS= read -r line; do
+        echo "$line" | grep -qE '^[0-9]+$' && makoctl msg -t 5000 -u low "AXORA transfer: ${line}%" 2>/dev/null || true
+    done
+    makoctl msg -t 3000 -u default "$title complete: $dst" 2>/dev/null || true
+else
+    case "${src,,}" in
+        *.zip|*.7z|*.rar) mkdir -p "$dst"; 7z x "$src" -o"$dst" -y "$@" ;;
+        *)                mkdir -p "$dst"; rsync -a --info=progress2 "$src" "$dst/" ;;
+    esac
+fi

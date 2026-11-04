@@ -1,0 +1,653 @@
+#!/usr/bin/env bash
+# axora-diagnose — Comprehensive system + codebase error collector
+# Produces structured JSON report for axora-fix to consume
+# Usage: axora-diagnose [--system|--codebase <dir>|--all] [--quiet]
+set -euo pipefail
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/axora-diagnose"
+REPORT="$STATE_DIR/last-report.json"
+PREV_REPORT="$STATE_DIR/prev-report.json"
+# Suppressed categories/signatures — one per line, "#" comments allowed.
+# Add a category or signature here to stop it being reported. Remove the line
+# to re-enable. (e.g. "gpu" suppresses all GPU warnings.)
+SUPPRESS_FILE="$STATE_DIR/suppress.conf"
+SUPPRESSED=""
+if [[ -f "$SUPPRESS_FILE" ]]; then
+    SUPPRESSED=$(grep -v '^\s*#' "$SUPPRESS_FILE" | grep -v '^\s*$' || true)
+fi
+MODE="${1:---system}"
+QUIET=false
+CODEBASE_DIR=""
+TIMESTAMP="$(date -Iseconds)"
+HOSTNAME="$(hostname)"
+ISSUES=()
+STATS_critical=0
+STATS_warning=0
+STATS_info=0
+
+# ── Parse args ──
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --system)  MODE="--system"; shift ;;
+        --codebase) MODE="--codebase"; CODEBASE_DIR="${2:-.}"; shift 2 ;;
+        --all)     MODE="--all"; shift ;;
+        --quiet)   QUIET=true; shift ;;
+        --help|-h) echo "Usage: axora-diagnose [--system|--codebase <dir>|--all] [--quiet]"; exit 0 ;;
+        *)         echo "Unknown arg: $1"; exit 1 ;;
+    esac
+done
+
+# ── Helpers ──
+add_issue() {
+    local severity="$1" category="$2" source="$3" summary="$4" evidence="$5" signature="$6"
+    # Suppression: skip if category or signature is in the suppress list
+    if [[ -n "$SUPPRESSED" ]]; then
+        if echo "$SUPPRESSED" | grep -qx "$category" || echo "$SUPPRESSED" | grep -qx "$signature"; then
+            return 0
+        fi
+    fi
+    # Escape JSON strings
+    summary="${summary//\\/\\\\}"
+    summary="${summary//\"/\\\"}"
+    summary="${summary//$'\n'/\\n}"
+    summary="${summary//$'\t'/\\t}"
+    evidence="${evidence//\\/\\\\}"
+    evidence="${evidence//\"/\\\"}"
+    evidence="${evidence//$'\n'/\\n}"
+    evidence="${evidence//$'\t'/\\t}"
+    # Truncate evidence to 500 chars
+    evidence="${evidence:0:500}"
+
+    ISSUES+=("{\"severity\":\"$severity\",\"category\":\"$category\",\"source\":\"$source\",\"summary\":\"$summary\",\"evidence\":\"$evidence\",\"signature\":\"$signature\"}")
+
+    case "$severity" in
+        critical) STATS_critical=$((STATS_critical + 1)) ;;
+        warning)  STATS_warning=$((STATS_warning + 1)) ;;
+        info)     STATS_info=$((STATS_info + 1)) ;;
+    esac
+}
+
+run_check() {
+    local label="$1"
+    shift
+    local output
+    if output=$("$@" 2>&1); then
+        echo "$output"
+    else
+        echo "$output"
+    fi
+}
+
+has_command() { command -v "$1" &>/dev/null; }
+
+# ── System scan functions ──
+
+scan_failed_services() {
+    local out
+    out=$(systemctl --failed --no-legend --no-pager 2>/dev/null || true)
+    if [[ -n "$out" ]]; then
+        while IFS= read -r line; do
+            local unit
+            unit=$(echo "$line" | awk '{print $1}')
+            local reason
+            reason=$(echo "$line" | awk '{print $4}')
+            add_issue "warning" "service" "systemctl --failed" \
+                "Failed service: $unit (reason: $reason)" \
+                "$line" \
+                "service_failed:${unit}"
+        done <<< "$out"
+    fi
+
+    # User services
+    out=$(systemctl --user --failed --no-legend --no-pager 2>/dev/null || true)
+    if [[ -n "$out" ]]; then
+        while IFS= read -r line; do
+            local unit
+            unit=$(echo "$line" | awk '{print $1}')
+            add_issue "warning" "service" "systemctl --user --failed" \
+                "Failed user service: $unit" \
+                "$line" \
+                "user_service_failed:${unit}"
+        done <<< "$out"
+    fi
+}
+
+scan_journal_errors() {
+    local out raw_out
+    # Critical + error since last boot
+    raw_out=$(journalctl -b -p 0..3 --no-pager -q --no-hostname 2>/dev/null | tail -50 || true)
+    # Filter known boot-time noise (hardware quirks, not actionable)
+    out=$(echo "$raw_out" | grep -v -i \
+        -e "NVRM.*nvAssert.*NoLog" \
+        -e "NVRM.*intermapRegisterDmaMapping" \
+        -e "platform_profile.*hp-wmi" \
+        -e "device offline error, dev sd" \
+        -e "I/O error, dev sd" \
+        -e "Buffer I/O error on dev sd" \
+        -e "rejecting I/O to offline device" \
+        -e "adv_monitor.*Unexpected NULL" \
+        -e "Failed to start Starts ydotoold service" \
+        -e "ntfs3.*failed to read volume" \
+        -e "msr: Write to unrecognized MSR 0x610" \
+        -e "msr: See https://git.kernel.org" \
+        -e "filter_write.*callbacks suppressed" \
+        -e "TDX not supported by the host platform" \
+        -e "multicast RX registrations are not supported" \
+        -e "Ignoring duplicate name.*Notifications" \
+        -e "Invalid key 'DEVTYPE'" \
+        -e "dyndbg: bad flag-op" \
+        -e "dyndbg: flags parse failed" \
+        -e "gkr-pam: unable to locate daemon control file" \
+        -e "rtw88_8821ce.*failed to send h2c" \
+        -e "SDDM.*Process crashed" \
+        -e "sddm-helper.*crashed" \
+        -e "kernel: $" \
+        2>/dev/null || true)
+    # Strip empty/whitespace-only lines
+    out=$(echo "$out" | sed '/^[[:space:]]*$/d' || true)
+    if [[ -n "$out" ]]; then
+        # Group by common patterns
+        local oom_count
+        oom_count=$(echo "$out" | grep -ci "oom\|out of memory\|killed process" || true)
+        if [[ "$oom_count" -gt 0 ]]; then
+            add_issue "critical" "memory" "journalctl -b -p 0..3" \
+                "OOM kills detected: $oom_count events since boot" \
+                "$(echo "$out" | grep -i 'oom\|out of memory\|killed process' | tail -5)" \
+                "oom_kills:${oom_count}"
+        fi
+
+        local nvidia_errors
+        nvidia_errors=$(echo "$out" | grep -ci "nvidia\|nvrm\|gpu" || true)
+        if [[ "$nvidia_errors" -gt 0 ]]; then
+            add_issue "warning" "gpu" "journalctl -b -p 0..3" \
+                "NVIDIA GPU errors: $nvidia_errors events" \
+                "$(echo "$out" | grep -i 'nvidia\|nvrm\|gpu' | tail -5)" \
+                "nvidia_errors:${nvidia_errors}"
+        fi
+
+        local disk_errors
+        disk_errors=$(echo "$out" | grep -ci "i/o error\|blk_update\|buffer i/o\|ata.*error\|ext4.*error\|btrfs.*error" || true)
+        if [[ "$disk_errors" -gt 0 ]]; then
+            add_issue "critical" "disk" "journalctl -b -p 0..3" \
+                "Disk I/O errors: $disk_errors events" \
+                "$(echo "$out" | grep -i 'i/o error\|blk_update\|buffer i/o\|ata.*error\|ext4.*error\|btrfs.*error' | tail -5)" \
+                "disk_io_errors:${disk_errors}"
+        fi
+
+        local kernel_panic
+        kernel_panic=$(echo "$out" | grep -ci "kernel panic\|oops\|bug:" || true)
+        if [[ "$kernel_panic" -gt 0 ]]; then
+            add_issue "critical" "kernel" "journalctl -b -p 0..3" \
+                "Kernel panic/oops: $kernel_panic events" \
+                "$(echo "$out" | grep -i 'kernel panic\|oops\|bug:' | tail -5)" \
+                "kernel_panic:${kernel_panic}"
+        fi
+
+        # Generic critical errors not caught above
+        local critical_generic
+        critical_generic=$(echo "$out" | grep -v -i "oom\|nvidia\|nvrm\|gpu\|i/o error\|blk_update\|buffer i/o\|ata.*error\|ext4.*error\|btrfs.*error\|kernel panic\|oops\|bug:" | tail -10 || true)
+        if [[ -n "$critical_generic" ]] && [[ "$(echo "$critical_generic" | wc -l)" -gt 0 ]]; then
+            add_issue "warning" "system" "journalctl -b -p 0..3" \
+                "System errors since boot ($(echo "$critical_generic" | wc -l) lines)" \
+                "$critical_generic" \
+                "journal_critical_generic"
+        fi
+    fi
+}
+
+scan_journal_warnings() {
+    local out raw_out
+    raw_out=$(journalctl -b -p 4 --no-pager -q --no-hostname 2>/dev/null | tail -30 || true)
+    # Filter known boot-time noise
+    out=$(echo "$raw_out" | grep -v -i \
+        -e "msr: Write to unrecognized MSR 0x610" \
+        -e "msr: See https://git.kernel.org" \
+        -e "filter_write.*callbacks suppressed" \
+        -e "rtw88_8821ce.*failed to send h2c" \
+        2>/dev/null || true)
+    if [[ -n "$out" ]]; then
+        local warn_count
+        warn_count=$(echo "$out" | wc -l)
+        if [[ "$warn_count" -gt 5 ]]; then
+            add_issue "info" "system" "journalctl -b -p 4" \
+                "System warnings since boot: $warn_count lines" \
+                "$(echo "$out" | tail -5)" \
+                "journal_warnings:${warn_count}"
+        fi
+    fi
+}
+
+scan_display() {
+    # Hyprland config errors
+    if has_command hyprctl; then
+        local hp_out
+        hp_out=$(hyprctl configerrors 2>/dev/null || true)
+        if [[ -n "$hp_out" ]] && [[ "$hp_out" != *"no errors"* ]] && [[ "$hp_out" != *"No errors"* ]]; then
+            add_issue "warning" "config" "hyprctl configerrors" \
+                "Hyprland config errors detected" \
+                "$hp_out" \
+                "hypr_config_errors"
+        fi
+    fi
+
+    # Quickshell log errors
+    local qs_log
+    qs_log=$(ls -t /run/user/1000/quickshell/by-id/*/log.qslog 2>/dev/null | head -1 || true)
+    if [[ -n "$qs_log" ]]; then
+        local qs_errors
+        qs_errors=$(grep -i "error\|failed\|fatal" "$qs_log" 2>/dev/null | tail -10 || true)
+        if [[ -n "$qs_errors" ]]; then
+            add_issue "warning" "config" "quickshell log" \
+                "Quickshell errors in log" \
+                "$qs_errors" \
+                "quickshell_errors"
+        fi
+    fi
+
+    # SDDM errors (filter known pre-fix boot noise)
+    local sddm_raw sddm_errors
+    sddm_raw=$(journalctl -u sddm --no-pager -q --no-hostname -p 0..4 --since "1 hour ago" 2>/dev/null || true)
+    sddm_errors=$(echo "$sddm_raw" | grep -v -i \
+        -e "Process crashed" \
+        -e "sddm-helper.*crashed" \
+        -e "sddm-helper.*exited with" \
+        -e "Signal received: SIGTERM" \
+        -e "Could not setup default cursor" \
+        -e "gkr-pam: unable to locate daemon control file" \
+        2>/dev/null | tail -10 || true)
+    if [[ -n "$sddm_errors" ]]; then
+        add_issue "warning" "display" "journalctl -u sddm" \
+            "SDDM errors in last hour" \
+            "$sddm_errors" \
+            "sddm_errors"
+    fi
+}
+
+scan_packages() {
+    if has_command pacman; then
+        # Orphans
+        local orphans
+        orphans=$(pacman -Qtdq 2>/dev/null || true)
+        if [[ -n "$orphans" ]]; then
+            local orphan_count
+            orphan_count=$(echo "$orphans" | wc -l)
+            add_issue "info" "package" "pacman -Qtdq" \
+                "Package orphans: $orphan_count packages" \
+                "$(echo "$orphans" | head -10)" \
+                "package_orphans:${orphan_count}"
+        fi
+
+        # Explicitly installed that are marked as dependencies (wrong reason)
+        local mislabeled
+        mislabeled=$(pacman -Qe 2>/dev/null | while IFS= read -r line; do
+            pkg=$(echo "$line" | awk '{print $1}')
+            if pacman -Qi "$pkg" 2>/dev/null | grep -q "Install Reason.*Installed as a dependency"; then
+                echo "$pkg"
+            fi
+        done | head -10 || true)
+        if [[ -n "$mislabeled" ]]; then
+            add_issue "info" "package" "pacman -Qe + reason check" \
+                "Packages marked as dependency but explicitly installed" \
+                "$mislabeled" \
+                "package_mislabeled"
+        fi
+    fi
+}
+
+scan_network() {
+    # DNS resolution
+    if ! ping -c 1 -W 2 1.1.1.1 &>/dev/null; then
+        add_issue "critical" "network" "ping 1.1.1.1" \
+            "Cannot reach DNS server 1.1.1.1" \
+            "ping timeout" \
+            "network_dns_down"
+    fi
+
+    # NetworkManager status
+    if has_command nmcli; then
+        local nm_state
+        nm_state=$(nmcli -t -f STATE general 2>/dev/null || true)
+        if [[ "$nm_state" != "connected" ]] && [[ "$nm_state" != "connected (site only)" ]]; then
+            add_issue "warning" "network" "nmcli general" \
+                "NetworkManager not fully connected: $nm_state" \
+                "$(nmcli -t -f STATE,CONNECTIVITY general 2>/dev/null || true)" \
+                "nm_not_connected:${nm_state}"
+        fi
+    fi
+
+    # Tailscale
+    if has_command tailscale; then
+        local ts_state
+        ts_state=$(tailscale status --json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('BackendState',''))" 2>/dev/null || true)
+        if [[ "$ts_state" != "Running" ]]; then
+            add_issue "info" "network" "tailscale status" \
+                "Tailscale not running: $ts_state" \
+                "" \
+                "tailscale_not_running"
+        fi
+    fi
+}
+
+scan_power() {
+    if [[ -f /sys/class/powercap/intel-rapl:0/constraint_0_power_limit_uw ]]; then
+        local pl1
+        pl1=$(cat /sys/class/powercap/intel-rapl:0/constraint_0_power_limit_uw 2>/dev/null || echo "0")
+        if [[ "$pl1" -eq 0 ]]; then
+            add_issue "warning" "power" "intel-rapl" \
+                "RAPL power limit is 0 — power management not configured" \
+                "constraint_0_power_limit_uw=0" \
+                "rapl_zero_limit"
+        elif [[ "$pl1" -lt 15000000 ]]; then
+            add_issue "info" "power" "intel-rapl" \
+                "RAPL PL1 unusually low: $((pl1/1000000))W" \
+                "constraint_0_power_limit_uw=$pl1" \
+                "rapl_low_limit:${pl1}"
+        fi
+    fi
+
+    # CPU governor
+    local gov
+    gov=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || true)
+    if [[ -n "$gov" ]] && [[ "$gov" != "performance" ]] && [[ "$gov" != "powersave" ]]; then
+        add_issue "info" "power" "cpu governor" \
+            "CPU governor: $gov" \
+            "" \
+            "cpu_governor:${gov}"
+    fi
+}
+
+scan_lock() {
+    # A stuck session lock looks exactly like a crashed desktop: the compositor
+    # is alive and still painting, but it routes every key and click to a lock
+    # client that owns nothing, and it stops answering hyprctl. Distinguishing
+    # the two is the whole point of this check — the "fix" for a crash (restart
+    # the compositor) is destructive and pointless here.
+    local sig=""; [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || \
+        sig=$(ls -1t "${XDG_RUNTIME_DIR:-/run/user/1000}"/hypr/ 2>/dev/null | head -1)
+    [[ -n "$sig" ]] && export HYPRLAND_INSTANCE_SIGNATURE="$sig"
+
+    local hyprlock_pids compositor_up
+    # `set -o pipefail` is on: pgrep exits 1 when nothing matches, which would
+    # abort the whole scan, so both of these tolerate a miss explicitly.
+    hyprlock_pids=$(pgrep -x hyprlock 2>/dev/null | tr '\n' ' ' || true)
+    if hyprctl version >/dev/null 2>&1; then compositor_up=1; else compositor_up=0; fi
+
+    if [[ "$compositor_up" -eq 0 ]]; then
+        if [[ -n "$hyprlock_pids" ]]; then
+            add_issue "critical" "lock" "hyprctl+pgrep" \
+                "Session is LOCKED with a stale hyprlock (${hyprlock_pids// /,}) — desktop ignores all input, compositor is NOT crashed" \
+                "hyprctl unreachable while hyprlock pid(s) ${hyprlock_pids} run: a SIGTERMed hyprlock exits without releasing ext_session_lock. Clear with: pkill -9 -x hyprlock" \
+                "session_lock_stuck"
+        else
+            add_issue "critical" "lock" "hyprctl" \
+                "Compositor not answering hyprctl and no hyprlock is running — the session lock outlived its client and only a compositor restart clears it" \
+                "hyprctl unreachable, pgrep -x hyprlock empty" \
+                "session_lock_orphan"
+        fi
+    elif [[ -n "$hyprlock_pids" ]]; then
+        add_issue "info" "lock" "pgrep" \
+            "hyprlock running (${hyprlock_pids// /,}) and the session is locked — normal while the screen is locked" \
+            "" \
+            "lock_held"
+    fi
+
+    # A revoked grant leaves hyprlock alive but drawing nothing. Its own stderr
+    # carries the signature; axora-lock writes it next to the power log.
+    local llog="${XDG_STATE_HOME:-$HOME/.local/state}/axora-power.log"
+    if [[ -f "$llog" ]] && grep -q "yeeten" "$llog" 2>/dev/null; then
+        add_issue "warning" "lock" "axora-power.log" \
+            "A session-lock grant was revoked (hyprlock 'yeeten') — the wake/idle lock is racing the resume transition" \
+            "$(grep -m2 yeeten "$llog")" \
+            "lock_grant_revoked"
+    fi
+
+    # Sleep mode + how long the last cycles actually took. s2idle keeps user
+    # space running, so wall-clock between 'suspend entry' and 'Freezing user
+    # space processes' is NOT sleep latency — reporting it as such sends people
+    # hunting a kernel bug that is not there.
+    local memsleep
+    memsleep=$(cat /sys/power/mem_sleep 2>/dev/null || echo unknown)
+    if [[ "$memsleep" == *s2idle* ]]; then
+        add_issue "info" "lock" "/sys/power/mem_sleep" \
+            "Sleep mode is s2idle only (shallow): user space keeps running through suspend, so idle timers still fire and the panel stays lit" \
+            "mem_sleep=$memsleep" \
+            "s2idle_only"
+    fi
+
+    # USB devices that cannot be addressed after a resume stall the whole
+    # resume path; -71 (EPROTO) storms are the usual culprit on a hub stack.
+    local e71
+    e71=$(journalctl -b --no-pager 2>/dev/null | grep -c 'error -71' || true)
+    if [[ "${e71:-0}" -gt 20 ]]; then
+        add_issue "warning" "lock" "journalctl usb" \
+            "USB enumeration storm: ${e71} EPROTO (-71) errors this boot — a device on a hub cannot be addressed and retries, stalling resume" \
+            "$(journalctl -b --no-pager 2>/dev/null | grep 'error -71' | head -2)" \
+            "usb_eproto_storm:${e71}"
+    fi
+}
+
+scan_disk() {
+    # Usage
+    local usage
+    usage=$(df -h / 2>/dev/null | tail -1 | awk '{print $5}' | tr -d '%')
+    if [[ "$usage" -gt 85 ]]; then
+        add_issue "warning" "disk" "df -h" \
+            "Root disk usage: ${usage}%" \
+            "$(df -h / | tail -1)" \
+            "disk_usage_high:${usage}"
+    elif [[ "$usage" -gt 70 ]]; then
+        add_issue "info" "disk" "df -h" \
+            "Root disk usage: ${usage}%" \
+            "" \
+            "disk_usage_moderate:${usage}"
+    fi
+
+    # Btrfs scrub
+    if has_command btrfs; then
+        local scrub_status
+        scrub_status=$(btrfs scrub status / 2>/dev/null || true)
+        if echo "$scrub_status" | grep -q "no scrub"; then
+            add_issue "info" "disk" "btrfs scrub" \
+                "No btrfs scrub has been run" \
+                "" \
+                "btrfs_no_scrub"
+        fi
+    fi
+
+    # Journal size
+    local journal_size
+    journal_size=$(journalctl --disk-usage 2>/dev/null | grep -oP '[\d.]+[GMK]' || true)
+    if [[ -n "$journal_size" ]]; then
+        local size_bytes
+        size_bytes=$(echo "$journal_size" | numfmt --from=iec 2>/dev/null || echo "0")
+        if [[ "$size_bytes" -gt 500000000 ]]; then
+            add_issue "info" "disk" "journalctl --disk-usage" \
+                "Journal size large: $journal_size" \
+                "" \
+                "journal_large:${journal_size}"
+        fi
+    fi
+}
+
+scan_security() {
+    # World-readable files in home
+    local world_readable
+    world_readable=$(find "$HOME" -maxdepth 3 -type f -perm -o+r \( -name "*.key" -o -name "*.pem" -o -name "*.env" -o -name "*.json" -path "*/secrets/*" \) 2>/dev/null | head -5 || true)
+    if [[ -n "$world_readable" ]]; then
+        add_issue "warning" "security" "find -perm" \
+            "World-readable sensitive files in home" \
+            "$world_readable" \
+            "world_readable_secrets"
+    fi
+
+    # Open listening ports (exclude loopback, systemd-resolved stub, tailscale, local dev tools)
+    local open_ports
+    open_ports=$(ss -tlnp 2>/dev/null | grep -v -e "127.0.0.1" -e "::1" -e "127.0.0.53" -e "127.0.0.54" -e "100.71.210.6" -e ":7007" | tail -10 || true)
+    if [[ -n "$open_ports" ]]; then
+        local port_count
+        port_count=$(echo "$open_ports" | wc -l)
+        if [[ "$port_count" -gt 3 ]]; then
+            add_issue "info" "security" "ss -tlnp" \
+                "External listening ports: $port_count" \
+                "$open_ports" \
+                "open_ports:${port_count}"
+        fi
+    fi
+}
+
+scan_codebase() {
+    local dir="${1:-.}"
+    [[ ! -d "$dir" ]] && return
+
+    # Package manager detection
+    if [[ -f "$dir/package.json" ]]; then
+        # TypeScript errors
+        if [[ -f "$dir/tsconfig.json" ]] && has_command tsc; then
+            local tsc_out
+            tsc_out=$(cd "$dir" && npx tsc --noEmit 2>&1 | tail -20 || true)
+            if [[ -n "$tsc_out" ]] && echo "$tsc_out" | grep -q "error TS"; then
+                local ts_err_count
+                ts_err_count=$(echo "$tsc_out" | grep -c "error TS" || true)
+                add_issue "warning" "build" "tsc --noEmit" \
+                    "TypeScript errors: $ts_err_count" \
+                    "$tsc_out" \
+                    "ts_errors:${ts_err_count}"
+            fi
+        fi
+
+        # Build check
+        if [[ -f "$dir/dist" ]] || [[ -d "$dir/dist" ]]; then
+            add_issue "info" "build" "package.json" \
+                "dist/ directory exists — may be stale" \
+                "" \
+                "stale_dist"
+        fi
+
+        # Check for .env without .env.example
+        if [[ -f "$dir/.env" ]] && [[ ! -f "$dir/.env.example" ]]; then
+            add_issue "info" "config" ".env" \
+                ".env exists but no .env.example" \
+                "" \
+                "no_env_example"
+        fi
+    fi
+
+    # Rust
+    if [[ -f "$dir/Cargo.toml" ]] && has_command cargo; then
+        local cargo_out
+        cargo_out=$(cd "$dir" && cargo check 2>&1 | tail -20 || true)
+        if echo "$cargo_out" | grep -q "^error"; then
+            add_issue "warning" "build" "cargo check" \
+                "Rust compilation errors" \
+                "$cargo_out" \
+                "rust_build_errors"
+        fi
+    fi
+
+    # Python
+    if [[ -f "$dir/pyproject.toml" ]] || [[ -f "$dir/setup.py" ]]; then
+        if has_command python3; then
+            local py_out
+            py_out=$(cd "$dir" && python3 -m py_compile *.py 2>&1 | tail -10 || true)
+            if [[ -n "$py_out" ]] && echo "$py_out" | grep -qi "error\|traceback"; then
+                add_issue "warning" "build" "python compile" \
+                    "Python syntax errors" \
+                    "$py_out" \
+                    "python_errors"
+            fi
+        fi
+    fi
+}
+
+# ── Run scans ──
+echo "🔍 Scanning system..."
+
+if [[ "$MODE" == "--system" ]] || [[ "$MODE" == "--all" ]]; then
+    scan_failed_services
+    scan_journal_errors
+    scan_journal_warnings
+    scan_display
+    scan_packages
+    scan_network
+    scan_power
+    scan_lock
+    scan_disk
+    scan_security
+fi
+
+if [[ "$MODE" == "--codebase" ]] || [[ "$MODE" == "--all" ]]; then
+    scan_codebase "$CODEBASE_DIR"
+fi
+
+# ── Build report ──
+mkdir -p "$STATE_DIR"
+[[ -f "$REPORT" ]] && cp "$REPORT" "$PREV_REPORT"
+
+# Write JSON
+{
+    echo "{"
+    echo "  \"timestamp\": \"$TIMESTAMP\","
+    echo "  \"hostname\": \"$HOSTNAME\","
+    echo "  \"mode\": \"${MODE#--}\","
+    echo "  \"summary\": {"
+    echo "    \"critical\": $STATS_critical,"
+    echo "    \"warning\": $STATS_warning,"
+    echo "    \"info\": $STATS_info,"
+    echo "    \"total\": $(( STATS_critical + STATS_warning + STATS_info ))"
+    echo "  },"
+    echo "  \"issues\": ["
+    first=true
+    for issue in "${ISSUES[@]}"; do
+        if $first; then
+            first=false
+        else
+            echo ","
+        fi
+        echo -n "    $issue"
+    done
+    echo ""
+    echo "  ]"
+    echo "}"
+} > "$REPORT"
+
+# ── Human-readable output ──
+if ! $QUIET; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  AXORA DIAGNOSE — $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    if [[ $STATS_critical -gt 0 ]]; then
+        echo "  🔴 CRITICAL: $STATS_critical"
+    fi
+    if [[ $STATS_warning -gt 0 ]]; then
+        echo "  🟡 WARNING:  $STATS_warning"
+    fi
+    if [[ $STATS_info -gt 0 ]]; then
+        echo "  🔵 INFO:     $STATS_info"
+    fi
+    echo ""
+
+    if [[ ${#ISSUES[@]} -eq 0 ]]; then
+        echo "  ✅ No issues found"
+    else
+        echo "  Issues:"
+        for issue in "${ISSUES[@]}"; do
+            sev=$(echo "$issue" | python3 -c "import sys,json; print(json.load(sys.stdin)['severity'])" 2>/dev/null || echo "?")
+            cat=$(echo "$issue" | python3 -c "import sys,json; print(json.load(sys.stdin)['category'])" 2>/dev/null || echo "?")
+            sum=$(echo "$issue" | python3 -c "import sys,json; print(json.load(sys.stdin)['summary'])" 2>/dev/null || echo "?")
+            case "$sev" in
+                critical) icon="🔴" ;;
+                warning)  icon="🟡" ;;
+                *)        icon="🔵" ;;
+            esac
+            echo "  $icon [$cat] $sum"
+        done
+    fi
+    echo ""
+    echo "  Report: $REPORT"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+fi
+
+# Exit code = number of critical issues
+exit "$STATS_critical"

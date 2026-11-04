@@ -1,0 +1,3 @@
+#!/bin/bash
+# axora-clipboard — open the shell launcher pre-filtered to clipboard history (accent-reactive)
+exec qs -c axora ipc call launcher open clip

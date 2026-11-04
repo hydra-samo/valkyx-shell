@@ -1,7 +1,7 @@
 [SddmGreeterTheme]
-Name=Hydra
-Description=HYDRA Samo branded greeter
-Author=Hydra Samo Labs
+Name=Axora
+Description=AXORA Samo branded greeter
+Author=Axora Labs
 License=MIT
 Type=sddm-theme
 ConfigFile=theme.conf

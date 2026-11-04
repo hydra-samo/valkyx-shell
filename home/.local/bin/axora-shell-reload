@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# axora-shell-reload — fast, reliable shell reload
+# Usage: axora-shell-reload [--no-wait]
+#
+# `qs kill` (graceful) is mandatory, NOT `pkill`. SIGTERM makes quickshell exit
+# without destroying its PanelWindows, and Hyprland keeps the layershell surfaces
+# alive with `pid: -1` — an orphaned surface holds the seat's input grab, so the
+# desktop paints but eats every click. Verified: `qs kill --pid` tore down all 11
+# surfaces and left zero orphans; pkill left a fullscreen 1366x768 orphan behind.
+
+set -euo pipefail
+
+NO_WAIT=false
+[[ "${1:-}" == "--no-wait" ]] && NO_WAIT=true
+
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+# qs MUST know the Wayland display. Without these it falls back to the xcb
+# platform plugin, cannot connect, and dies with "no Qt platform plugin could be
+# initialized" — which is invisible unless the start log is kept (see LOG below).
+if [[ -z "${WAYLAND_DISPLAY:-}" ]]; then
+    for sock in "$XDG_RUNTIME_DIR"/wayland-*; do
+        [[ -S "$sock" ]] || continue
+        export WAYLAND_DISPLAY="$(basename "$sock")"
+        break
+    done
+fi
+if [[ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" && -d "$XDG_RUNTIME_DIR/hypr" ]]; then
+    HYPRLAND_INSTANCE_SIGNATURE=$(ls -1t "$XDG_RUNTIME_DIR"/hypr/ | head -1)
+    export HYPRLAND_INSTANCE_SIGNATURE
+fi
+LOG=/tmp/qs.log
+# The pattern must match the quickshell process and NOTHING else. `pgrep -f`
+# matches anywhere in a command line, so an unanchored `qs -c axora` also matches
+# every process that merely *mentions* that text: the caller's own shell, a grep
+# of hyprland.lua, a `axora-update` wrapper. Bracketing (`qs -c hydr[a]`) does
+# NOT fix that — it only stops a literal invocation from matching; a shell whose
+# cmdline contains the string still matches. That is how step 3 ended up running
+# `pkill -9` against the live shell (the orphan-maker) while step 5 reported a
+# reload that never happened. The `^...$` anchors make the match whole-cmdline
+# only, so the real `qs -c axora` matches and a shell that merely mentions it does
+# not. Keep this identical to the pattern in axora-update and axora-doctor:
+# if the two disagree, one of them lies about whether the shell is running.
+PAT='^qs -c axora$'
+
+# 1. Graceful kill — quickshell destroys its own windows on the way out.
+for pid in $(pgrep -f "$PAT" 2>/dev/null || true); do
+    qs kill --pid "$pid" >/dev/null 2>&1 || true
+done
+
+# 2. Wait for process to actually die. The budget is generous on purpose: this
+#    graceful path destroys a dozen PanelWindows, and cutting it short pushes us
+#    into step 3's SIGKILL, which is exactly what orphans layershell surfaces.
+for i in {1..50}; do
+    pgrep -f "$PAT" >/dev/null || break
+    sleep 0.1
+done
+
+# 3. Force kill only if the graceful path failed
+if pgrep -f "$PAT" >/dev/null; then
+    pkill -9 -f "$PAT" >/dev/null 2>&1 || true
+fi
+
+# 4. Drop locks AND stale ipc.sockets. The old instance is dead by now, so every
+#    socket still on disk is debris. Without this, the readiness check in step 6
+#    happily matches a dead instance's socket and reports a reload that never
+#    happened — which is exactly how a crashed start stayed hidden.
+rm -f /run/user/1000/quickshell/by-id/*/instance.lock 2>/dev/null || true
+rm -f /run/user/1000/quickshell/by-id/*/ipc.sock 2>/dev/null || true
+
+# 5+6. Start, then prove it. TWO attempts, because a single cold start can lose
+#      a race against its own debris (stale lock/socket from the instance we just
+#      killed) and die silently. One flaky attempt with no retry is how a reload
+#      leaves the desktop with no shell at all.
+last_err=""
+sock=""
+for attempt in 1 2; do
+    # Clear debris before EACH attempt, not just once up front: the first attempt
+    # may have left its own half-written lock/socket behind.
+    rm -f /run/user/1000/quickshell/by-id/*/instance.lock 2>/dev/null || true
+    rm -f /run/user/1000/quickshell/by-id/*/ipc.sock 2>/dev/null || true
+
+    # Start detached. Log to a real file: discarding it (>/dev/null) made a failed
+    # start completely invisible.
+    setsid -f sh -c "qs -c axora > $LOG 2>&1 < /dev/null &"
+
+    # Wait for the process.
+    started=false
+    for i in {1..40}; do
+        if pgrep -f "$PAT" >/dev/null; then started=true; break; fi
+        sleep 0.1
+    done
+    if [[ "$started" != true ]]; then
+        last_err="qs -c axora did not start (WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-unset})"
+    else
+        # Wait for the IPC socket, which is the real proof the config loaded.
+        sock=""
+        for i in {1..30}; do
+            for s in /run/user/1000/quickshell/by-id/*/ipc.sock; do
+                [[ -S "$s" ]] && sock="$s"
+            done
+            [[ -n "$sock" ]] && break
+            sleep 0.1
+        done
+        if [[ -z "$sock" ]]; then
+            last_err="process is up but no IPC socket appeared"
+            # Don't leave a process that never came up competing with attempt 2.
+            for pid in $(pgrep -f "$PAT" 2>/dev/null || true); do
+                qs kill --pid "$pid" >/dev/null 2>&1 || true
+            done
+        else
+            last_err=""; break
+        fi
+    fi
+    # `if`, not `[[ ... ]] && echo`: under `set -e` a trailing `&&` list that
+    # evaluates false is a failed command, which aborted the whole script on
+    # attempt 2 — silently, before the "RELOAD FAILED" report could print.
+    if [[ "$attempt" == 1 ]]; then
+        echo "  attempt 1 failed ($last_err) — retrying" >&2
+    fi
+done
+
+if [[ -n "$last_err" ]]; then
+    echo "RELOAD FAILED after 2 attempts: $last_err" >&2
+    tail -20 "$LOG" >&2 2>/dev/null || true
+    exit 1
+fi
+
+if [[ "$NO_WAIT" != true ]]; then
+    # `sock` is already proven non-empty by the attempt loop above.
+
+    # Orphan report. A `pid: -1` layershell surface is invisible on screen but
+    # still holds the seat's input grab, so the desktop looks perfect and eats
+    # every click in that band. Nothing else in the session reports it, which is
+    # why this has to be loud. Hyprland will not reap these; only a compositor
+    # restart clears one.
+    orphans=$(hyprctl layers 2>/dev/null | grep -c 'pid: -1' || true)
+    if [[ "${orphans:-0}" -gt 0 ]]; then
+        echo "WARNING: $orphans orphaned layer surface(s) — clicks in that band are dead." >&2
+        echo "         Only a compositor restart (logout) clears these. See axora-shell-reload." >&2
+    fi
+
+    echo "Shell reloaded. IPC ready: $sock"
+else
+    echo "Shell reload triggered (background)."
+fi

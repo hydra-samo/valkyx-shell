@@ -1,0 +1,312 @@
+{
+  "themes": [
+    {
+      "name": "Amber",
+      "source": "axora",
+      "light": false,
+      "accent": "#FF9800",
+      "bg": "#14100a",
+      "surface": "#1a1610",
+      "field": "#221c14",
+      "line": "#2e261c",
+      "wallpaper": null
+    },
+    {
+      "name": "Cyan",
+      "source": "axora",
+      "light": false,
+      "accent": "#00BCD4",
+      "bg": "#0a1214",
+      "surface": "#10181a",
+      "field": "#141e20",
+      "line": "#1c2a2e",
+      "wallpaper": null
+    },
+    {
+      "name": "Ember",
+      "source": "axora",
+      "light": false,
+      "accent": "#FF5252",
+      "bg": "#140a0a",
+      "surface": "#1a1010",
+      "field": "#221414",
+      "line": "#2e1c1c",
+      "wallpaper": null
+    },
+    {
+      "name": "Axora",
+      "source": "axora",
+      "light": false,
+      "accent": "#00A86B",
+      "bg": "#0a1210",
+      "surface": "#101614",
+      "field": "#141d19",
+      "line": "#1a2420",
+      "wallpaper": null
+    },
+    {
+      "name": "Ocean",
+      "source": "axora",
+      "light": false,
+      "accent": "#2196F3",
+      "bg": "#0a1016",
+      "surface": "#10161c",
+      "field": "#141c24",
+      "line": "#1c2834",
+      "wallpaper": null
+    },
+    {
+      "name": "Violet",
+      "source": "axora",
+      "light": false,
+      "accent": "#7C4DFF",
+      "bg": "#0d0a14",
+      "surface": "#141018",
+      "field": "#181420",
+      "line": "#221c2e",
+      "wallpaper": null
+    },
+    {
+      "name": "catppuccin",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#89b4fa",
+      "bg": "#1e1e2e",
+      "surface": "#313244",
+      "field": "#313244",
+      "line": "#101019",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/catppuccin/1-totoro.webp"
+    },
+    {
+      "name": "catppuccin-latte",
+      "source": "omarchy",
+      "light": true,
+      "accent": "#1e66f5",
+      "bg": "#eff1f5",
+      "surface": "#dce0e8",
+      "field": "#dce0e8",
+      "line": "#d7d8dc",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/catppuccin-latte/1-color-fade.webp"
+    },
+    {
+      "name": "ethereal",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#7d82d9",
+      "bg": "#060B1E",
+      "surface": "#131a3a",
+      "field": "#131a3a",
+      "line": "#030610",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/ethereal/1-cosmic.webp"
+    },
+    {
+      "name": "everforest",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#7fbbb3",
+      "bg": "#2d353b",
+      "surface": "#343f44",
+      "field": "#343f44",
+      "line": "#181d20",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/everforest/1-tree-tops.webp"
+    },
+    {
+      "name": "flexoki-light",
+      "source": "omarchy",
+      "light": true,
+      "accent": "#205EA6",
+      "bg": "#FFFCF0",
+      "surface": "#E6E4D9",
+      "field": "#E6E4D9",
+      "line": "#e5e2d8",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/flexoki-light/1-orb.webp"
+    },
+    {
+      "name": "gruvbox",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#7daea3",
+      "bg": "#282828",
+      "surface": "#3c3836",
+      "field": "#3c3836",
+      "line": "#161616",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/gruvbox/1-the-backwater.jpg"
+    },
+    {
+      "name": "hackerman",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#82FB9C",
+      "bg": "#0B0C16",
+      "surface": "#151828",
+      "field": "#151828",
+      "line": "#06060c",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/hackerman/1-synth-scape.jpg"
+    },
+    {
+      "name": "kanagawa",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#dcd7ba",
+      "bg": "#1f1f28",
+      "surface": "#223249",
+      "field": "#223249",
+      "line": "#111116",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/kanagawa/1-kanagawa.jpg"
+    },
+    {
+      "name": "last-horizon",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#b59790",
+      "bg": "#0c0b0c",
+      "surface": "#0c0b0c",
+      "field": "#0c0b0c",
+      "line": "#060606",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/last-horizon/1-eyes-wide.webp"
+    },
+    {
+      "name": "lumon",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#8bc9eb",
+      "bg": "#16242d",
+      "surface": "#1b2d40",
+      "field": "#1b2d40",
+      "line": "#0b1216",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/lumon/01-united-in-severance.webp"
+    },
+    {
+      "name": "lupine",
+      "source": "omarchy",
+      "light": true,
+      "accent": "#3264eb",
+      "bg": "#fafafa",
+      "surface": "#f5f5f5",
+      "field": "#f5f5f5",
+      "line": "#dedede",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/lupine/01-cherry-blossom-bokeh.webp"
+    },
+    {
+      "name": "matte-black",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#e68e0d",
+      "bg": "#121212",
+      "surface": "#1e1e1e",
+      "field": "#1e1e1e",
+      "line": "#090909",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/matte-black/0-ship-at-sea.jpg"
+    },
+    {
+      "name": "miasma",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#78824b",
+      "bg": "#222222",
+      "surface": "#2c2c2c",
+      "field": "#2c2c2c",
+      "line": "#121212",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/miasma/01-nature-of-fear.webp"
+    },
+    {
+      "name": "nord",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#81a1c1",
+      "bg": "#2e3440",
+      "surface": "#3b4252",
+      "field": "#3b4252",
+      "line": "#191c23",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/nord/0-black-moon.jpg"
+    },
+    {
+      "name": "osaka-jade",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#509475",
+      "bg": "#111c18",
+      "surface": "#23372B",
+      "field": "#23372B",
+      "line": "#090f0d",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/osaka-jade/1-glowing-city.webp"
+    },
+    {
+      "name": "retro-82",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#faa968",
+      "bg": "#05182e",
+      "surface": "#0a2540",
+      "field": "#0a2540",
+      "line": "#020c17",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/retro-82/1-in-the-groove.webp"
+    },
+    {
+      "name": "ristretto",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#f38d70",
+      "bg": "#2c2525",
+      "surface": "#3d2f2a",
+      "field": "#3d2f2a",
+      "line": "#181414",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/ristretto/0-launch.webp"
+    },
+    {
+      "name": "rose-pine",
+      "source": "omarchy",
+      "light": true,
+      "accent": "#56949f",
+      "bg": "#faf4ed",
+      "surface": "#f2e9e1",
+      "field": "#f2e9e1",
+      "line": "#e1dbd5",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/rose-pine/1-funky-shapes.webp"
+    },
+    {
+      "name": "solitude",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#798186",
+      "bg": "#101315",
+      "surface": "#101315",
+      "field": "#101315",
+      "line": "#080a0b",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/solitude/1-on-pole.webp"
+    },
+    {
+      "name": "tokyo-night",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#7aa2f7",
+      "bg": "#1a1b26",
+      "surface": "#24283b",
+      "field": "#24283b",
+      "line": "#0e0e14",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/tokyo-night/0-winding-road.webp"
+    },
+    {
+      "name": "vantablack",
+      "source": "omarchy",
+      "light": false,
+      "accent": "#8d8d8d",
+      "bg": "#000000",
+      "surface": "#1a1a1a",
+      "field": "#1a1a1a",
+      "line": "#070707",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/vantablack/0-dot-hands.webp"
+    },
+    {
+      "name": "white",
+      "source": "omarchy",
+      "light": true,
+      "accent": "#6e6e6e",
+      "bg": "#ffffff",
+      "surface": "#c0c0c0",
+      "field": "#c0c0c0",
+      "line": "#e8e8e8",
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/white/1-white.webp"
+    }
+  ]
+}

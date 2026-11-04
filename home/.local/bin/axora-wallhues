@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+# AXORA wallhues — per-image dominant colors for the wallpaper selector's
+# hue-dot filters. Prints one JSON array per arg to stdout; caches to
+# ~/.cache/axora-wallhues/<name>.json. PIL-quantize downscaled thumb, skip
+# near-black/gray, keep <=3 hexes.
+import json
+import os
+import re
+import sys
+
+from PIL import Image
+
+CACHE = os.path.expanduser("~/.cache/axora-wallhues")
+
+
+def to_hsv(rgb):
+    r, g, b = [x / 255.0 for x in rgb]
+    mx, mn = max(r, g, b), min(r, g, b)
+    v = mx
+    d = mx - mn
+    s = 0.0 if mx == 0 else d / mx
+    h = 0.0
+    if d:
+        if mx == r:
+            h = 60.0 * (((g - b) / d) % 6)
+        elif mx == g:
+            h = 60.0 * ((b - r) / d + 2)
+        else:
+            h = 60.0 * ((r - g) / d + 4)
+    return h, s * 100.0, v * 100.0
+
+
+def extract(path):
+    # key by full path: omarchy ships an `omarchy.webp` in ~every theme dir, so a
+    # basename key made all of them share one hue entry.
+    key = re.sub(r'[^A-Za-z0-9._-]', '_', path)
+    cache = os.path.join(CACHE, key + ".json")
+    arr = []
+    try:
+        im = Image.open(path).convert("RGB")
+        im = im.copy()
+        im.thumbnail((24, 24))
+        q = im.quantize(colors=4, method=2).convert("RGB")
+        counts = q.getcolors(maxcolors=4) or []
+        counts.sort(reverse=True)
+        for _cnt, rgb in counts:
+            h, s, v = to_hsv(rgb)
+            if s < 24 or v < 18:
+                continue
+            arr.append("#%02x%02x%02x" % rgb)
+            if len(arr) >= 3:
+                break
+        if not arr and counts:
+            arr.append("#%02x%02x%02x" % counts[0][1])
+    except Exception:
+        arr = []
+    os.makedirs(CACHE, exist_ok=True)
+    with open(cache, "w") as f:
+        json.dump(arr, f)
+    print(json.dumps(arr))
+
+
+if __name__ == "__main__":
+    for p in sys.argv[1:]:
+        extract(p)
