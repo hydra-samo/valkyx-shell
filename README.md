@@ -38,7 +38,37 @@ auto-approved. Detects installed vs missing packages, installs what's needed,
 creates the user, enables services, installs fonts, deploys dotfiles, and
 configures SDDM. Idempotent — safe to re-run.
 
-## What's excluded
+## Privacy & security
+
+The repo contains **only brand and config data — no personal data**.
+
+| Excluded | Reason |
+|----------|--------|
+| `avatar-circle.png` | Your personal profile photo — replaced with `avatar-placeholder.svg` |
+| `hydra-samo-wallpaper.png` | Your personal wallpaper — replaced with `hydra-samo-wallpaper.svg` placeholder |
+| `state.json`, `state.dev.json` | Personal usage state (greetOnce, fontScale, etc.) |
+| `power-profile` | Your saved CPU power profile |
+| `remote.json` | Personal remote connection config |
+| `.env*`, `*secret*`, `*token*`, `*credential*` | Secrets and API keys — never committed |
+| `hydra-assistant`, `hydra-automata` | Kept on the host, not in this repo |
+
+### Avatar (Super+I settings panel / greetings)
+
+The settings panel avatar falls back to `avatar-placeholder.svg` if you don't
+provide your own. To use your profile picture:
+
+```bash
+cp your-photo.png ~/.config/hydra/avatar-circle.png
+```
+
+### Wallpaper
+
+The lock screen and shell fall back to `hydra-samo-wallpaper.svg` placeholder.
+To use your own wallpaper:
+
+```bash
+cp your-wallpaper.png ~/.local/share/backgrounds/hydra-samo-wallpaper.png
+```
 
 ## What's excluded
 
@@ -47,6 +77,7 @@ configures SDDM. Idempotent — safe to re-run.
   `LM-Studio`) — not part of the shell config; install separately if needed
 - TTS model binaries (`.piper`) — kept on the host; `hydra-assistant` needs them
 - systemd unit files — not part of the portable dotfiles deploy
+- Personal data (see Privacy & security above)
 
 ## Notes
 
@@ -54,4 +85,6 @@ configures SDDM. Idempotent — safe to re-run.
   on any user/machine (including root on `machy`, after adjusting `$HOME`).
 - Shell rc files (`.bashrc`, `.zshrc`, `.profile`) have `/home/hydrasamo`
   replaced with `$HOME` for portability.
+- QML files use `StandardPaths.writableLocation(StandardPaths.HomeLocation)`
+  instead of hardcoded paths.
 - `usr/share/sddm/themes/hydra/` and `/etc/sddm.conf.d/` require `sudo`.

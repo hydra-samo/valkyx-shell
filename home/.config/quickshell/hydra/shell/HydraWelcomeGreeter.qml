@@ -75,7 +75,7 @@ PanelWindow {
     property string avatarSource: ""
     Process {
         running: true
-        command: ["/bin/sh", "-c", "for f in \"$HOME/.config/hydra/avatar-circle.png\" \"$HOME/.local/share/sddm/avatars/user.face.icon\" \"$HOME/.face.icon\" \"$HOME/.face\"; do [ -f \"$f\" ] && printf %s \"$f\" && break; done; true"]
+        command: ["/bin/sh", "-c", "for f in \"$HOME/.config/hydra/avatar-circle.png\" \"$HOME/.config/hydra/avatar-placeholder.svg\" \"$HOME/.local/share/sddm/avatars/user.face.icon\" \"$HOME/.face.icon\" \"$HOME/.face\"; do [ -f \"$f\" ] && printf %s \"$f\" && break; done; true"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const found = String(text).trim()

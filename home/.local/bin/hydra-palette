@@ -5,7 +5,7 @@
 set -euo pipefail
 
 IMG="${1:-}"
-[ -z "$IMG" ] && IMG="$HOME/.local/share/backgrounds/hydra-samo-wallpaper.png"
+[ -z "$IMG" ] && IMG="$HOME/.local/share/backgrounds/hydra-samo-wallpaper.svg"
 [ -f "$IMG" ] || { echo "no wallpaper at $IMG" >&2; exit 1; }
 
 TMP="$(mktemp)"

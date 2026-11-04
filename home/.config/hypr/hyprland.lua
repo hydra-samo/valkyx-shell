@@ -658,7 +658,7 @@ hl.on("hyprland.start", function()
     -- wallpaper (kind-dispatch: image → awww still instant; gif/video → mpvpaper over a
     -- blanked awww so the previous still never peeks under the video or flashes back)
     -- ~/.cache/hydra-wallpaper.{kind,path} written by HydraState.setWallpaper.
-    hl.exec_cmd("sleep 0.4 && sh -c 'K=$(cat ~/.cache/hydra-wallpaper.kind 2>/dev/null || echo image); P=$(cat ~/.cache/hydra-wallpaper.path 2>/dev/null); if [ \"$K\" = image ]; then awww img --transition-type none \"${P:-$HOME/.local/share/backgrounds/hydra-samo-wallpaper.png}\"; else awww clear 2>/dev/null; [ -n \"$P\" ] && mpvpaper -o \"loop=inf no-audio no-osc\" eDP-1 \"$P\" >/dev/null 2>&1 & fi'")
+    hl.exec_cmd("sleep 0.4 && sh -c 'K=$(cat ~/.cache/hydra-wallpaper.kind 2>/dev/null || echo image); P=$(cat ~/.cache/hydra-wallpaper.path 2>/dev/null); if [ \"$K\" = image ]; then awww img --transition-type none \"${P:-$HOME/.local/share/backgrounds/hydra-samo-wallpaper.svg}\"; else awww clear 2>/dev/null; [ -n \"$P\" ] && mpvpaper -o \"loop=inf no-audio no-osc\" eDP-1 \"$P\" >/dev/null 2>&1 & fi'")
 
     -- shell chrome
     hl.exec_cmd("qs -c hydra")

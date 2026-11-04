@@ -17,3 +17,43 @@ __pycache__/
 
 # Backups made by the installer
 *.hydra-bak-*/
+
+# ── Personal data (never commit) ──────────────────────────────────────────
+# Personal avatar / profile picture — replace with your own at
+# ~/.config/hydra/avatar-circle.png (or avatar-placeholder.svg fallback)
+home/.config/hydra/avatar-circle.png
+home/.config/hydra/avatar-*.png
+home/.config/hydra/avatar-*.jpg
+home/.config/hydra/*.face*
+
+# Personal wallpaper — replace with your own at
+# ~/.local/share/backgrounds/hydra-samo-wallpaper.png
+home/.local/share/backgrounds/hydra-samo-wallpaper.png
+home/.local/share/backgrounds/hydra-samo-wallpaper.jpg
+home/.local/share/backgrounds/hydra-samo-wallpaper.jpeg
+
+# Personal state / usage data (contains greetOnce, fontScale, etc.)
+home/.config/hydra/state.json
+home/.config/hydra/state.dev.json
+home/.config/hydra/power-profile
+
+# ── Secrets / environment (never commit) ───────────────────────────────────
+.env
+.env.*
+!.env.example
+*.secret
+*.key
+*.token
+*secret*
+*token*
+*credential*
+*password*
+
+# Personal remote config (may contain endpoints/tokens)
+home/.config/hydra/remote.json
+
+# Cache / runtime data
+home/.cache/
+home/.local/share/hydra-memory/
+home/.local/share/hydra-automata/
+home/.local/share/hydra-console/

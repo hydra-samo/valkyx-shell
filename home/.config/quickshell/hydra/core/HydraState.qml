@@ -273,7 +273,7 @@ QtObject {
         if (deriveAccent === undefined) deriveAccent = true
         const base = path.split("/").pop()
         const kind = WallpaperStore.kindOf(path)
-        const dest = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/backgrounds/hydra-samo-wallpaper.png"
+        const dest = StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.local/share/backgrounds/hydra-samo-wallpaper.svg"
         if (kind === "image") {
             // apply + persist a copy + record idx + re-derive the accent palette (matugen),
             // and yield any video layer + write the kind cache so boot restores the still.
@@ -1503,7 +1503,7 @@ QtObject {
             "python3 - <<'PY'\n" +
             "from PIL import Image\n" +
             "import os\n" +
-            "p = os.path.expanduser('~/.local/share/backgrounds/hydra-samo-wallpaper.png')\n" +
+            "p = os.path.expanduser('~/.local/share/backgrounds/hydra-samo-wallpaper.svg')\n" +
             "im = Image.open(p).convert('L').resize((1,1))\n" +
             "print('BRIGHT' if int(im.getpixel((0,0))) >= 140 else 'DARK')\n" +
             "PY"]

@@ -12,7 +12,7 @@ if [ -z "${WAYLAND_DISPLAY:-}" ]; then
 fi
 
 CONF="$HOME/.config/hypr/hyprlock.conf"
-WALL="$HOME/.local/share/backgrounds/hydra-samo-wallpaper.png"
+WALL="$HOME/.local/share/backgrounds/hydra-samo-wallpaper.svg"
 PAL="$HOME/.cache/hydra-palette.json"
 
 python3 - "$CONF" "$WALL" "$PAL" <<'PY'
