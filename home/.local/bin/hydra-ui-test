@@ -404,7 +404,7 @@ def exec_target_checks(qml_files):
     log("STATIC: resolving every exec()'d command against the shell PATH")
     # the PATH qs actually runs with (HydraState passes it through to `sh -c`)
     path_env = os.environ.get(
-        "HYDRA_SHELL_PATH", "/home/hydrasamo/.local/bin:/usr/local/bin:/usr/bin")
+        "HYDRA_SHELL_PATH", "$HOME/.local/bin:/usr/local/bin:/usr/bin")
     path_dirs = [p for p in path_env.split(":") if p]
     missing, checked = [], 0
     for path in sorted(qml_files):

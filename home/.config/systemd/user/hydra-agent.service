@@ -4,7 +4,7 @@ After=hydra-studio.service
 
 [Service]
 WorkingDirectory=%h/Projects HYDRA/HYDRA SAMO LABS/PORTFOLIO
-ExecStart=/home/hydrasamo/.opencode/bin/opencode serve --port=17171 --hostname=127.0.0.1 --log-level=warn
+ExecStart=$HOME/.opencode/bin/opencode serve --port=17171 --hostname=127.0.0.1 --log-level=warn
 EnvironmentFile=%h/.config/opencode/explabs.env
 Restart=always
 RestartSec=3

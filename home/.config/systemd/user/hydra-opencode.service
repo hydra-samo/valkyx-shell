@@ -4,7 +4,7 @@ After=opencode-serve.service
 Requires=opencode-serve.service
 
 [Service]
-ExecStart=/home/hydrasamo/.local/bin/hydra-opencode-ttyd
+ExecStart=$HOME/.local/bin/hydra-opencode-ttyd
 Restart=on-failure
 RestartSec=3
 

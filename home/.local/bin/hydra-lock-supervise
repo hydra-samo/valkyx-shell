@@ -27,7 +27,7 @@ if [ -z "${WAYLAND_DISPLAY:-}" ]; then
     done
 fi
 
-/home/hydrasamo/.local/bin/hydra-lock &
+$HOME/.local/bin/hydra-lock &
 
 # Report how fast the lock mapped. Callers poll on the same signal, so a normal
 # run is ~150ms and this is diagnostic, not a gate.

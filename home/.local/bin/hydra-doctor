@@ -150,9 +150,9 @@ done
 
 # PATH for compositor execs is /usr/local/bin:/usr/bin only, so a bare-name
 # script bind fails silently unless ~/.local/bin is in the environment block.
-grep -qE 'hl\.env\("PATH", *"/home/hydrasamo/\.local/bin' "$CFG" \
+grep -qE 'hl\.env\("PATH", *"$HOME/\.local/bin' "$CFG" \
 	&& ok exec-path "~/.local/bin is in the compositor PATH" \
-	|| err exec-path "PATH env block does not include /home/hydrasamo/.local/bin — every barename script bind fails"
+	|| err exec-path "PATH env block does not include $HOME/.local/bin — every barename script bind fails"
 
 # ── input ─────────────────────────────────────────────────────────────────────
 head_ "input"

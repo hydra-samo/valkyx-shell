@@ -2,7 +2,7 @@
 Type=Application
 Name=Camera Tuner
 Comment=Manual controls for the HP TrueVision HD camera (live tweak + box preset)
-Exec=/home/hydrasamo/hydra-assistant/device/hydra-cam-tune
+Exec=$HOME/hydra-assistant/device/hydra-cam-tune
 Icon=camera-video
 Terminal=false
 Categories=Settings;Video;

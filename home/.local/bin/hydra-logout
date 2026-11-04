@@ -54,7 +54,7 @@ fi
 # stamped per-run because --collect has not always garbage-collected the old one
 # in time, and a fixed name then fails with "already loaded".
 if ! systemd-run --user --quiet --unit="hydra-logout-$(date +%s)" --collect \
-        /home/hydrasamo/.local/bin/hydra-logout-watchdog "$sid" 2>>"$LOG"; then
+        $HOME/.local/bin/hydra-logout-watchdog "$sid" 2>>"$LOG"; then
     note "FAILED: could not start hydra-logout-watchdog — session $sid left running"
     exit 1
 fi

@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/hydrasamo/hydra-assistant/web_shim.py
+ExecStart=/usr/bin/python3 $HOME/hydra-assistant/web_shim.py
 Restart=on-failure
 RestartSec=3
 Environment=PATH=%h/.opencode/bin:%h/.local/bin:/usr/local/bin:/usr/bin

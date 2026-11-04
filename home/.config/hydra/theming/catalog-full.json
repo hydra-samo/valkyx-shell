@@ -75,7 +75,7 @@
       "surface": "#313244",
       "field": "#313244",
       "line": "#101019",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/catppuccin/1-totoro.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/catppuccin/1-totoro.webp"
     },
     {
       "name": "catppuccin-latte",
@@ -86,7 +86,7 @@
       "surface": "#dce0e8",
       "field": "#dce0e8",
       "line": "#d7d8dc",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/catppuccin-latte/1-color-fade.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/catppuccin-latte/1-color-fade.webp"
     },
     {
       "name": "ethereal",
@@ -97,7 +97,7 @@
       "surface": "#131a3a",
       "field": "#131a3a",
       "line": "#030610",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/ethereal/1-cosmic.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/ethereal/1-cosmic.webp"
     },
     {
       "name": "everforest",
@@ -108,7 +108,7 @@
       "surface": "#343f44",
       "field": "#343f44",
       "line": "#181d20",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/everforest/1-tree-tops.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/everforest/1-tree-tops.webp"
     },
     {
       "name": "flexoki-light",
@@ -119,7 +119,7 @@
       "surface": "#E6E4D9",
       "field": "#E6E4D9",
       "line": "#e5e2d8",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/flexoki-light/1-orb.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/flexoki-light/1-orb.webp"
     },
     {
       "name": "gruvbox",
@@ -130,7 +130,7 @@
       "surface": "#3c3836",
       "field": "#3c3836",
       "line": "#161616",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/gruvbox/1-the-backwater.jpg"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/gruvbox/1-the-backwater.jpg"
     },
     {
       "name": "hackerman",
@@ -141,7 +141,7 @@
       "surface": "#151828",
       "field": "#151828",
       "line": "#06060c",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/hackerman/1-synth-scape.jpg"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/hackerman/1-synth-scape.jpg"
     },
     {
       "name": "kanagawa",
@@ -152,7 +152,7 @@
       "surface": "#223249",
       "field": "#223249",
       "line": "#111116",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/kanagawa/1-kanagawa.jpg"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/kanagawa/1-kanagawa.jpg"
     },
     {
       "name": "last-horizon",
@@ -163,7 +163,7 @@
       "surface": "#0c0b0c",
       "field": "#0c0b0c",
       "line": "#060606",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/last-horizon/1-eyes-wide.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/last-horizon/1-eyes-wide.webp"
     },
     {
       "name": "lumon",
@@ -174,7 +174,7 @@
       "surface": "#1b2d40",
       "field": "#1b2d40",
       "line": "#0b1216",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/lumon/01-united-in-severance.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/lumon/01-united-in-severance.webp"
     },
     {
       "name": "lupine",
@@ -185,7 +185,7 @@
       "surface": "#f5f5f5",
       "field": "#f5f5f5",
       "line": "#dedede",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/lupine/01-cherry-blossom-bokeh.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/lupine/01-cherry-blossom-bokeh.webp"
     },
     {
       "name": "matte-black",
@@ -196,7 +196,7 @@
       "surface": "#1e1e1e",
       "field": "#1e1e1e",
       "line": "#090909",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/matte-black/0-ship-at-sea.jpg"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/matte-black/0-ship-at-sea.jpg"
     },
     {
       "name": "miasma",
@@ -207,7 +207,7 @@
       "surface": "#2c2c2c",
       "field": "#2c2c2c",
       "line": "#121212",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/miasma/01-nature-of-fear.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/miasma/01-nature-of-fear.webp"
     },
     {
       "name": "nord",
@@ -218,7 +218,7 @@
       "surface": "#3b4252",
       "field": "#3b4252",
       "line": "#191c23",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/nord/0-black-moon.jpg"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/nord/0-black-moon.jpg"
     },
     {
       "name": "osaka-jade",
@@ -229,7 +229,7 @@
       "surface": "#23372B",
       "field": "#23372B",
       "line": "#090f0d",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/osaka-jade/1-glowing-city.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/osaka-jade/1-glowing-city.webp"
     },
     {
       "name": "retro-82",
@@ -240,7 +240,7 @@
       "surface": "#0a2540",
       "field": "#0a2540",
       "line": "#020c17",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/retro-82/1-in-the-groove.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/retro-82/1-in-the-groove.webp"
     },
     {
       "name": "ristretto",
@@ -251,7 +251,7 @@
       "surface": "#3d2f2a",
       "field": "#3d2f2a",
       "line": "#181414",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/ristretto/0-launch.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/ristretto/0-launch.webp"
     },
     {
       "name": "rose-pine",
@@ -262,7 +262,7 @@
       "surface": "#f2e9e1",
       "field": "#f2e9e1",
       "line": "#e1dbd5",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/rose-pine/1-funky-shapes.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/rose-pine/1-funky-shapes.webp"
     },
     {
       "name": "solitude",
@@ -273,7 +273,7 @@
       "surface": "#101315",
       "field": "#101315",
       "line": "#080a0b",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/solitude/1-on-pole.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/solitude/1-on-pole.webp"
     },
     {
       "name": "tokyo-night",
@@ -284,7 +284,7 @@
       "surface": "#24283b",
       "field": "#24283b",
       "line": "#0e0e14",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/tokyo-night/0-winding-road.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/tokyo-night/0-winding-road.webp"
     },
     {
       "name": "vantablack",
@@ -295,7 +295,7 @@
       "surface": "#1a1a1a",
       "field": "#1a1a1a",
       "line": "#070707",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/vantablack/0-dot-hands.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/vantablack/0-dot-hands.webp"
     },
     {
       "name": "white",
@@ -306,7 +306,7 @@
       "surface": "#c0c0c0",
       "field": "#c0c0c0",
       "line": "#e8e8e8",
-      "wallpaper": "/home/hydrasamo/Pictures/Wallpapers/omarchy/white/1-white.webp"
+      "wallpaper": "$HOME/Pictures/Wallpapers/omarchy/white/1-white.webp"
     }
   ]
 }

@@ -12,7 +12,7 @@ hl.config({ input = { kb_layout = "us,ara", kb_variant = "", kb_model = "", kb_o
 -- ENVIRONMENT
 -- GDM sessions don't source shell profiles — export the user bin PATH
 -- explicitly or every exec <script> bind into ~/.local/bin silently fails.
-hl.env("PATH", "/home/hydrasamo/.local/bin:/usr/local/bin:/usr/bin")
+hl.env("PATH", "$HOME/.local/bin:/usr/local/bin:/usr/bin")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_TYPE", "wayland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
@@ -89,8 +89,8 @@ hl.bind(mod .. " + Space",       hl.dsp.exec_cmd("qs -c hydra ipc call launcher 
 hl.bind(mod .. " + S",           hl.dsp.exec_cmd("qs -c hydra ipc call panel toggle"))
 hl.bind(mod .. " + A",           hl.dsp.exec_cmd("qs -c hydra ipc call panelLeft toggle"))
 hl.bind(mod .. " + I",           hl.dsp.exec_cmd("qs -c hydra ipc call settings toggle"))
-hl.bind(mod .. " + D",           hl.dsp.exec_cmd("/home/hydrasamo/.local/bin/hydra-holo-window"))
-hl.bind(mod .. " + CTRL + D",     hl.dsp.exec_cmd("/home/hydrasamo/.local/bin/hydra-holo-window"))
+hl.bind(mod .. " + D",           hl.dsp.exec_cmd("$HOME/.local/bin/hydra-holo-window"))
+hl.bind(mod .. " + CTRL + D",     hl.dsp.exec_cmd("$HOME/.local/bin/hydra-holo-window"))
 -- input language (xkb layout, via hydra-im). Two paths, both on keys a 60%
 -- board actually has. Scroll_Lock is the primary: one dead key repurposed, no
 -- chord, one tap — nothing to hold in the right order. Ctrl+Space is the
@@ -658,7 +658,7 @@ hl.on("hyprland.start", function()
     -- wallpaper (kind-dispatch: image → awww still instant; gif/video → mpvpaper over a
     -- blanked awww so the previous still never peeks under the video or flashes back)
     -- ~/.cache/hydra-wallpaper.{kind,path} written by HydraState.setWallpaper.
-    hl.exec_cmd("sleep 0.4 && sh -c 'K=$(cat ~/.cache/hydra-wallpaper.kind 2>/dev/null || echo image); P=$(cat ~/.cache/hydra-wallpaper.path 2>/dev/null); if [ \"$K\" = image ]; then awww img --transition-type none \"${P:-/home/hydrasamo/.local/share/backgrounds/hydra-samo-wallpaper.png}\"; else awww clear 2>/dev/null; [ -n \"$P\" ] && mpvpaper -o \"loop=inf no-audio no-osc\" eDP-1 \"$P\" >/dev/null 2>&1 & fi'")
+    hl.exec_cmd("sleep 0.4 && sh -c 'K=$(cat ~/.cache/hydra-wallpaper.kind 2>/dev/null || echo image); P=$(cat ~/.cache/hydra-wallpaper.path 2>/dev/null); if [ \"$K\" = image ]; then awww img --transition-type none \"${P:-$HOME/.local/share/backgrounds/hydra-samo-wallpaper.png}\"; else awww clear 2>/dev/null; [ -n \"$P\" ] && mpvpaper -o \"loop=inf no-audio no-osc\" eDP-1 \"$P\" >/dev/null 2>&1 & fi'")
 
     -- shell chrome
     hl.exec_cmd("qs -c hydra")
@@ -674,4 +674,4 @@ hl.on("hyprland.start", function()
 end)
 -- Re-apply the last chosen input language: a config (re)load rebuilds every
 -- keymap from input.kb_layout above, which would snap the layout back to "us".
-hl.exec_cmd("/home/hydrasamo/.local/bin/hydra-im restore")
+hl.exec_cmd("$HOME/.local/bin/hydra-im restore")

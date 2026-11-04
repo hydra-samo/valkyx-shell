@@ -13,7 +13,7 @@
 #   toggle    DISABLED — removed Sep 13
 set -euo pipefail
 
-BASE=/home/hydrasamo/hydra-sandbox
+BASE=$HOME/hydra-sandbox
 SYS="$BASE/system"
 STASH="$HOME/.config/.env-live"
 SHELL_SRC="$BASE/shell"
@@ -78,7 +78,7 @@ do_sandbox() {
   while IFS='|' read -r cfg sandx; do flip_cfg "$cfg" "$sandx"; done < <(flip_specs)
   # keep the state-isolation patch on the sandbox shell copy (sync may overwrite it)
   if [ -f "$SHELL_SRC/core/HydraState.qml" ]; then
-    sed -i 's#_persistPath: "/home/hydrasamo/.config/hydra/state.json"#_persistPath: "/home/hydrasamo/.config/hydra/state.dev.json"#' "$SHELL_SRC/core/HydraState.qml"
+    sed -i 's#_persistPath: "$HOME/.config/hydra/state.json"#_persistPath: "$HOME/.config/hydra/state.dev.json"#' "$SHELL_SRC/core/HydraState.qml"
   fi
   reload_all
   echo "sandbox: shell + hypr + gtk + mako now from ~/hydra-sandbox. State -> state.dev.json."

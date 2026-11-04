@@ -5,7 +5,7 @@ Requires=hydra-local-brain.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/hydrasamo/hydra-assistant/llm_shim.py
+ExecStart=/usr/bin/python3 $HOME/hydra-assistant/llm_shim.py
 Restart=on-failure
 RestartSec=3
 

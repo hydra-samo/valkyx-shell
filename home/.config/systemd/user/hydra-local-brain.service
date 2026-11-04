@@ -4,7 +4,7 @@ After=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/home/hydrasamo/.local/bin/hydra-local-brain
+ExecStart=$HOME/.local/bin/hydra-local-brain
 Restart=on-failure
 RestartSec=3
 

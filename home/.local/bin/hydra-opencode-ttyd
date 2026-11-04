@@ -2,8 +2,8 @@
 set -e
 export XDG_RUNTIME_DIR=/run/user/1000
 export TERM=xterm-256color
-export HOME=/home/hydrasamo
+export HOME=$HOME
 export WAYLAND_DISPLAY=wayland-1
 export DISPLAY=:1
-cd /home/hydrasamo
+cd $HOME
 exec ttyd -W -R opencode

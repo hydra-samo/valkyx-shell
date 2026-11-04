@@ -40,8 +40,8 @@ Run as a normal user — the script uses `sudo` internally for `/etc` and
 
 ## Notes
 
-- All paths use `$HOME` — nothing is hardcoded to `/home/hydrasamo`, so it works
+- All paths use `$HOME` — nothing is hardcoded to `$HOME`, so it works
   on any user/machine (including root on `machy`, after adjusting `$HOME`).
-- Shell rc files (`.bashrc`, `.zshrc`, `.profile`) have `/home/hydrasamo`
+- Shell rc files (`.bashrc`, `.zshrc`, `.profile`) have `$HOME`
   replaced with `$HOME` for portability.
 - `usr/share/sddm/themes/hydra/` and `/etc/systemd/system/` require `sudo`.

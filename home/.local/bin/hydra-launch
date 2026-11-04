@@ -334,7 +334,7 @@ case "${1:-}" in
           Terminal) setsid kitty >/dev/null 2>&1 & ;;
           Helium)   setsid helium-browser >/dev/null 2>&1 & ;;
 Files)    setsid thunar >/dev/null 2>&1 & ;;
-          Sandbox)  setsid kitty --title HyDraSandbox --directory=/home/hydrasamo/hydra-sandbox >/dev/null 2>&1 & ;;
+          Sandbox)  setsid kitty --title HyDraSandbox --directory=$HOME/hydra-sandbox >/dev/null 2>&1 & ;;
 Editor)   setsid code-oss >/dev/null 2>&1 & ;;
           Blender)  setsid blender >/dev/null 2>&1 & ;;
           Resolve)

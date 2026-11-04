@@ -18,10 +18,10 @@ note "requested"
 # `sh -c` that inherits Hyprland's PATH, which does NOT include ~/.local/bin.
 case "$action" in
     lock)
-        exec /home/hydrasamo/.local/bin/hydra-lock
+        exec $HOME/.local/bin/hydra-lock
         ;;
     logout)
-        exec /home/hydrasamo/.local/bin/hydra-logout
+        exec $HOME/.local/bin/hydra-logout
         ;;
     reboot|shutdown|hibernate)
         what=poweroff; [ "$action" = reboot ] && what=reboot

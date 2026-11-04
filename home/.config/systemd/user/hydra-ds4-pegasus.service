@@ -3,7 +3,7 @@ Description=Launch Pegasus Frontend on DS4 PS button
 
 [Service]
 Type=simple
-ExecStart=/home/hydrasamo/.local/bin/hydra-ds4-pegasus
+ExecStart=$HOME/.local/bin/hydra-ds4-pegasus
 Restart=always
 RestartSec=2
 

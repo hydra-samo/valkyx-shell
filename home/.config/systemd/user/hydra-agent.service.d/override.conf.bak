@@ -3,4 +3,4 @@
 # execution surface to every device on the cafe wifi.
 [Service]
 ExecStart=
-ExecStart=/home/hydrasamo/.opencode/bin/opencode serve --port=17171 --hostname=100.71.210.6 --log-level=WARN
+ExecStart=$HOME/.opencode/bin/opencode serve --port=17171 --hostname=100.71.210.6 --log-level=WARN

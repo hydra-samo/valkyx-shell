@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # hydra-shell-live — exit SANDBOX: restores shell + hypr + gtk + mako to live copies.
 # (replacement: hydra-env live)
-exec /home/hydrasamo/.local/bin/hydra-env live
+exec $HOME/.local/bin/hydra-env live

@@ -1795,7 +1795,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             # read HERE, synchronously, because ffmpeg needs -s before it starts.
             try:
                 cap = subprocess.Popen(
-                    ["/home/hydrasamo/.local/bin/hydra-cap", "--fps=%d" % fps],
+                    ["$HOME/.local/bin/hydra-cap", "--fps=%d" % fps],
                     stdout=subprocess.PIPE, bufsize=0)
                 hdr = b""
                 end = time.time() + 3.0

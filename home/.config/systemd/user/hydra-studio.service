@@ -10,7 +10,7 @@ WorkingDirectory=%h/Projects HYDRA/HYDRA SAMO LABS/PORTFOLIO
 #   tailscale serve /      -> proxies to 127.0.0.1:1717 (HTTPS :443)
 # Passing --host twice did NOT do this: Vite keeps only the last one, which left
 # loopback unbound and the desktop windows pointing at nothing.
-ExecStart=/home/hydrasamo/.config/nvm/versions/node/v24.18.1/bin/npm run dev -- --port=1717 --host=0.0.0.0 --strictPort
+ExecStart=$HOME/.config/nvm/versions/node/v24.18.1/bin/npm run dev -- --port=1717 --host=0.0.0.0 --strictPort
 Restart=always
 RestartSec=3
 Environment=BROWSER=none

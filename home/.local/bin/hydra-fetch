@@ -5,6 +5,6 @@ case "$TERM" in
         exec fastfetch
         ;;
     *)
-        exec fastfetch --logo file --logo /home/hydrasamo/.config/fastfetch/hydra_logo.txt
+        exec fastfetch --logo file --logo $HOME/.config/fastfetch/hydra_logo.txt
         ;;
 esac

@@ -1,6 +1,6 @@
 [Unit]
 Description=Keep the Hydra seat fleet and council in step with the live free tier
-Documentation=file:///home/hydrasamo/council-harness/docs/hydra-council-sync-plan.md
+Documentation=file://$HOME/council-harness/docs/hydra-council-sync-plan.md
 
 [Timer]
 OnBootSec=4min
