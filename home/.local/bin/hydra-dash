@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# hydra-dash — HYDRA SAMO dashboard poller (per-core CPU, swap, mount disks,
+# temps, GPU). Emits key=value lines. Covers the fields NOT already polled by
+# HydraState.sysGet / netBandGet.
+#
+#   cores:   comma-separated per-core util %
+#   swap:    swap used %
+#   mounts:  /|pct;;/data|pct...  (local filesystems, excludes pseudo/virtual)
+#   cput:    CPU temperature (C, from acpitz/TCPU coretemp)
+#   pktt:    package temperature (C, x86_pkg_temp)
+#   gpu:     util|temp|memUsed|memTotal (nvidia-smi) or "none"
+set -euo pipefail
+
+# per-core + total CPU util (two samples of /proc/stat)
+c1=$(awk '/^cpu/{print}' /proc/stat)
+sleep 0.4
+c2=$(awk '/^cpu/{print}' /proc/stat)
+
+cores=""
+total=""
+while IFS= read -r line2; do
+    id=$(awk '{print $1}' <<<"$line2")
+    p=$(awk -v a="$(grep "^${id} " <<<"$c1")" -v b="$line2" 'BEGIN{
+        split(a,x," "); split(b,y," ");
+        busy=(y[2]-x[2])+(y[3]-x[3])+(y[4]-x[4]);
+        tot=busy+(y[5]-x[5])+(y[6]-x[6]);
+        printf "%d", (tot>0?busy/tot*100:0) }')
+    if [ "$id" = "cpu" ]; then total="$p"; else cores="${cores:+$cores,}$p"; fi
+done <<<"$c2"
+
+swap=$(awk '/SwapTotal/{t=$2}/SwapFree/{f=$2}END{if(t<=0)printf "0"; else printf "%d",(t-f)/t*100}' /proc/meminfo)
+
+mounts=$(df -P 2>/dev/null | awk 'NR>1 && $1 !~ /^(tmpfs|devtmpfs|efivarfs|overlay|proc|sysfs|cgroup|dev|run|shm)/ && $6 !~ /^\/(run|root|srv|var)(\/|$)/ {gsub("%","",$5); printf "%s|%d;;", $6, $5}')
+
+zone() {
+    # $1 = thermal zone type substring; prints temp in C if found
+    for d in /sys/class/thermal/thermal_zone*; do
+        [ -f "$d/type" ] || continue
+        if grep -qE "$1" "$d/type" 2>/dev/null; then
+            awk -v t="$(cat "$d/temp" 2>/dev/null || echo 0)" 'BEGIN{printf "%d", t/1000}'
+            return 0
+        fi
+    done
+    printf "0"
+}
+cput=$(zone "TCPU|acpitz")
+pktt=$(zone "x86_pkg_temp")
+
+if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1; then
+    gpu=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null | tr -d ' ' | awk -F, '{printf "%d|%d|%d|%d", $1,$2,$3,$4}')
+else
+    gpu="none"
+fi
+
+echo "cores=$cores"
+echo "swap=$swap"
+echo "mounts=$mounts"
+echo "cput=$cput"
+echo "pktt=$pktt"
+echo "gpu=$gpu"

@@ -1,0 +1,13 @@
+[Unit]
+Description=Hydra Ollama-compat shim (llama-server -> local_ask)
+After=hydra-local-brain.service
+Requires=hydra-local-brain.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/hydrasamo/hydra-assistant/llm_shim.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

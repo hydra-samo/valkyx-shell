@@ -1,0 +1,14 @@
+[Unit]
+Description=Hydra web-seat shim (opencode provider <-> hydra-ai over Helium CDP)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/hydrasamo/hydra-assistant/web_shim.py
+Restart=on-failure
+RestartSec=3
+Environment=PATH=%h/.opencode/bin:%h/.local/bin:/usr/local/bin:/usr/bin
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

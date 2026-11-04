@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# hydra-pass-write <file> <secret> — hand one secret to a waiting script.
+#
+# The secret arrives as ARGV rather than inside a command string: interpolating a
+# password into `sh -c` breaks on quotes and exposes it in `ps` for the lifetime of
+# the process. The file lives in XDG_RUNTIME_DIR (tmpfs), so it never hits disk.
+set -uo pipefail
+
+f="${1:-}"
+[ -n "$f" ] || exit 1
+shift
+
+# umask first: the file must never be briefly world-readable.
+(umask 077 && printf '%s' "${1-}" > "$f")
+exit $?

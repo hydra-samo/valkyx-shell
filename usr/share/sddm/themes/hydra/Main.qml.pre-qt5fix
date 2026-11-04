@@ -1,0 +1,284 @@
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+import Qt5Compat.GraphicalEffects 1.0
+
+Rectangle {
+    id: root
+    color: "#0a1210"
+    property bool loginFailedFlag: false
+
+    // ── Blurred background ──
+    Image {
+        id: bgImage
+        anchors.fill: parent
+        source: config.background
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: false
+        visible: false
+    }
+    FastBlur {
+        anchors.fill: parent
+        source: bgImage
+        radius: 64
+        transparentBorder: true
+    }
+    Rectangle { anchors.fill: parent; color: "#440a1210" }
+
+    // ── Main column — macOS login layout ──
+    ColumnLayout {
+        anchors.centerIn: parent
+        spacing: 0
+
+        // ── Clock ──
+        Text {
+            id: clockText
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 2
+            color: "#eef0ee"
+            font.family: "Space Grotesk"
+            font.pixelSize: 64
+            font.weight: Font.Light
+            Timer {
+                interval: 1000; running: true; repeat: true
+                onTriggered: clockText.text = Qt.formatDateTime(new Date(), "HH:mm")
+            }
+            Component.onCompleted: text = Qt.formatDateTime(new Date(), "HH:mm")
+        }
+
+        // ── Date ──
+        Text {
+            id: dateText
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 24
+            color: "#aab4ae"
+            font.family: "Space Grotesk"
+            font.pixelSize: 13
+            font.letterSpacing: 1
+            Timer {
+                interval: 30000; running: true; repeat: true
+                onTriggered: dateText.text = Qt.formatDateTime(new Date(), "dddd, MMMM d")
+            }
+            Component.onCompleted: text = Qt.formatDateTime(new Date(), "dddd, MMMM d")
+        }
+
+        // ── Avatar circle ──
+        Item {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 12
+            Layout.preferredWidth: 72
+            Layout.preferredHeight: 72
+
+            Image {
+                id: avatarImage
+                anchors.fill: parent
+                source: config.logo
+                fillMode: Image.PreserveAspectFit
+                visible: false
+                layer.enabled: true
+                layer.effect: OpacityMask {
+                    maskSource: Rectangle {
+                        width: 72; height: 72
+                        radius: 36
+                    }
+                }
+            }
+            // Subtle ring
+            Rectangle {
+                anchors.fill: parent
+                radius: 36
+                color: "transparent"
+                border.color: "#3300A86B"
+                border.width: 1.5
+            }
+        }
+
+        // ── Username ──
+        TextField {
+            id: username
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 6
+            Layout.preferredWidth: 220
+            text: sddm.user || ""
+            horizontalAlignment: Text.AlignHCenter
+            font.family: "Space Grotesk"
+            font.pixelSize: 14
+            font.weight: Font.Medium
+            color: "#eef0ee"
+            placeholderText: ""
+            background: Item {}
+            leftPadding: 0; rightPadding: 0
+            implicitHeight: 28
+            onAccepted: password.forceActiveFocus()
+        }
+
+        // ── Password field — macOS underline style ──
+        Item {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 16
+            Layout.preferredWidth: 220
+            Layout.preferredHeight: 32
+
+            TextField {
+                id: password
+                anchors.fill: parent
+                echoMode: TextInput.Password
+                font.family: "Space Grotesk"
+                font.pixelSize: 13
+                color: "#eef0ee"
+                placeholderText: "Enter Password"
+                placeholderTextColor: "#5a635f"
+                horizontalAlignment: Text.AlignHCenter
+                background: Rectangle {
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    height: 1
+                    color: password.activeFocus ? "#00A86B" : (root.loginFailedFlag ? "#c96a6a" : "#3a4540")
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+                leftPadding: 4; rightPadding: 4
+                onAccepted: doLogin()
+            }
+        }
+
+        // ── Fail label ──
+        Text {
+            id: failLabel
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 4
+            visible: root.loginFailedFlag
+            text: "Try again"
+            color: "#c96a6a"
+            font.family: "Space Grotesk"
+            font.pixelSize: 11
+        }
+
+        // ── Login button — small, minimal ──
+        Button {
+            id: loginBtn
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 20
+            text: "→"
+            implicitWidth: 32
+            implicitHeight: 32
+            onClicked: doLogin()
+            contentItem: Text {
+                text: loginBtn.text
+                color: "#04140d"
+                font.family: "Space Grotesk"
+                font.pixelSize: 16
+                font.weight: Font.Bold
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            background: Rectangle {
+                radius: 16
+                color: loginBtn.down ? "#007a4d" : "#00A86B"
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+            opacity: password.text.length > 0 ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+        }
+
+        // ── Session picker — minimal pill ──
+        ComboBox {
+            id: sessionBox
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 0
+            model: sddm.sessions2 ? sddm.sessions2 : []
+            textRole: "name"
+            displayText: currentText
+            Layout.preferredWidth: 140
+            implicitHeight: 24
+            opacity: 0.5
+            background: Rectangle {
+                radius: 6
+                color: "transparent"
+            }
+            contentItem: Text {
+                text: parent.displayText
+                color: "#8a938f"
+                font.family: "Space Grotesk"
+                font.pixelSize: 9
+                font.letterSpacing: 1
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+            }
+        }
+    }
+
+    // ── Power buttons — bottom corners, macOS style ──
+    Row {
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 24
+        anchors.left: parent.left
+        anchors.leftMargin: 28
+        spacing: 16
+
+        Text {
+            text: "⏻"
+            color: shutArea.containsMouse ? "#c96a6a" : "#4a534f"
+            font.pixelSize: 16
+            Behavior on color { ColorAnimation { duration: 150 } }
+            MouseArea {
+                id: shutArea
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
+                onClicked: sddm.powerOff()
+            }
+        }
+        Text {
+            text: "↻"
+            color: rebootArea.containsMouse ? "#00A86B" : "#4a534f"
+            font.pixelSize: 16
+            Behavior on color { ColorAnimation { duration: 150 } }
+            MouseArea {
+                id: rebootArea
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
+                onClicked: sddm.reboot()
+            }
+        }
+    }
+
+    // ── Focus hint — bottom right ──
+    Text {
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 26
+        anchors.right: parent.right
+        anchors.rightMargin: 28
+        text: "⏎ return"
+        color: "#3a4540"
+        font.family: "Space Grotesk"
+        font.pixelSize: 9
+        font.letterSpacing: 1
+    }
+
+
+    function doLogin() {
+        var user = username.text.trim()
+        if (user === "") { user = sddm.user }
+        var sess = (sessionBox.count > 0 && sessionBox.currentIndex >= 0)
+                 ? sddm.sessions2[sessionBox.currentIndex].key
+                 : sddm.lastSession
+        sddm.login(user, password.text, sess)
+    }
+
+    Connections {
+        target: sddm
+        function onLoginFailed() { root.loginFailedFlag = true; password.selectAll(); password.forceActiveFocus() }
+    }
+
+    Component.onCompleted: {
+        console.log("THEME-LOADED-MARKER")
+        if (sddm.lastSession !== "") {
+            var lst = sddm.sessions2 || []
+            for (var i = 0; i < lst.length; i++) {
+                if (lst[i].key === sddm.lastSession) { sessionBox.currentIndex = i; break }
+            }
+        }
+        username.forceActiveFocus()
+    }
+}

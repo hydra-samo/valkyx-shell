@@ -1,0 +1,14 @@
+[Unit]
+Description=Fcitx5 input method (Arabic/English keyboard)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/fcitx5 --replace
+Restart=on-failure
+RestartSec=2
+Slice=app.slice
+
+[Install]
+WantedBy=graphical-session.target

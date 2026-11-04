@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Dump GTA V post-crash logs. The game TRUNCATES these on every launch, so run
+# this right after a crash, before relaunching.
+G="$HOME/Games/Grand Theft Auto V"
+D="$HOME/Games/prefixes/grand-theft-auto-v/drive_c/users/steamuser/Documents/Rockstar Games"
+
+for f in \
+  "$G/ScriptHookV.log" \
+  "$G/OpenIV.log" \
+  "$G/RageOpenV.log" \
+  "$G/menyooLog.txt" \
+  "$D/Social Club/socialclub.log" \
+  "$HOME/.local/share/lutris/proton-logs/steam-271590.log"
+do
+  [ -f "$f" ] || { echo "--- missing: $f"; continue; }
+  printf '\n\033[1m=== %s  (last write %s)\033[0m\n' \
+    "$(basename "$f")" "$(date -d "@$(stat -c %Y "$f")" +%H:%M:%S)"
+  # socialclub.log is UTF-16, strip the NULs
+  tail -25 "$f" | tr -d '\000'
+done

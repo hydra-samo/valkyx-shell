@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /home/hydrasamo/.venvs/hydra-memory/bin/python /home/hydrasamo/repos/hydra-memory/hydra_memory.py "$@"

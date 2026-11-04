@@ -1,0 +1,18 @@
+{
+  "name": "Ocean",
+  "source": "hydra",
+  "colors": {
+    "accent": "#2196F3",
+    "muted": "#75b1d3",
+    "bg": "#0a1016",
+    "surface": "#10161c",
+    "field": "#141c24",
+    "line": "#1c2834",
+    "text": "#e6eae8",
+    "textOnAccent": "#04140d",
+    "danger": "#c96a6a",
+    "warning": "#d0a86a"
+  },
+  "wallpaper": null,
+  "style": "hydra"
+}

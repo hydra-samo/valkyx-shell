@@ -1,0 +1,14 @@
+[Unit]
+Description=Keep the Hydra seat fleet and council in step with the live free tier
+Documentation=file:///home/hydrasamo/council-harness/docs/hydra-council-sync-plan.md
+
+[Timer]
+OnBootSec=4min
+OnUnitActiveSec=6h
+# Never on the hour: every other timer in this box would collide.
+RandomizedDelaySec=25min
+Persistent=true
+Unit=hydra-council-sync.service
+
+[Install]
+WantedBy=timers.target

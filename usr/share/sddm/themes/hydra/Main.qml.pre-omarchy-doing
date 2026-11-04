@@ -1,0 +1,399 @@
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+import QtGraphicalEffects 1.0
+
+Rectangle {
+    id: root
+    color: "#0a1210"
+    property bool loginFailedFlag: false
+    readonly property string loginUser: sddm.user || "hydrasamo"
+
+    function hexToRgba(hex, alpha) {
+        var h = (hex && String(hex).replace("#", "")) || "00A86B"
+        if (h.length < 6) h = "00A86B"
+        return Qt.rgba(
+            parseInt(h.substring(0, 2), 16) / 255,
+            parseInt(h.substring(2, 4), 16) / 255,
+            parseInt(h.substring(4, 6), 16) / 255,
+            alpha)
+    }
+    function tint(c, t) {
+        return Qt.rgba(c.r + (1 - c.r) * t, c.g + (1 - c.g) * t, c.b + (1 - c.b) * t, 1)
+    }
+    readonly property color accent: hexToRgba(config.accent, 1)
+    readonly property color ink: Qt.rgba(accent.r * 0.32, accent.g * 0.32, accent.b * 0.32, 1)
+    readonly property color mutedC: Qt.rgba(accent.r * 0.55, accent.g * 0.55, accent.b * 0.55, 1)
+
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0;  color: Qt.rgba(1, 1, 1, 1) }
+            GradientStop { position: 0.35; color: root.tint(root.accent, 0.86) }
+            GradientStop { position: 1.0;  color: root.tint(root.accent, 0.68) }
+        }
+    }
+    RadialGradient {
+        anchors.fill: parent
+        horizontalRadius: width * 0.8
+        verticalRadius: height * 0.9
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.25) }
+            GradientStop { position: 1.0; color: "transparent" }
+        }
+        cached: true
+    }
+    RadialGradient {
+        anchors.centerIn: parent
+        width: 900; height: 900
+        horizontalRadius: width / 2
+        verticalRadius: height / 2
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: root.tint(root.accent, 0.55); opacity: 0.5 }
+            GradientStop { position: 0.55; color: root.tint(root.accent, 0.75); opacity: 0.22 }
+            GradientStop { position: 1.0; color: "transparent"; opacity: 0 }
+        }
+        cached: true
+    }
+
+    ColumnLayout {
+        anchors.centerIn: parent
+        spacing: 0
+
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 2
+            text: "HYDRA SAMO"
+            color: root.ink
+            font.family: "Space Grotesk"
+            font.pixelSize: 56
+            font.weight: Font.Bold
+            font.letterSpacing: 6
+        }
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 34
+            text: "LABS"
+            color: root.accent
+            font.family: "Space Grotesk"
+            font.pixelSize: 16
+            font.weight: Font.Medium
+            font.letterSpacing: 16
+        }
+
+        Item {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 14
+            Layout.preferredWidth: 64
+            Layout.preferredHeight: 64
+
+            Image {
+                id: avatarImage
+                anchors.fill: parent
+                source: config.logo
+                fillMode: Image.PreserveAspectFit
+                visible: false
+                layer.enabled: true
+                layer.effect: OpacityMask {
+                    maskSource: Rectangle {
+                        width: 64; height: 64
+                        radius: 32
+                    }
+                }
+            }
+            Rectangle {
+                anchors.fill: parent
+                radius: 32
+                color: "transparent"
+                border.color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.4)
+                border.width: 1.5
+            }
+        }
+
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 14
+            color: root.ink
+            font.family: "Space Grotesk"
+            font.pixelSize: 14
+            font.weight: Font.Medium
+            text: root.loginUser
+        }
+
+        Item {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 16
+            Layout.preferredWidth: 300
+            Layout.preferredHeight: 46
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 23
+                color: Qt.rgba(1, 1, 1, 0.45)
+                border.color: password.activeFocus
+                    ? root.accent
+                    : (root.loginFailedFlag ? "#c96a6a" : Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.45))
+                border.width: 1.5
+                Behavior on border.color { ColorAnimation { duration: 200 } }
+            }
+            TextField {
+                id: password
+                anchors.fill: parent
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+                focus: true
+                echoMode: TextInput.Password
+                font.family: "Space Grotesk"
+                font.pixelSize: 13
+                color: root.ink
+                placeholderText: "password"
+                placeholderTextColor: Qt.rgba(root.mutedC.r, root.mutedC.g, root.mutedC.b, 0.7)
+                horizontalAlignment: Text.AlignHCenter
+                background: Item {}
+                onAccepted: doLogin()
+                onTextChanged: root.loginFailedFlag = false
+            }
+        }
+
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 20
+            visible: root.loginFailedFlag
+            text: "Try again"
+            color: "#c96a6a"
+            font.family: "Space Grotesk"
+            font.pixelSize: 11
+        }
+
+        Button {
+            id: loginBtn
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 22
+            text: "\u2192"
+            implicitWidth: 34
+            implicitHeight: 34
+            onClicked: doLogin()
+            contentItem: Text {
+                text: loginBtn.text
+                color: "#ffffff"
+                font.family: "Space Grotesk"
+                font.pixelSize: 16
+                font.weight: Font.Bold
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            background: Rectangle {
+                radius: 17
+                color: loginBtn.down ? Qt.darker(root.accent, 1.2) : root.accent
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+            opacity: password.text.length > 0 ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+        }
+
+        ComboBox {
+            id: sessionBox
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 0
+            model: sessionModel
+            textRole: "name"
+            currentIndex: sessionModel ? sessionModel.lastIndex : 0
+            Layout.preferredWidth: 180
+            implicitHeight: 24
+            opacity: 0.75
+            background: Rectangle {
+                radius: 6
+                color: Qt.rgba(1, 1, 1, 0.25)
+                border.color: Qt.rgba(root.mutedC.r, root.mutedC.g, root.mutedC.b, 0.4)
+                border.width: 1
+            }
+            contentItem: Text {
+                text: parent.displayText
+                color: root.ink
+                font.family: "Space Grotesk"
+                font.pixelSize: 10
+                font.letterSpacing: 1
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+            }
+        }
+    }
+
+    Column {
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 26
+        anchors.rightMargin: 26
+        spacing: 2
+
+        Text {
+            id: clockText
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: root.ink
+            font.family: "JetBrainsMono Nerd Font"
+            font.pixelSize: 29
+            font.weight: Font.Medium
+            Timer {
+                interval: 1000; running: true; repeat: true
+                onTriggered: clockText.text = Qt.formatDateTime(new Date(), "HH:mm")
+            }
+            Component.onCompleted: text = Qt.formatDateTime(new Date(), "HH:mm")
+        }
+        Text {
+            id: dateText
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: root.mutedC
+            font.family: "JetBrainsMono Nerd Font"
+            font.pixelSize: 12
+            font.letterSpacing: 1
+            Timer {
+                interval: 30000; running: true; repeat: true
+                onTriggered: dateText.text = Qt.formatDateTime(new Date(), "ddd d MMM")
+            }
+            Component.onCompleted: text = Qt.formatDateTime(new Date(), "ddd d MMM")
+        }
+    }
+
+    Column {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: 26
+        anchors.bottomMargin: 24
+        spacing: 2
+
+        Text {
+            color: root.ink
+            font.family: "Space Grotesk"
+            font.pixelSize: 13
+            font.weight: Font.Medium
+            text: root.loginUser
+        }
+        Text {
+            color: root.mutedC
+            font.family: "Space Grotesk"
+            font.pixelSize: 10
+            text: (sessionBox.currentIndex >= 0 && sessionModel)
+                ? sessionModel.data(sessionBox.currentIndex, "name")
+                : "default session"
+        }
+    }
+
+    Row {
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin: 20
+        spacing: 42
+
+        Column {
+            spacing: 2
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "\uf011"
+                font.family: "JetBrainsMono Nerd Font"
+                font.pixelSize: 18
+                color: pwArea.containsMouse ? "#c96a6a" : Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.75)
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Power off"
+                color: root.mutedC
+                font.family: "Space Grotesk"
+                font.pixelSize: 9
+                font.letterSpacing: 1
+            }
+            MouseArea {
+                id: pwArea
+                anchors.fill: parent
+                anchors.topMargin: -8
+                anchors.bottomMargin: -8
+                anchors.leftMargin: -20
+                anchors.rightMargin: -20
+                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
+                onClicked: sddm.powerOff()
+            }
+        }
+
+        Column {
+            spacing: 2
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "\uf186"
+                font.family: "JetBrainsMono Nerd Font"
+                font.pixelSize: 18
+                color: slArea.containsMouse ? root.accent : Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.75)
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Sleep"
+                color: root.mutedC
+                font.family: "Space Grotesk"
+                font.pixelSize: 9
+                font.letterSpacing: 1
+            }
+            MouseArea {
+                id: slArea
+                anchors.fill: parent
+                anchors.topMargin: -8
+                anchors.bottomMargin: -8
+                anchors.leftMargin: -20
+                anchors.rightMargin: -20
+                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
+                onClicked: sddm.suspend()
+            }
+        }
+
+        Column {
+            spacing: 2
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "\uf021"
+                font.family: "JetBrainsMono Nerd Font"
+                font.pixelSize: 18
+                color: rbArea.containsMouse ? root.accent : Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.75)
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Reboot"
+                color: root.mutedC
+                font.family: "Space Grotesk"
+                font.pixelSize: 9
+                font.letterSpacing: 1
+            }
+            MouseArea {
+                id: rbArea
+                anchors.fill: parent
+                anchors.topMargin: -8
+                anchors.bottomMargin: -8
+                anchors.leftMargin: -20
+                anchors.rightMargin: -20
+                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
+                onClicked: sddm.reboot()
+            }
+        }
+    }
+
+    function doLogin() {
+        var sess = (sessionBox.currentIndex >= 0) ? sessionBox.currentIndex : 0
+        sddm.login(root.loginUser, password.text, sess)
+    }
+
+    Connections {
+        target: sddm
+        function onLoginFailed() {
+            root.loginFailedFlag = true
+            password.selectAll()
+            password.forceActiveFocus()
+        }
+    }
+
+    Component.onCompleted: {
+        console.log("THEME-LOADED-MARKER")
+        password.forceActiveFocus()
+    }
+}

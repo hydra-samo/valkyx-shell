@@ -1,0 +1,13 @@
+#!/bin/sh
+# awww-daemon launcher for systemd --user: the user manager does not set
+# WAYLAND_DISPLAY, so wait for the live compositor socket (Hyprland creates it
+# a second or two after the service fires at default.target — launching blind
+# made the daemon panic on wayland-0 and core-dump).
+# Exclude our own control socket + lock so we never talk to ourselves.
+for i in $(seq 1 25); do
+    sock="$(ls /run/user/"$(id -u)"/wayland-* 2>/dev/null | grep -v -e '\.lock$' -e 'awww-daemon\.sock' | sort -V | tail -1)"
+    [ -n "$sock" ] && break
+    sleep 0.2
+done
+[ -n "$sock" ] && export WAYLAND_DISPLAY="$(basename "$sock")"
+exec /usr/bin/awww-daemon "$@"

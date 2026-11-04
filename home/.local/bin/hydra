@@ -1,0 +1,2 @@
+#!/bin/bash
+exec "/home/hydrasamo/.local/bin/hydra.AppImage" "$@"

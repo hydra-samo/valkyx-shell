@@ -1,0 +1,655 @@
+#!/usr/bin/env python3
+"""
+hydra-ui-test — runtime + static behavior harness for the HYDRA Quickshell shell.
+
+Catches the class of bug that static code-reading cannot: QML binding-destruction
+and silent runtime failures. A model reasoning over source sees two "correct"
+lines (a binding + a harmless-looking handler) and concludes it's fine — but at
+runtime the handler assignment silently kills the binding and the UI freezes.
+
+Two layers, both deterministic (no vision, no flaky pixel heuristics):
+
+  --static   Scan every .qml for the binding-destruction anti-pattern: a property
+             that is BOUND (`prop: expr`) AND also ASSIGNED in a signal handler
+             (`onXxx: prop = v`). The assignment destroys the binding. Also flags
+             other known QML pitfalls (assigning to a bound prop in
+             Component.onCompleted / onXxxChanged).
+
+  --runtime  Drive the REAL shell via IPC + ydotool synthetic input and assert
+             observable behavior through the `_test` IPC hook (which reads the
+             ACTUAL rendered highlight, not the logical cursor) plus process and
+             window checks. This catches anything static misses.
+
+Usage:
+  hydra-ui-test [--static] [--runtime] [--shell-dir DIR] [--quiet] [--json]
+  (default: both static + runtime)
+
+Exit code: 0 = all pass, 1 = failures, 2 = harness error (shell not running, etc.)
+"""
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+
+SHELL_DIR = os.path.expanduser("~/.config/quickshell/hydra")
+STATE_DIR = os.path.expanduser("~/.local/state/hydra-ui-test")
+RESULTS = []  # list of {name, status, detail}
+
+# ───────────────────────── helpers ─────────────────────────
+def log(msg):
+    if not QUIET:
+        print(msg)
+
+def run(cmd, timeout=10):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return r.returncode, r.stdout.strip(), r.stderr.strip()
+    except subprocess.TimeoutExpired:
+        return -1, "", "timeout"
+    except FileNotFoundError:
+        return -1, "", "command not found"
+
+def ipc(target, fn):
+    rc, out, err = run(["qs", "-c", "hydra", "ipc", "call", target, fn])
+    return out if rc == 0 else None
+
+def record(name, status, detail=""):
+    RESULTS.append({"name": name, "status": status, "detail": detail})
+    mark = "PASS" if status == "pass" else ("FAIL" if status == "fail" else "SKIP")
+    line = f"  [{mark}] {name}" + (f" — {detail}" if detail else "")
+    # --quiet means "only print failures", so a failure must never be the thing
+    # that gets silenced. record() used to print through log(), which is a no-op
+    # under --quiet — i.e. the flag hid the results you ran it for.
+    if not QUIET or status != "pass":
+        print(line)
+
+def shell_running():
+    # Anchored: `pgrep -f "qs -c hydra"` matches anything whose command line merely
+    # mentions that text — including the agent's own shell running this very
+    # check — so it reported "running" against a desktop with no shell at all.
+    rc, out, _ = run(["pgrep", "-f", "^qs -c hydra$"])
+    return rc == 0 and bool(out)
+
+# ───────────────────────── STATIC CHECKS ─────────────────────────
+# The binding-destruction anti-pattern:
+#   prop: <binding>          <- property bound
+#   onXxx: { prop = v }      <- same property ASSIGNED in a handler -> kills binding
+# We detect: for each property name that appears as a binding target, check if it
+# is also the LHS of an assignment inside any signal-handler block.
+# NOTE the optional `property [readonly] <Type> ` prefix: without it the
+# regex could not match `property int current: model * 2` at all, so every
+# TYPED property declaration was invisible to this check.
+BINDING_RE = re.compile(r'^\s*(?:property\s+(?:readonly\s+)?[A-Za-z_][A-Za-z0-9_.<>]*\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.+)$')
+# A handler line may be a bare `onXxx:` OR a qualified `Component.onCompleted:` /
+# `MouseArea.onClicked:` / `Connections.onFoo:` — the qualified form is very common
+# and must not be missed.
+HANDLER_RE = re.compile(r'^\s*(?:[A-Za-z_][A-Za-z0-9_]*\.)?on[A-Za-z0-9_]+\s*:\s*(.+)$')
+# Unqualified assignment: bare property name on the LHS (no dot). A dotted
+# target like `calPop.visible = false` writes a DIFFERENT object's property and
+# cannot destroy THIS object's binding — only a bare `visible = false` can.
+ASSIGN_RE = re.compile(r'(?<![:=<>!.])([A-Za-z_][A-Za-z0-9_]*)\s*=(?!=)')
+# A property name only means something INSIDE its own object. `command:` on
+# mediaScan and `_runner.command = ...` are different objects, so a global
+# name table reports a phantom "binding-destruction". These names are injected
+# by Qt onto Process/Timer/StdioCollector and are never QML-declared bindings,
+# so a same-named write in another object is always a different property.
+QT_INJECTED = {"command", "running", "interval", "repeat", "delegate",
+               "stdout", "stderr", "channel", "tagName", "splitOutputs"}
+
+
+def static_checks():
+    log("STATIC: scanning for binding-destruction + QML pitfalls")
+    qml_files = []
+    for root, _, files in os.walk(SHELL_DIR):
+        for f in files:
+            if f.endswith(".qml"):
+                qml_files.append(os.path.join(root, f))
+    if not qml_files:
+        record("static:find-qml", "fail", "no .qml files under " + SHELL_DIR)
+        return
+
+    findings = []
+    for path in sorted(qml_files):
+        try:
+            lines = open(path, encoding="utf-8").read().splitlines()
+        except Exception as e:
+            findings.append((path, 0, "unreadable: %s" % e))
+            continue
+        bound = {}          # prop -> line of binding
+        i = 0
+        n = len(lines)
+        while i < n:
+            line = lines[i].strip()
+            i += 1
+            if not line or line.startswith("//"):
+                continue
+            code = re.sub(r'//.*$', '', line).strip()
+            if not code:
+                continue
+            # detect a binding line: prop: expr  (but not `onXxx:` handler, not `id:`)
+            m = BINDING_RE.match(code)
+            if m and not HANDLER_RE.match(code) and m.group(1) != "id":
+                prop = m.group(1)
+                expr = m.group(2)
+                # A binding is a NON-literal expression. Literals: numbers,
+                # quoted strings, bare identifiers (no dot/parens/operators).
+                # `launcher.current` (has a dot) is a real binding; `0`/`true`/
+                # `"foo"` are literals. This is what separates a binding from a
+                # plain property assignment.
+                is_literal = bool(re.fullmatch(r'[-+]?\d+(\.\d+)?', expr)) or \
+                             bool(re.fullmatch(r'["\'].*["\']', expr)) or \
+                             bool(re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', expr))
+                if not is_literal and prop not in QT_INJECTED:
+                    bound[prop] = i - 1
+            # detect a handler line: onXxx: { ... } or onXxx: expr
+            hm = HANDLER_RE.match(code)
+            if hm:
+                body = hm.group(1)
+                # If the handler opens a `{` block, collect lines until braces balance
+                # (the assignment may be on a later line, e.g. onCountChanged: { ... }).
+                if "{" in body:
+                    depth = body.count("{") - body.count("}")
+                    while depth > 0 and i < n:
+                        nxt = re.sub(r'//.*$', '', lines[i]).strip()
+                        body += "\n" + nxt
+                        depth = nxt.count("{") - nxt.count("}")
+                        i += 1
+                # find UNQUALIFIED assignments to bound props within the handler body
+                for am in ASSIGN_RE.finditer(body):
+                    target = am.group(1)
+                    if target in bound:
+                        findings.append((path, i, "binding-destruction: '%s' bound at line %d, assigned in handler at line %d" % (target, bound[target], i)))
+
+
+    if findings:
+        for path, line, msg in findings:
+            rel = os.path.relpath(path, SHELL_DIR)
+            record("static:binding-destruction", "fail", "%s:%d %s" % (rel, line, msg))
+    else:
+        record("static:binding-destruction", "pass", "no binding-destruction in %d qml files" % len(qml_files))
+
+    exec_target_checks(qml_files)
+    slop_checks(qml_files)
+
+
+# ── Anti-slop + silent-failure rules ────────────────────────────────────────
+# Every rule below corresponds to a defect that produced NO output anywhere:
+# the file loaded clean, qmllint was clean, the log was clean, and the UI simply
+# did nothing. Those are the only bugs worth a linter — a rule that catches a
+# loud error saves nobody any time.
+#
+# Notably ABSENT: a radius scale. An audit of all 85 live radius literals found
+# the recurring rule is `radius = size / 2` (a dot: 6x6/r3, the toggle knob:
+# 20x20/r10, icon buttons: 26x26/r13). The 20 distinct values exist BECAUSE the
+# elements differ in size, so snapping them onto a fixed scale would turn every
+# circle into a rounded square. Do not add that rule without new evidence.
+DEAD_DIRS = ("_reference",)
+
+# Not visual children: they neither paint nor take pointer events on their own.
+# Everything else at depth 1 counts toward the single-gate rule.
+INERT = {"property", "readonly", "required", "signal", "enum", "function", "id",
+         "alias", "Component", "Connections", "Timer", "Instantiator", "Binding",
+         "Transition", "SequentialAnimation", "ParallelAnimation", "NumberAnimation",
+         "ColorAnimation", "PropertyAnimation", "RotationAnimation",
+         "PauseAnimation", "ScriptAction", "SpringAnimation", "Behavior",
+         "NumberTransition", "states", "transitions", "pragma", "import"}
+
+# The curve behind the large majority of generated motion: it starts and ends
+# slow, which is exactly what makes UI read as hesitant rather than settled.
+AI_EASING = re.compile(r'Easing\.(InOut(?:Quad|Sine|Cubic|Quart|Quint|Expo|Exponent)|'
+                       r'In(?:Quad|Sine|Cubic|Exponent))\b')
+LITERAL_DURATION = re.compile(r'\bduration:\s*(\d+)')
+# humanize-ui: no cyan, no violet-indigo. Both are dead giveaways.
+BANNED_HEX = re.compile(r'#(?:00FFCC|00E5FF|22D3EE|7C3AED|6366F1|8B5CF6|A855F7)\b', re.I)
+COMMENT = re.compile(r'//.*$')
+
+
+def _live(path):
+    return not any(d in path.split(os.sep) for d in DEAD_DIRS)
+
+
+def _block_end(lines, start):
+    """Index of the line closing the block opened on `start`."""
+    depth = 0
+    for j in range(start, len(lines)):
+        code = COMMENT.sub('', lines[j])
+        depth += code.count('{') - code.count('}')
+        if depth <= 0:
+            return j
+    return len(lines) - 1
+
+
+def _depth1_children(lines, start, end):
+    """(type, line) for each `Type {` sitting exactly one level inside start..end."""
+    out, depth = [], 0
+    for j in range(start, end + 1):
+        code = COMMENT.sub('', lines[j])
+        if depth == 1:
+            m = re.match(r'\s*([A-Z][\w.]*)\s*\{', code)
+            if m:
+                out.append((m.group(1).split('.')[-1], j))
+        depth += code.count('{') - code.count('}')
+    return out
+
+
+def _strip_type(code):
+    """Turn `Text { a; b }` into ` a; b }` so its own properties are readable."""
+    return re.sub(r'^\s*[A-Z][\w.]*\s*\{\s*', ' ', code)
+
+
+def _own_text(lines, start, end):
+    """Own-level source text of a block.
+
+    Two things count as "nested" and are therefore excluded: anything past an
+    opening brace, and a single-line item declaration. A one-line
+    `MouseArea { anchors.fill: parent }` has net-zero brace delta, so a naive
+    depth counter calls it an own-level property — which is how 4 working
+    elements got reported as using anchors illegally.
+
+    A one-line block is the mirror case and it is easy to get wrong: its
+    properties sit ON the opening line, so skipping that line (correct for a
+    multi-line block, whose opening line carries only `Type {`) yields an empty
+    string and the rule silently passes its own fixture. Hence `single`.
+    """
+    out, depth = [], 0
+    single = (end == start)
+    for j in range(start if single else start + 1, end + 1):
+        code = COMMENT.sub('', lines[j])
+        if single:
+            code = _strip_type(code)
+        if depth == 0 and not re.match(r'\s*[A-Z][\w.]*\s*\{', code):
+            out.append(code)
+        depth += code.count('{') - code.count('}')
+    return "\n".join(out)
+
+
+def _sized(lines, start, end, axis):
+    """True if the block itself establishes `axis`.
+
+    An explicit `width:`, an anchor, OR a Layout attachment all count. A Column
+    with `Layout.fillWidth: true` inside a parent Layout is perfectly sized, and
+    treating it as unsized produced false positives on the working sidebar.
+    `implicitWidth` deliberately does NOT count: it is derived from the children,
+    so relying on it alongside a child reading parent.width is the actual loop.
+    """
+    single = (end == start)
+    for j in range(start if single else start + 1, end + 1):
+        code = COMMENT.sub('', lines[j])
+        if single:
+            code = _strip_type(code)
+        elif re.match(r'\s*[A-Z][\w.]*\s*\{', code):
+            continue
+        if re.match(r'\s*%s\s*:' % axis, code):
+            return True
+        if re.match(r'\s*anchors\.(fill|centerIn|left|right|top|bottom|'
+                    r'horizontalCenter|verticalCenter)\b', code):
+            return True
+        if re.match(r'\s*Layout\.\w*%s\b' % axis.capitalize(), code):
+            return True
+    return False
+
+
+def slop_checks(qml_files):
+    log("STATIC: anti-slop + silent-failure rules")
+    # HydraMotion.qml DEFINES the vocabulary the other rules enforce, so scanning
+    # it for that vocabulary flags the definitions themselves.
+    live = [p for p in qml_files
+            if _live(p) and os.path.basename(p) != "HydraMotion.qml"]
+    gates, cyc, easing, durs, palette = [], [], [], [], []
+
+    for path in live:
+        rel = os.path.relpath(path, SHELL_DIR)
+        try:
+            raw = open(path, encoding="utf-8").read()
+        except Exception as e:
+            gates.append("%s unreadable: %s" % (rel, e))
+            continue
+        lines = raw.splitlines()
+
+        for idx, ln in enumerate(lines):
+            code = COMMENT.sub('', ln)
+            if AI_EASING.search(code):
+                easing.append("%s:%d %s" % (rel, idx + 1, AI_EASING.search(code).group(1)))
+            md = LITERAL_DURATION.search(code)
+            if md:
+                durs.append("%s:%d duration: %s" % (rel, idx + 1, md.group(1)))
+            mb = BANNED_HEX.search(code)
+            if mb:
+                palette.append("%s:%d %s" % (rel, idx + 1, mb.group(0)))
+
+            # 1. THE Sep 26 DESKTOP-BRICKER. Signature, precisely: a depth-1
+            #    gate that binds its own opacity and contains no visual child,
+            #    while real content sits BESIDE it as a sibling. QML ignores
+            #    indentation, so this reads as nested in the source and is not.
+            #    A PanelWindow with several independently-managed popups at
+            #    depth 1 (TopHud) is a different, legitimate architecture and is
+            #    NOT flagged — only an orphaned gate is.
+            if re.match(r'\s*(Shell\.)?PanelWindow\s*\{', code):
+                end = _block_end(lines, idx)
+                kids = [(t, k) for t, k in _depth1_children(lines, idx, end)
+                        if t not in INERT]
+                for t, k in kids:
+                    if t not in ("Item", "Rectangle"):
+                        continue
+                    ke = _block_end(lines, k)
+                    own = _own_text(lines, k, ke)
+                    has_gate = re.search(r'\bopacity\s*:', own) is not None
+                    painted = [x for x, _x in _depth1_children(lines, k, ke)
+                               if x not in INERT]
+                    if has_gate and not painted and len(kids) > 1:
+                        gates.append("%s:%d empty gate %s beside %d sibling visual "
+                                     "children — it hides nothing"
+                                     % (rel, k + 1, t, len(kids) - 1))
+
+            # The circular-size trap. SILENT, verified against a live bug: a
+            # Column with no width whose Text read `width: parent.width`
+            # collapsed the entire greeting to nothing, and Qt logged no binding
+            # loop at all.
+            #
+            # NOT flagged, deliberately: anchors inside a Column/Row. Qt
+            # documents it as illegal, but this shell uses it in 4 places that
+            # render correctly with zero "Cannot specify anchors" warnings, so
+            # the rule produced 84 -> 4 findings, all false, on working UI.
+            # A rule that cries wolf gets ignored, which is worse than no rule.
+            mc = re.match(r'\s*(Column|Row)\s*\{', code)
+            if mc:
+                axis = "width" if mc.group(1) == "Column" else "height"
+                end = _block_end(lines, idx)
+                if not _sized(lines, idx, end, axis):
+                    for t, k in _depth1_children(lines, idx, end):
+                        if t in INERT:
+                            continue
+                        ke = _block_end(lines, k)
+                        if re.search(r'\b%s\s*:\s*parent\.%s\b' % (axis, axis),
+                                     _own_text(lines, k, ke)):
+                            cyc.append("%s:%d %s has no %s but child %s sets %s: parent.%s"
+                                       % (rel, idx + 1, mc.group(1), axis, t, axis, axis))
+
+    def emit(name, items, ok):
+        record(name, "pass" if not items else "fail",
+               ok if not items else "%d: %s" % (len(items),
+                                                 "; ".join(items[:4]) + (" ..." if len(items) > 4 else "")))
+
+    emit("slop:no-orphaned-panelwindow-gate", gates,
+         "no PanelWindow has an empty gate beside its content")
+    emit("slop:no-circular-positioner-size", cyc,
+         "no Column/Row derives its size from a child reading parent.<same axis>")
+    emit("slop:no-ai-easing-curve", easing,
+         "no raw Easing.InOut*/In* curves (use HydraMotion.curveOut/curveIn/curveSnap)")
+    emit("slop:no-literal-duration", durs,
+         "every animation duration comes from a HydraMotion token")
+    emit("slop:no-banned-accent", palette,
+         "no cyan / violet-indigo accents")
+
+
+# Every `exec("...")` / `HydraState.exec("...")` string is run by `sh -c` with the
+# SHELL's PATH, and the runner DISCARDS stdout+stderr. So a typo'd or missing
+# barename is a 100% silent no-op — the button just does nothing. This is how
+# `hydra-logout` shipped broken: exec'd by the power menu, never existed, no
+# error anywhere. Every bare command token must resolve in the shell's PATH.
+EXEC_RE = re.compile(r'\bexec\(\s*"((?:[^"\\]|\\.)*)"')
+# segments are chained with && ; || | — the first word of each is a command
+SEG_SPLIT = re.compile(r'&&|\|\||;|\|')
+# skip env-var assignments and shell builtins used as prefixes
+ENV_ASSIGN = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*=')
+SHELL_BUILTINS = {"cd", "echo", "exit", "true", "false", "test", "exec", "eval",
+                  "source", "export", "set", "unset", "read", "return", "trap"}
+
+
+def exec_target_checks(qml_files):
+    """Assert every barename exec'd from QML exists in the shell's PATH."""
+    log("STATIC: resolving every exec()'d command against the shell PATH")
+    # the PATH qs actually runs with (HydraState passes it through to `sh -c`)
+    path_env = os.environ.get(
+        "HYDRA_SHELL_PATH", "/home/hydrasamo/.local/bin:/usr/local/bin:/usr/bin")
+    path_dirs = [p for p in path_env.split(":") if p]
+    missing, checked = [], 0
+    for path in sorted(qml_files):
+        try:
+            src = open(path, encoding="utf-8").read()
+        except Exception:
+            continue
+        for m in EXEC_RE.finditer(src):
+            for seg in SEG_SPLIT.split(m.group(1)):
+                seg = seg.strip()
+                if not seg or ENV_ASSIGN.match(seg):
+                    continue
+                tok = seg.split()[0].strip("'\"")
+                # a segment may open with a subshell/brace: "(mpvpaper ... &)"
+                tok = tok.lstrip("({").strip("'\"")
+                if not tok or "/" in tok or tok in SHELL_BUILTINS:
+                    continue
+                if tok in ("sh", "sudo", "env", "nohup", "setsid", "hyprctl",
+                           "systemctl", "loginctl", "pkill", "kill", "sleep",
+                           "python3", "awk", "sed", "grep", "cat", "mkdir",
+                           "gsettings", "notify-send", "makoctl", "nmcli",
+                           "wpctl", "pactl", "bluetoothctl", "mpvpaper", "grim"):
+                    continue  # resolved from the base system PATH, not our scripts
+                checked += 1
+                if not any(os.access(os.path.join(d, tok), os.X_OK) for d in path_dirs):
+                    line = src[:m.start()].count("\n") + 1
+                    missing.append((path, line, tok))
+    if missing:
+        for path, line, tok in missing:
+            rel = os.path.relpath(path, SHELL_DIR)
+            record("static:exec-target", "fail",
+                   "%s:%d execs '%s' which does not exist in PATH (%s) — silent no-op"
+                   % (rel, line, tok, path_env))
+    else:
+        record("static:exec-target", "pass",
+               "all %d exec()'d hydra-* targets exist" % checked)
+
+# ───────────────────────── RUNTIME CHECKS ─────────────────────────
+def ydotool_key(code):
+    run(["ydotool", "key", "%d:1" % code, "%d:0" % code], timeout=5)
+
+def count_proc(name):
+    rc, out, _ = run(["pgrep", "-c", "-x", name])
+    try:
+        return int(out)
+    except ValueError:
+        return 0
+
+def launcher_open():
+    """Force the launcher open; return True if it ends open."""
+    for _ in range(4):
+        s = ipc("launcher", "toggle")
+        if s == "open":
+            time.sleep(0.8)
+            return True
+        time.sleep(0.3)
+    return False
+
+def press_until(keycode, want, attempts=4, gap=0.35):
+    """Press `keycode` repeatedly until the launcher selection equals `want`.
+    ydotool events are occasionally dropped, so retry. Returns the final state."""
+    got = ipc("_test", "launcherSelection")
+    for _ in range(attempts):
+        if got == want:
+            return got
+        ydotool_key(keycode)
+        time.sleep(gap)
+        got = ipc("_test", "launcherSelection")
+    return got
+
+def press_until_changes(keycode, from_state, attempts=4, gap=0.35):
+    """Press `keycode` until the selection differs from `from_state`. Returns
+    the final state (== from_state if it never changed)."""
+    got = ipc("_test", "launcherSelection")
+    for _ in range(attempts):
+        if got != from_state:
+            return got
+        ydotool_key(keycode)
+        time.sleep(gap)
+        got = ipc("_test", "launcherSelection")
+    return got
+
+def orphan_layers():
+    """Count layer-shell surfaces Hyprland reports as `pid: -1` — surfaces whose
+    client it has lost track of. A PanelWindow driven by `visible: false` leaves
+    one behind: Hyprland orphans the wlr-layer-shell surface but it KEEPS the
+    seat's input grab, so the desktop goes on painting while eating every key
+    and click, and `hyprctl reload` will not release it. This is the single
+    worst failure mode in the shell and it is invisible until you notice the
+    desktop has stopped responding."""
+    rc, out, _ = run(["hyprctl", "layers"], timeout=10)
+    if rc != 0:
+        return None
+    return out.count("pid: -1")
+
+
+def check_no_orphan_leak():
+    """Regression guard: cycling every panel must not create an orphan."""
+    log("RUNTIME: cycling every panel, watching for orphaned layer surfaces")
+    before = orphan_layers()
+    if before is None:
+        record("runtime:no-orphan-leak", "skip", "hyprctl unavailable (session locked?)")
+        return
+    targets = ["power", "panel", "panelLeft", "settings", "launcher", "wallpaper"]
+    for t in targets:
+        ipc(t, "open")
+        time.sleep(0.3)
+        ipc(t, "close")
+        time.sleep(0.3)
+    after = orphan_layers()
+    if after > before:
+        record("runtime:no-orphan-leak", "fail",
+               "cycling %s leaked %d orphaned layer surface(s) (%d -> %d). A PanelWindow "
+               "is being hidden with `visible: false` — it must stay mapped and gate on "
+               "opacity/focusable/enabled, or the desktop stops accepting input."
+               % (", ".join(targets), after - before, before, after))
+    else:
+        record("runtime:no-orphan-leak", "pass",
+               "no orphan leaked across %d panels (orphans %d -> %d)" % (len(targets), before, after))
+
+
+def runtime_checks():
+    log("RUNTIME: driving the live shell")
+    if not shell_running():
+        record("runtime:shell-running", "fail", "qs -c hydra not running — start it first")
+        return
+
+    check_no_orphan_leak()
+
+    # --- launcher: open, selection moves on Down/Up, Escape closes ---
+    if not launcher_open():
+        record("runtime:launcher-open", "fail", "could not open launcher")
+        return
+    sel0 = ipc("_test", "launcherSelection")
+    if not sel0 or sel0 == "none":
+        record("runtime:launcher-open", "fail", "launcher open but no selection (got %r)" % sel0)
+        ipc("launcher", "toggle")
+        return
+    record("runtime:launcher-open", "pass", "opened, first selection=%s" % sel0)
+
+    # Down should move selection to a DIFFERENT row (retry until it moves)
+    sel1 = press_until_changes(108, sel0, attempts=4)  # Down
+    if sel1 and sel1 != sel0:
+        record("runtime:launcher-down", "pass", "%s -> %s" % (sel0, sel1))
+    else:
+        record("runtime:launcher-down", "fail", "selection did not move on Down (stuck at %s)" % sel0)
+
+    # Up should move back to sel0 (retry until it returns)
+    sel2 = press_until(103, sel0, attempts=4)  # Up
+    if sel2 == sel0:
+        record("runtime:launcher-up", "pass", "%s -> %s" % (sel1, sel2))
+    else:
+        record("runtime:launcher-up", "fail", "selection did not return on Up (got %s, want %s)" % (sel2, sel0))
+
+    # Escape should close (retry until the launcher closes)
+    closed = False
+    for _ in range(4):
+        ydotool_key(1)  # Escape
+        time.sleep(0.4)
+        s = ipc("launcher", "toggle")
+        if s == "open":  # was closed, now open
+            closed = True
+            ipc("launcher", "toggle")  # close again
+            break
+        time.sleep(0.3)
+    if closed:
+        record("runtime:launcher-escape", "pass", "Escape closed launcher")
+    else:
+        record("runtime:launcher-escape", "fail", "Escape did not close launcher")
+
+    # --- launcher: Enter launches the selected curated app ---
+    # A fresh open lands on index 0 (Terminal). Press Enter, expect a kitty window.
+    if not launcher_open():
+        record("runtime:launcher-enter", "skip", "could not reopen launcher")
+    else:
+        sel = ipc("_test", "launcherSelection")
+        if sel != "Terminal":
+            record("runtime:launcher-enter", "skip", "fresh open did not select Terminal (got %s)" % sel)
+        else:
+            before = count_proc("kitty")
+            ydotool_key(28)  # Enter
+            time.sleep(1.2)
+            after = count_proc("kitty")
+            if after > before:
+                record("runtime:launcher-enter", "pass", "Enter launched kitty (%d -> %d)" % (before, after))
+            else:
+                record("runtime:launcher-enter", "fail", "Enter did not launch kitty (%d -> %d)" % (before, after))
+        ipc("launcher", "toggle")  # ensure closed
+
+    # --- panels: settings + sidebar toggle open/close ---
+    s = ipc("settings", "toggle")
+    if s == "open":
+        record("runtime:settings-toggle", "pass", "settings opened")
+        ipc("settings", "toggle")
+    else:
+        record("runtime:settings-toggle", "fail", "settings toggle=%s" % s)
+
+    s = ipc("panelLeft", "toggle")
+    if s == "open":
+        record("runtime:sidebar-toggle", "pass", "sidebar opened")
+        ipc("panelLeft", "toggle")
+    else:
+        record("runtime:sidebar-toggle", "fail", "sidebar toggle=%s" % s)
+
+    # --- right sidebar (ActionCenter, Super+S) toggle open/close ---
+    s = ipc("panel", "toggle")
+    if s == "open":
+        record("runtime:panel-toggle", "pass", "right sidebar opened")
+        ipc("panel", "toggle")
+    else:
+        record("runtime:panel-toggle", "fail", "right sidebar toggle=%s" % s)
+
+# ───────────────────────── main ─────────────────────────
+def main():
+    global QUIET, SHELL_DIR
+    ap = argparse.ArgumentParser(description="HYDRA shell UI behavior harness")
+    ap.add_argument("--static", action="store_true", help="run static binding-destruction scan only")
+    ap.add_argument("--runtime", action="store_true", help="run runtime behavior tests only")
+    ap.add_argument("--shell-dir", default=SHELL_DIR, help="path to the hydra shell dir")
+    ap.add_argument("--quiet", action="store_true", help="only print failures")
+    ap.add_argument("--json", action="store_true", help="emit JSON report")
+    args = ap.parse_args()
+
+    QUIET = args.quiet
+    SHELL_DIR = args.shell_dir
+
+    do_static = args.static or not args.runtime
+    do_runtime = args.runtime or not args.static
+
+    if do_static:
+        static_checks()
+    if do_runtime:
+        runtime_checks()
+
+    # summary
+    passed = sum(1 for r in RESULTS if r["status"] == "pass")
+    failed = sum(1 for r in RESULTS if r["status"] == "fail")
+    skipped = sum(1 for r in RESULTS if r["status"] == "skip")
+    log("")
+    log("SUMMARY: %d pass, %d fail, %d skip" % (passed, failed, skipped))
+
+    if args.json:
+        print(json.dumps({"results": RESULTS, "passed": passed, "failed": failed, "skipped": skipped}, indent=2))
+
+    return 1 if failed else 0
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,8 @@
+#!/bin/sh
+# hydra-notify — put a message on the notification channel(s) the phone sees.
+#   hydra-notify "Title" "Body" --level done --source council
+#   hydra-notify -t "Title" -b "Body" -l error
+#   echo "body" | hydra-notify -t "Title"
+#   hydra-notify --recent 20
+# Spool: ~/.local/state/hydra-assistant/notifications.jsonl (see notify.py).
+exec /usr/bin/python3 "$HOME/hydra-assistant/notify.py" "$@"

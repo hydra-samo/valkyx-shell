@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=HYDRA GAMES
+Comment=Scan, extract, vault and register games for the HYDRA library
+Exec=/home/hydrasamo/hydra-games/run
+Icon=/home/hydrasamo/.cache/hydra-icons/Hydra/brand.png
+Terminal=false
+Categories=Game;Utility;
+StartupWMClass=hydra-games
+StartupNotify=true

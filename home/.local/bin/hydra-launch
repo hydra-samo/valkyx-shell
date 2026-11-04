@@ -1,0 +1,364 @@
+#!/usr/bin/env bash
+# hydra-launch — HYDRA command surface: apps(all) · projects · windows · commands · workspaces
+#   no args       → hand off to the QML launcher (ShellRoot/HydraLauncher)
+#   --list-json   → print JSON entries {kind,name,icon,run} for the QML launcher
+#   --run GROUP   → execute a named action (run field from --list-json)
+set -uo pipefail
+
+root="$HOME/Projects HYDRA/HYDRA SAMO LABS"
+
+# ───────────────────────── icon resolution ─────────────────────────
+find_icon() { # $1 = icon theme name ("" → generic app icon)
+  local name="$1" p
+  [ -z "$name" ] && name="utilities-terminal"
+  for base in "$HOME/.local/share/icons" /usr/share/icons; do
+    for size in scalable 256x256 128x128 64x64 48x48 32x32 24x24; do
+      for ext in svg png; do
+        p="$base/hicolor/$size/apps/$name.$ext"
+        [ -f "$p" ] && { echo "file://$p"; return; }
+        p="$base/Papirus/$size/apps/$name.$ext"
+        [ -f "$p" ] && { echo "file://$p"; return; }
+      done
+    done
+  done
+  for ext in png svg; do
+    p="/usr/share/pixmaps/$name.$ext"
+    [ -f "$p" ] && { echo "file://$p"; return; }
+  done
+  echo "file:///usr/share/icons/Papirus/48x48/apps/utilities-terminal.svg"
+}
+
+# ───────────────────────── entry lists ─────────────────────────
+curated_quick() { printf '%s\n' "Terminal" "Helium" "Files" "Sandbox" "Editor" "Blender" "Resolve" "Games"; }
+project_names() { printf '%s\n' "Portfolio" "Motion Engine" "Brand" "Workspace root" "Studio site" "Studio console"; }
+cmd_names()    { printf '%s\n' "Lock" "Screenshot region" "Screenshot full" "Toggle DND" "Night light toggle" "Wallpaper next" "Wallpaper random" "Clipboard history" "Network settings" "Power menu"; }
+ws_names()     { printf '%s\n' "01 studio" "02 create" "03 code" "04 research" "05 personal" "06 game"; }
+game_names()   { sqlite3 "$HOME/.local/share/lutris/pga.db" "SELECT slug, name FROM games WHERE installed=1 ORDER BY name;" 2>/dev/null; }
+
+# ───────────────────────── themed glyph icon dir ─────────────────────────
+# accent-reactive custom icons live in ~/.cache/hydra-icons/<theme>/ — the
+# QML launcher passes the active theme so icons follow the accent on switch.
+icon_glyph() { # $1 = glyph name, $2 = theme ("" → current active)
+  echo "file://$HOME/.cache/hydra-icons/${2:-Hydra}/$1.png"
+}
+
+# ───────────────────────── launch dispatch ─────────────────────────
+launch_app() { # $1 = display name
+  local want="$1" id="" fp=""
+  while IFS=$'\t' read -r nm id fp icon; do
+    if [ "$nm" = "$want" ]; then
+      if [ "$fp" = "1" ]; then setsid flatpak run "$id" >/dev/null 2>&1 &
+      else setsid gtk-launch "$id" >/dev/null 2>&1 & fi
+      return
+    fi
+  done < "$hy_map"; return 1
+}
+launch_game() { # $1 = lutris slug
+  setsid lutris "lutris:rungame/$1" >/dev/null 2>&1 &
+}
+launch_clip() { # $1 = nth TEXT cliphist entry (1-based, binary skipped)
+  local n="${1:-1}"
+  local raw
+  raw=$(cliphist list 2>/dev/null | python3 -c "
+import sys
+n = int(sys.argv[1]); i = 0
+for line in sys.stdin:
+    parts = line.rstrip('\n').split('\t', 1)
+    if len(parts) < 2: continue
+    try:
+        parts[1].encode('utf-8')
+    except UnicodeDecodeError:
+        continue
+    i += 1
+    if i == n:
+        sys.stdout.write(line); break
+" "$n")
+  [ -n "$raw" ] && printf '%s\n' "$raw" | cliphist decode | wl-copy
+}
+launch_emoji() { # $1 = the glyph itself
+  [ -n "${1:-}" ] || return 0
+  printf '%s' "$1" | wl-copy
+  # Also type it, so the picker is useful without leaving the current field.
+  wtype "$1" 2>/dev/null || true
+}
+launch_dir() { # $1 = project name
+  case "$1" in
+    Portfolio)      setsid kitty --directory="$root/PORTFOLIO" >/dev/null 2>&1 & ;;
+    Motion\ Engine) setsid kitty --directory="$root/HYDRA MOTION ENGINE" >/dev/null 2>&1 & ;;
+    Brand)          setsid kitty --directory="$root/BRAND" >/dev/null 2>&1 & ;;
+    Workspace\ root) setsid kitty --directory="$root" >/dev/null 2>&1 & ;;
+    Studio\ site)   setsid /usr/bin/helium-browser --app=http://127.0.0.1:1717/ --class=HYDRAStudioSite --user-data-dir="$HOME/.local/share/hydra-studio/site-profile" --no-first-run --no-default-browser-check >/dev/null 2>&1 & ;;
+    Studio\ console) setsid /usr/bin/helium-browser --app=http://127.0.0.1:1717/dashboard --class=HYDRAStudioDash --user-data-dir="$HOME/.local/share/hydra-studio/console-profile" --no-first-run --no-default-browser-check >/dev/null 2>&1 & ;;
+  esac
+}
+launch_cmd() { # $1 = command name
+  case "$1" in
+    Lock)               exec hyprlock ;;
+    Screenshot\ region) exec hydra-screenshot region ;;
+    Screenshot\ full)   exec hydra-screenshot full ;;
+    Toggle\ DND)        makoctl mode -t do-not-disturb >/dev/null 2>&1 & ;;
+    Night\ light\ toggle) pgrep -x gammastep >/dev/null && pkill -x gammastep || { setsid gammastep -O 3500K >/dev/null 2>&1 & } ;;
+    Wallpaper\ next)    exec hydra-wallpaper next ;;
+    Wallpaper\ random)  exec hydra-wallpaper random ;;
+    Clipboard\ history) exec qs -c hydra ipc call launcher open clip ;;  # in-shell, accent-reactive
+    Network\ settings)  setsid nm-connection-editor >/dev/null 2>&1 & ;;
+    Power\ menu)        exec hydra-power-menu ;;
+  esac
+}
+launch_ws() { # $1 = ws name
+  hydra-dispatch workspace "name:$1" >/dev/null 2>&1
+}
+launch_win() { # $1 = window title
+  local addr want="$1"
+  addr=$(python3 - "$want" <<'PY'
+import json, subprocess, sys
+try:
+    want = sys.argv[1]
+    for c in json.loads(subprocess.check_output(["hyprctl","-j","clients"], text=True)):
+        if c.get("mapped") and c.get("title","")[:70] == want:
+            print(c["address"]); break
+except Exception: pass
+PY
+)
+  [ -n "$addr" ] && hydra-dispatch focuswindow "address:$addr" >/dev/null 2>&1 &
+}
+
+# ───────────────────────── app map generator ─────────────────────────
+# fills $1 with "name\tappid\tflatpak-flag\ticon-name" for all installed apps
+build_app_map() {
+  python3 - "$1" <<'PY' >/dev/null 2>&1 || true
+import sys, os, glob, configparser
+out = open(sys.argv[1], "w", encoding="utf-8")
+seen = set()
+curated = {"Terminal","Helium","Files","Editor","Blender","Resolve"}
+dirs = [
+    os.path.expanduser("~/.local/share/applications"),
+    "/usr/local/share/applications",
+    "/usr/share/applications",
+    "/var/lib/flatpak/exports/share/applications",
+]
+for d in dirs:
+    for f in sorted(glob.glob(os.path.join(d, "*.desktop"))):
+        appid = os.path.basename(f)[:-8]
+        if appid in seen: continue
+        name = None; nodisplay = False; icon = ""
+        try:
+            cp = configparser.ConfigParser()
+            cp.read(f, encoding="utf-8")
+            e = cp["Desktop Entry"] if cp.has_section("Desktop Entry") else {}
+            name = e.get("Name","").strip() or None
+            nodisplay = e.get("NoDisplay","false").strip().lower() == "true" or e.get("Hidden","false").strip().lower() == "true"
+            icon = e.get("Icon","").strip()
+        except Exception:
+            continue
+        if nodisplay or not name or name in curated or name in seen: continue
+        seen.add(name)
+        out.write(f"{name}\t{appid}\t{1 if 'flatpak' in f else 0}\t{icon}\n")
+out.close()
+PY
+}
+
+# ───────────────────────── JSON listing (QML launcher) ─────────────────────────
+# $1 = theme name ("" → Hydra) — styles the custom glyph icons per accent
+# $2 = section ("", "app", "dir", "cmd", "ws", "win", "game", "clip")
+#     section filters to ONE entry kind (project/clipboard/game pickers).
+list_json() {
+  local theme="${1:-Hydra}" section="${2:-}"
+  local hy_map="$(mktemp)"
+
+  echo "["
+  local first=true
+  emit() { [ "$first" = false ] && echo ","; first=false; printf '%s' "$1"; }
+
+  # curated quick (only in the full view)
+  if [ -z "$section" ] || [ "$section" = "app" ]; then
+    while IFS= read -r name; do
+      case "$name" in
+        Terminal) ic="$(icon_glyph terminal-app "$theme")" ;;
+        Helium)   ic="$(icon_glyph browser-app "$theme")" ;;
+        Files)    ic="$(icon_glyph files-app "$theme")" ;;
+        Sandbox)  ic="$(icon_glyph terminal-app "$theme")" ;;
+        Editor)   ic="$(icon_glyph editor-app "$theme")" ;;
+        Blender)  ic="$(icon_glyph blender-app "$theme")" ;;
+        Resolve)  ic="$(icon_glyph resolve-app "$theme")" ;;
+        Games)    ic="$(icon_glyph game "$theme")" ;;
+      esac
+      emit "{\"kind\":\"app\",\"name\":\"$name\",\"icon\":\"$ic\",\"run\":\"app|$name\",\"tag\":\"quick\"}"
+    done < <(curated_quick)
+  fi
+
+  # all installed apps
+  if [ -z "$section" ] || [ "$section" = "app" ]; then
+    build_app_map "$hy_map"
+    while IFS=$'\t' read -r nm id fp icn; do
+      [ -z "$nm" ] && continue
+      ic="$(find_icon "$icn")"
+      emit "{\"kind\":\"app\",\"name\":\"$nm\",\"icon\":\"$ic\",\"run\":\"app|$nm\"}"
+    done < "$hy_map"
+  fi
+
+  # projects (dir)
+  if [ -z "$section" ] || [ "$section" = "dir" ]; then
+    while IFS= read -r name; do
+      emit "{\"kind\":\"dir\",\"name\":\"$name\",\"icon\":\"$(icon_glyph folder "$theme")\",\"run\":\"dir|$name\"}"
+    done < <(project_names)
+  fi
+
+  # running windows — icon by class, fallback to themed glyph so it fits the accent
+  if [ -z "$section" ] || [ "$section" = "win" ]; then
+    python3 - "$theme" 2>/dev/null <<'PY' | while IFS= read -r line; do emit "$line"; done
+import json, subprocess, sys
+try:
+    theme = sys.argv[1]
+    cl = json.loads(subprocess.check_output(["hyprctl","-j","clients"], text=True))
+    for c in cl:
+        if c.get("mapped") and c.get("title"):
+            t = c["title"][:70].replace("\\","\\\\").replace('"','\\"')
+            ic = "file://%s/.cache/hydra-icons/%s/window.png" % (__import__("os").path.expanduser("~"), theme)
+            print('{"kind":"win","name":"%s","icon":"%s","run":"win|%s"}' % (t, ic, t))
+except Exception:
+    pass
+PY
+  fi
+
+  # commands
+  if [ -z "$section" ] || [ "$section" = "cmd" ]; then
+    while IFS= read -r name; do
+      case "$name" in
+        Lock)               ic="$(icon_glyph window "$theme")" ;;
+        Screenshot\ region|Screenshot\ full) ic="file:///usr/share/icons/Papirus/48x48/apps/accessories-camera.svg" ;;
+        Toggle\ DND)        ic="file:///usr/share/icons/Papirus/48x48/status/notification-disabled.svg" ;;
+        Night\ light\ toggle) ic="file:///usr/share/icons/Papirus/48x48/apps/applets-night-light.svg" ;;
+        Wallpaper\ next|Wallpaper\ random) ic="file:///usr/share/icons/Papirus/48x48/apps/preferences-desktop-wallpaper.svg" ;;
+        Clipboard\ history) ic="$(icon_glyph clip "$theme")" ;;
+        Network\ settings)  ic="file:///usr/share/icons/Papirus/48x48/apps/nm-connection-editor.svg" ;;
+        Power\ menu)        ic="file:///usr/share/icons/Papirus/48x48/actions/system-shutdown.svg" ;;
+      esac
+      emit "{\"kind\":\"cmd\",\"name\":\"$name\",\"icon\":\"$ic\",\"run\":\"cmd|$name\"}"
+    done < <(cmd_names)
+  fi
+
+  # lutris games — cover art from the lutris coverart dir, themed glyph fallback
+  if [ -z "$section" ] || [ "$section" = "game" ]; then
+    local ca="$HOME/.local/share/lutris/coverart"
+    while IFS='|' read -r slug gname; do
+      [ -z "$slug" ] && continue
+      gname="$(echo "$gname" | sed 's/"/\\"/g')"
+      if [ -f "$ca/$slug.jpg" ]; then ic="file://$ca/$slug.jpg"
+      else ic="$(icon_glyph game "$theme")"; fi
+      emit "{\"kind\":\"game\",\"name\":\"$gname\",\"icon\":\"$ic\",\"run\":\"game|$slug\"}"
+    done < <(game_names)
+  fi
+
+  # emoji (separate picker section) — "GLYPH Label" lines; the glyph leads the
+  # name so it is both visible and searchable. Replaces the fuzzel picker.
+  if [ "$section" = "emoji" ]; then
+    python3 - "$theme" <<'PY' | while IFS= read -r line; do emit "$line"; done
+import json, os, sys
+theme = sys.argv[1]
+f = os.path.expanduser("~/.local/share/hydra-emoji.txt")
+try:
+    ic = "file://%s/.cache/hydra-icons/%s/clip.png" % (os.path.expanduser("~"), theme)
+    for raw in open(f, encoding="utf-8").read().split("\n"):
+        if not raw.strip():
+            continue
+        g, _, label = raw.partition(" ")
+        if not g:
+            continue
+        g = g.replace("\\", "\\\\").replace('"', '\\"')
+        name = ("%s %s" % (g, label)).strip()
+        name = name.replace("\\", "\\\\").replace('"', '\\"')
+        print('{"kind":"emoji","name":"%s","icon":"%s","run":"emoji|%s"}' % (name, ic, g))
+except Exception:
+    pass
+PY
+  fi
+
+  # clipboard history (separate picker section) — only text entries, UTF-8 safe
+  if [ "$section" = "clip" ]; then
+    python3 - "$theme" <<'PY' | while IFS= read -r line; do emit "$line"; done
+import json, subprocess, sys, os
+try:
+    theme = sys.argv[1]
+    out = subprocess.run(["cliphist","list"], capture_output=True, text=False)
+    lines = out.stdout.split(b"\n")
+    n = 1
+    for raw in lines:
+        if not raw: continue
+        parts = raw.split(b"\t", 1)
+        try:
+            txt = parts[1].decode("utf-8") if len(parts) > 1 else b""
+        except UnicodeDecodeError:
+            n += 1; continue  # binary/image item — skip
+        txt = txt.replace("\n", " ").strip()[:60]
+        if not txt: n += 1; continue
+        txt = txt.replace("\\", "\\\\").replace('"', '\\"')
+        ic = "file://%s/.cache/hydra-icons/%s/clip.png" % (os.path.expanduser("~"), theme)
+        print('{"kind":"clip","name":"%s","icon":"%s","run":"clip|%s"}' % (txt, ic, n))
+        n += 1
+except Exception:
+    pass
+PY
+  fi
+
+  # workspaces
+  if [ -z "$section" ] || [ "$section" = "ws" ]; then
+    while IFS= read -r name; do
+      emit "{\"kind\":\"ws\",\"name\":\"$name\",\"icon\":\"file:///usr/share/icons/Papirus/48x48/places/user-desktop.svg\",\"run\":\"ws|$name\"}"
+    done < <(ws_names)
+  fi
+
+  echo ""
+  echo "]"
+  rm -f "$hy_map"
+}
+
+# ───────────────────────── entrypoint ─────────────────────────
+# --list-json [theme] [section]   → JSON for the QML launcher
+# --run GROUP                     → execute a named action
+case "${1:-}" in
+  --list-json) list_json "${2:-Hydra}" "${3:-}"; exit 0 ;;
+  --run)
+    run="$2"
+    echo "$run" | grep -q '|' || { echo "bad run: $run" >&2; exit 1; }
+    kind="${run%%|*}"; val="${run#*|}"   # NOTE: run field uses plain | (JSON can't hold │)
+    hy_map="$(mktemp)"
+    build_app_map "$hy_map"
+    case "$kind" in
+      app)
+        # curated quick tiles are display names, NOT app-map names — dispatch
+        # them directly. Everything else
+        # falls through to launch_app (app-map lookup by display name).
+        case "$val" in
+          Games) exec qs -c hydra ipc call launcher open game ;;
+          Terminal) setsid kitty >/dev/null 2>&1 & ;;
+          Helium)   setsid helium-browser >/dev/null 2>&1 & ;;
+Files)    setsid thunar >/dev/null 2>&1 & ;;
+          Sandbox)  setsid kitty --title HyDraSandbox --directory=/home/hydrasamo/hydra-sandbox >/dev/null 2>&1 & ;;
+Editor)   setsid code-oss >/dev/null 2>&1 & ;;
+          Blender)  setsid blender >/dev/null 2>&1 & ;;
+          Resolve)
+            export __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __VK_LAYER_NV_optimus=NVIDIA_only DRI_PRIME=1
+            setsid davinci-resolve >/dev/null 2>&1 & ;;
+          *) launch_app "$val" ;;
+        esac ;;
+      dir) launch_dir "$val" ;;
+      cmd) launch_cmd "$val" ;;
+      ws)  launch_ws "$val" ;;
+      win) launch_win "$val" ;;
+      game) launch_game "$val" ;;
+      clip) launch_clip "$val" ;;
+      emoji) launch_emoji "$val" ;;
+    esac
+    rm -f "$hy_map"
+    exit 0 ;;
+esac
+
+# ───────────────────────── bare invocation ─────────────────────────
+# The QML launcher is the real launcher: it renders the same list from
+# --list-json and dispatches with --run. Hand off rather than keeping a second,
+# drifting copy of that dispatch here.
+if ! qs -c hydra ipc call launcher open >/dev/null 2>&1; then
+    printf 'hydra-launch: shell not running — start it with hydra-shell-reload\n' >&2
+    exit 1
+fi

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# hydra-screenshot region|full — grim-based (no portal dependency)
+#
+# Hyprland 0.56.2 has an upstream screencopy regression: the compositor accepts the
+# capture and then never sends the frame's `ready()` (ext-image-copy-capture, broken
+# by upstream commit b4ee467 / PR #11709 — grim hangs forever, no error). `timeout`
+# turns that silent hang into a visible failure; remove it once Hyprland ships a fix.
+set -euo pipefail
+
+dir="$HOME/Pictures/Screenshots"
+mkdir -p "$dir"
+file="$dir/shot-$(date +%Y%m%d-%H%M%S).png"
+mode="${1:-region}"
+GRIM_TIMEOUT=12
+
+capture() {
+  if ! timeout "$GRIM_TIMEOUT" grim "$@"; then
+    rm -f "$file"
+    echo "screencopy failed: grim did not complete in ${GRIM_TIMEOUT}s (known Hyprland 0.56 ext-image-copy-capture regression)" >&2
+    notify-send -a HYDRA "Screenshot" "FAILED — grim timed out (Hyprland 0.56 capture bug)" 2>/dev/null || true
+    exit 1
+  fi
+}
+
+case "$mode" in
+  region) capture -g "$(slurp)" "$file" ;;
+  full)   capture "$file" ;;
+  *) echo "usage: hydra-screenshot [region|full]" >&2; exit 64 ;;
+esac
+
+notify-send -a HYDRA "Screenshot" "saved ${file##*/}" 2>/dev/null || true

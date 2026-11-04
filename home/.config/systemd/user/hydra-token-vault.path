@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch the hydra remote token and mirror it to the vault
+
+[Path]
+PathModified=%h/.local/state/hydra/remote-token
+Unit=hydra-token-vault.service
+
+[Install]
+WantedBy=default.target

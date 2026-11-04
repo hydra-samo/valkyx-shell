@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Hydra-S Console
+Comment=Master console — Automata, Remote and Studio in one window
+Exec=/home/hydrasamo/.local/bin/hydra-console
+Icon=/home/hydrasamo/.cache/hydra-icons/Hydra/brand.png
+Terminal=false
+Categories=Development;Utility;
+StartupWMClass=HydraConsole
+X-KDE-StartupNotify=false

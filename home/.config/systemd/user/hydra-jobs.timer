@@ -1,0 +1,11 @@
+[Unit]
+Description=HYDRA maintenance weekly (Sun 04:17)
+
+[Timer]
+OnCalendar=Sun *-*-* 04:17:00
+# Spread the load: a fixed 00:00 stamp collides with every other timer on the box.
+Persistent=true
+RandomizedDelaySec=30m
+
+[Install]
+WantedBy=timers.target

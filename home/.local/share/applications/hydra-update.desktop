@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=HYDRA Update
+GenericName=Apply config
+Comment=Validate, snapshot, reload compositor and shell, then verify
+Exec=kitty --hold -e /home/hydrasamo/.local/bin/hydra-update
+Icon=system-software-install
+Terminal=false
+Categories=System;
+Keywords=hydra;update;apply;reload;config;
+NoDisplay=false
+StartupNotify=true

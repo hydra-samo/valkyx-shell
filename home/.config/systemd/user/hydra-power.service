@@ -1,0 +1,11 @@
+[Unit]
+Description=HYDRA SAMO power profile restore (applies saved CPU EPP/governor)
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/hydra-power-apply.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

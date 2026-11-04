@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=HYDRA Welcome
+GenericName=Session welcome
+Comment=Keybinds, theme, language and shell health
+Exec=qs -c hydra ipc call welcome open
+Icon=hydra-samo
+Terminal=false
+Categories=System;
+Keywords=hydra;welcome;keybinds;settings;startup;system;
+X-Hydra-Cli=hydra-welcome
+NoDisplay=false
+StartupNotify=true

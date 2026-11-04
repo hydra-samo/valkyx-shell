@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# hydra-pegasus-theme <name-or-partial> — switch Pegasus Frontend theme live
+# Names (matching is case-insensitive substring): clean-covers-desktop, clearOS,
+# library, clean-covers, prosperoOS, colorful, minimis, epic-memories, grid
+set -e
+want="$1"
+[ -z "$want" ] && { echo "usage: $0 <theme-name>"; exit 1; }
+thdir="$HOME/.config/pegasus-frontend/themes"
+[ -d "$thdir" ] || { echo "no theme dir: $thdir"; exit 1; }
+match=$(find "$thdir" -maxdepth 1 -mindepth 1 -type d | while read -r d; do
+  base=$(basename "$d")
+  case "$base" in
+    *"$want"*) echo "$base" ;;
+  esac
+done | head -1)
+[ -z "$match" ] && { echo "theme not found matching: $want"; ls "$thdir"; exit 1; }
+echo "general.theme: $thdir/$match" > "$HOME/.config/pegasus-frontend/settings.txt"
+for p in $(pidof pegasus-fe); do kill -9 "$p"; done
+setsid -f pegasus-fe >/tmp/pegasus.log 2>&1 </dev/null
+echo "→ $match  (grid = built-in Pegasus Grid)"

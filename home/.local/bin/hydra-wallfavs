@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+# HYDRA wallfavs — favorite wallpaper paths in ~/.cache/hydra-favs (one per
+# line). subcommands: list | add <p> | rm <p> | toggle <p> (prints 1/0).
+import os
+import sys
+
+FAVS = os.path.expanduser("~/.cache/hydra-favs")
+
+
+def load():
+    if not os.path.exists(FAVS):
+        return []
+    with open(FAVS) as f:
+        return [l.strip() for l in f if l.strip()]
+
+
+def save(arr):
+    with open(FAVS, "w") as f:
+        f.write("\n".join(arr) + ("\n" if arr else ""))
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "list"
+    arr = load()
+    if cmd == "list":
+        for p in arr:
+            print(p)
+    elif cmd in ("add", "rm", "toggle") and len(sys.argv) > 2:
+        p = sys.argv[2]
+        if cmd == "add" and p not in arr:
+            arr.append(p)
+            save(arr)
+        elif cmd == "rm" and p in arr:
+            save([x for x in arr if x != p])
+        elif cmd == "toggle":
+            if p in arr:
+                save([x for x in arr if x != p])
+                print("0")
+            else:
+                arr.append(p)
+                save(arr)
+                print("1")
+
+
+if __name__ == "__main__":
+    main()

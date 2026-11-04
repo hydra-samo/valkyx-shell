@@ -1,0 +1,21 @@
+#!/bin/bash
+# Reveal a just-downloaded file in thunar: pick the newest file in the opened
+# folder if it's < 2 min old, else just open the folder.
+# Args come from xdg-open as file:// URIs (FDM passes the folder only).
+
+dir=""
+for a in "$@"; do
+    a="${a#file://}"
+    if [ -d "$a" ]; then dir="$a"; fi
+done
+[ -z "$dir" ] && exec thunar "$@"
+
+newest="$(find "$dir" -maxdepth 1 -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1)"
+# shellcheck disable=SC2016
+age="${newest%% *}"
+file="${newest#* }"
+now="$(date +%s)"
+if [ -n "$file" ] && awk -v a="$age" -v n="$now" 'BEGIN{exit !(n-a < 120)}'; then
+    exec thunar "$file"
+fi
+exec thunar "$dir"

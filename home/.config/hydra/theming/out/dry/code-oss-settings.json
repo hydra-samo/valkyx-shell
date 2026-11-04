@@ -1,0 +1,22 @@
+{
+  "files.autoSave": "afterDelay",
+  "workbench.colorTheme": "iNiR Material",
+  "workbench.colorCustomizations": {
+    "editor.background": "#0a1214",
+    "editor.foreground": "#e6eae8",
+    "editorCursor.foreground": "#00BCD4",
+    "editor.selectionBackground": "#00BCD455",
+    "sideBar.background": "#10181a",
+    "sideBar.foreground": "#e6eae8",
+    "activityBar.background": "#141e20",
+    "activityBar.foreground": "#66c2c5",
+    "activityBar.activeBorder": "#00BCD4",
+    "statusBar.background": "#00BCD4",
+    "statusBar.foreground": "#04140d",
+    "titleBar.background": "#10181a",
+    "titleBar.foreground": "#e6eae8",
+    "panel.background": "#0a1214",
+    "input.background": "#141e20",
+    "focusBorder": "#00BCD4"
+  }
+}

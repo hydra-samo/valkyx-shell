@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+import os, re
+def uptime_s():  # rough cpu% since boot via /proc/stat
+    pass
+# cpu mhz + temp
+mhz = 0
+try:
+    for l in open("/proc/cpuinfo"):
+        if l.startswith("cpu MHz"): mhz = float(l.split(":")[1]); break
+except: pass
+temp = "?"
+for z in sorted(os.listdir("/sys/class/thermal")):
+    if z.startswith("thermal_zone"):
+        try:
+            t = int(open(f"/sys/class/thermal/{z}/temp").read().strip())/1000
+            if t > 20: temp = f"{t:.0f}\u00b0C"; break
+        except: pass
+# mem
+try:
+    for l in open("/proc/meminfo"):
+        if l.startswith("MemTotal"): tot = int(l.split()[1])
+        if l.startswith("MemAvailable"): avail = int(l.split()[1])
+    used = (tot-avail)/1024/1024; totg = tot/1024/1024
+    mem = f"{used:.1f}/{totg:.1f}G"
+except: mem = "?"
+# disk
+try:
+    s = os.statvfs("/")
+    disk = f"{(s.f_blocks-s.f_bavail)*s.f_frsize/1e9:.0f}/{(s.f_blocks*s.f_frsize/1e9):.0f}G"
+except: disk = "?"
+print(f'CPU {mhz:.0f}MHz  \u2022  {temp}  \u2022  RAM {mem}  \u2022  SYS {disk}')

@@ -1,0 +1,11 @@
+[Unit]
+Description=HYDRA agent queue drain every 20 min
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=20min
+# Catch up after the laptop was asleep/asleep-at-desk without replaying 40 queued tasks.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=HYDRA agent queue drain - unattended opencode tasks
+After=hydra-agent.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/hydra-jobs agents
+TimeoutStartSec=6h
+
+[Install]
+WantedBy=default.target

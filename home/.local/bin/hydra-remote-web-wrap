@@ -1,0 +1,5 @@
+#!/bin/sh
+# Never trust a stored compositor signature: pick the newest instance dir live.
+export WAYLAND_DISPLAY=wayland-1
+export HYPRLAND_INSTANCE_SIGNATURE=$(ls -1t /run/user/1000/hypr/ | head -1)
+exec /home/hydrasamo/.local/bin/hydra-remote-web "$@"

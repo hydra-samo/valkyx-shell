@@ -1,0 +1,21 @@
+#!/bin/sh
+# correct audio state after every wireplumber start:
+#   Headphones profile (analog out) -> Headphones sink @100%,
+#   mic -> Stereo Mic2 @ unity (1.0)
+CARD="alsa_card.pci-0000_00_1f.3-platform-skl_hda_dsp_generic"
+HP_PROFILE='HiFi (HDMI1, HDMI2, HDMI3, Headphones, Mic1, Mic2)'
+for i in $(seq 1 40); do
+  pactl set-card-profile "$CARD" "$HP_PROFILE" >/dev/null 2>&1
+  hp=$(wpctl status 2>/dev/null | tr -d '│├└─' | sed 's/^[[:space:]]*//' | grep -E 'Headphones \[' | sed 's/^\** *\([0-9]*\).*/\1/' | head -1)
+  mid=$(wpctl status 2>/dev/null | tr -d '│├└─' | sed 's/^[[:space:]]*//' | grep -E 'Stereo Microphone \[' | sed 's/^\** *\([0-9]*\).*/\1/' | head -1)
+  if [ -n "$hp" ] && [ -n "$mid" ]; then
+    wpctl set-default "$hp"
+    wpctl set-volume "$hp" 1.0
+    wpctl set-default "$mid"
+    wpctl set-volume "$mid" 1.0
+    sleep 1
+    [ "$(wpctl get-volume "$hp" 2>/dev/null | grep -oE '[0-9.]+')" = "1.00" ] && exit 0
+  fi
+  sleep 0.5
+done
+exit 1
