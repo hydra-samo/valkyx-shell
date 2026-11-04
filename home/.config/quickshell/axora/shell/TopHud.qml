@@ -26,39 +26,10 @@ PanelWindow {
     color: "transparent"
     exclusiveZone: AxoraMetrics.hudH
 
-    // assistant services: polled every 5s (cheap is-active, no journal tail)
-    property bool axoraAssistantLive: false
-    property bool axoraVoiceLive: false
-    Process {
-        id: axoraSvcPoll
-        command: ["sh", "-c", "systemctl --user is-active axora-assistant.service axora-voice.service"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const lines = text.trim().split("\n")
-                hudRoot.axoraAssistantLive = (lines[0] || "") === "active"
-                hudRoot.axoraVoiceLive = (lines[1] || "") === "active"
-            }
-        }
-    }
-    Timer {
-        interval: 5000
-        repeat: true
-        running: true
-        triggeredOnStart: true
-        onTriggered: axoraSvcPoll.running = true
-    }
-    function axoraSvcToggle(unit, want) {
-        AxoraState.exec("systemctl --user " + (want ? "start " : "stop ") + unit)
-        svcRePoll.restart()
-    }
-    Timer {
-        id: svcRePoll
-        interval: 2500
-        onTriggered: axoraSvcPoll.running = true
-    }
+
 
     // close all popups when the bar itself hides (fullscreen/game)
-    onVisibleChanged: if (!visible) { calPop.visible = false; monPop.visible = false; audPop.visible = false; netPop.visible = false; medPop.visible = false; axoraPop.visible = false; hudTip.visible = false }
+    onVisibleChanged: if (!visible) { calPop.visible = false; monPop.visible = false; audPop.visible = false; netPop.visible = false; medPop.visible = false; hudTip.visible = false }
 
     function openPopup(pop, item) {
         calPop.visible = false; monPop.visible = false; audPop.visible = false; netPop.visible = false; medPop.visible = false; axoraPop.visible = false
@@ -283,16 +254,6 @@ PanelWindow {
                 glow: AxoraTheme.accent
                 tip: "Launcher (Super+Space)"
                 onClicked: AxoraState.launcherOpen = true
-            }
-
-            // assistant — emerald dot while either service runs, opens control
-            BarIcon {
-                id: axoraItem
-                imageSource: "file://StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/quickshell/axora/data/axora-mark_v4_white.svg""
-                iconColor: (hudRoot.axoraAssistantLive || hudRoot.axoraVoiceLive) ? AxoraTheme.accent : AxoraTheme.muted
-                glow: (hudRoot.axoraAssistantLive || hudRoot.axoraVoiceLive) ? AxoraTheme.accent : "transparent"
-                tip: (hudRoot.axoraAssistantLive || hudRoot.axoraVoiceLive) ? "AXORA assistant running" : "AXORA assistant stopped"
-                onClicked: hudRoot.openPopup(axoraPop, axoraItem)
             }
 
             // media — small capsule: art thumb + title, click opens the media popup.
@@ -728,80 +689,6 @@ PanelWindow {
                     Text { text: (parts[1] || "") + "%"; width: 32; horizontalAlignment: Text.AlignRight; color: AxoraTheme.muted; font.family: AxoraTheme.fontMono; font.pixelSize: Math.round(9 * AxoraState.fontScale) }
                     Text { text: (parts[2] || "") + "%"; width: 32; horizontalAlignment: Text.AlignRight; color: AxoraTheme.muted; font.family: AxoraTheme.fontMono; font.pixelSize: Math.round(9 * AxoraState.fontScale) }
                 }
-            }
-        }
-    }
-
-    // ── assistant control (services + mic + window) ──
-    HudPopup {
-        id: axoraPop
-        implicitWidth: 250
-        implicitHeight: axoraCol.implicitHeight + 20
-        Column {
-            id: axoraCol
-            anchors.fill: parent
-            anchors.margins: 10
-            spacing: 8
-            Text {
-                text: "AXORA Assistant"
-                color: AxoraTheme.text; font.family: AxoraTheme.fontUI; font.pixelSize: Math.round(10 * AxoraState.fontScale); font.bold: true
-            }
-            // one row per service: status + start/stop
-            Repeater {
-                model: ListModel {
-                    ListElement { label: "Assistant"; unit: "axora-assistant.service" }
-                    ListElement { label: "Voice"; unit: "axora-voice.service" }
-                }
-                delegate: Row {
-                    required property string label
-                    required property string unit
-                    property bool live: unit === "axora-assistant.service" ? hudRoot.axoraAssistantLive : hudRoot.axoraVoiceLive
-                    width: parent.width
-                    spacing: 8
-                    Text {
-                        width: parent.width - 76
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: label + "  ·  " + (live ? "RUNNING" : "STOPPED")
-                        color: live ? AxoraTheme.accent : AxoraTheme.muted
-                        font.family: AxoraTheme.fontMono; font.pixelSize: Math.round(9 * AxoraState.fontScale)
-                    }
-                    Rectangle {
-                        width: 68; height: 24; radius: 6
-                        color: "transparent"
-                        border.color: live ? AxoraTheme.tint(AxoraTheme.danger, "66") : AxoraTheme.tint(AxoraTheme.accent, "66"); border.width: 1
-                        Text {
-                            anchors.centerIn: parent
-                            text: live ? "STOP" : "START"
-                            color: live ? AxoraTheme.danger : (svcH.containsMouse ? AxoraTheme.accent : AxoraTheme.text)
-                            font.family: AxoraTheme.fontUI; font.pixelSize: Math.round(9 * AxoraState.fontScale)
-                        }
-                        MouseArea { id: svcH; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: hudRoot.axoraSvcToggle(unit, !live) }
-                    }
-                }
-            }
-            Rectangle {
-                width: parent.width; height: 24; radius: 6
-                color: "transparent"
-                border.color: AxoraState.micMuted ? AxoraTheme.tint(AxoraTheme.danger, "66") : AxoraMaterials.border; border.width: 1
-                Text {
-                    anchors.centerIn: parent
-                    text: AxoraState.micMuted ? "\uDB80\uDF6D  Mic muted" : "\uDB80\uDF6C  Mic live"
-                    color: AxoraState.micMuted ? AxoraTheme.danger : (micH2.containsMouse ? AxoraTheme.accent : AxoraTheme.text)
-                    font.family: AxoraTheme.fontUI; font.pixelSize: Math.round(9 * AxoraState.fontScale)
-                }
-                MouseArea { id: micH2; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: AxoraState.toggleMic() }
-            }
-            Rectangle {
-                width: parent.width; height: 24; radius: 6
-                color: "transparent"
-                border.color: AxoraMaterials.border; border.width: 1
-                Text {
-                    anchors.centerIn: parent
-                    text: "Open assistant window"
-                    color: winH.containsMouse ? AxoraTheme.accent : AxoraTheme.text
-                    font.family: AxoraTheme.fontUI; font.pixelSize: Math.round(9 * AxoraState.fontScale)
-                }
-                MouseArea { id: winH; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { AxoraState.exec("axora-holo-window"); axoraPop.visible = false } }
             }
         }
     }

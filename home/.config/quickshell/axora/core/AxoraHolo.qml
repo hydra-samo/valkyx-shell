@@ -1,5 +1,5 @@
-// AxoraHolo — the assistant UI's token singleton: the fixed emerald palette,
-// the scanline layer's one opacity, and the type scale. The assistant surface
+// AxoraHolo — the holo UI's token singleton: the fixed emerald palette,
+// the scanline layer's one opacity, and the type scale. The holo surface
 // is the BRAND surface: it does NOT follow the desktop theme presets, so the
 // palette is literals here, not aliases of AxoraTheme. Registered in
 // core/qmldir; consumed via `import "../core"`.
@@ -8,11 +8,11 @@ import QtQuick
 
 QtObject {
     // ── palette (theme-following identity) ──
-    // The assistant is a BRAND surface no longer: the whole window follows
-    // the desktop theme (user override). Geometry (plexus/ring/brackets)
-    // is untouched — only color derives from AxoraTheme.accent, so the
-    // default Axora theme renders exactly the old emerald. Amber/red stay
-    // reserved literals (approval = the ONE warning, red = deny only).
+    // The holo surface is a BRAND surface: it follows the desktop theme
+    // (user override). Geometry (plexus/ring/brackets) is untouched — only
+    // color derives from AxoraTheme.accent, so the default Axora theme
+    // renders exactly the old emerald. Amber/red stay reserved literals
+    // (approval = the ONE warning, red = deny only).
     readonly property color bg: AxoraTheme.bg          // the glass field
     readonly property color deep: Qt.darker(AxoraTheme.accent, 3.0) // structural fills
     readonly property color primary: AxoraTheme.accent // borders, text, icons, active marks
@@ -60,7 +60,7 @@ QtObject {
 
     // ── type scale (scale-1 px) ──
     // Every use is Math.round(N * AxoraState.fontScale); nothing renders
-    // below 10px at scale 1. One scale for the whole assistant UI — no fixed
+    // below 10px at scale 1. One scale for the whole holo UI — no fixed
     // sizes, no second regime.
     readonly property int fsMicro: 10   // labels, chips, metric readouts
     readonly property int fsTiny: 11    // dense mono (steps, memory rows)

@@ -15,9 +15,6 @@ ShellRoot {
     // Top HUD strip
     Shell.TopHud {}
 
-    // Assistant dynamic island (background voice surface under the TopHud)
-    Shell.AxoraAssistantIsland {}
-
     // Left sidebar: wallpaper & media picker
     Shell.AxoraLeftSidebar {}
 
@@ -133,11 +130,6 @@ ShellRoot {
 
     // Approval popup: standalone card whenever the backend holds a pending
     // tool call (the window overlay only shows while the window is open).
-    Shell.AxoraApprovalPopup { id: approvalPopup }
-
-    // NOTE: the panel holo (AxoraAssistantHolo) was removed — window mode
-    // (`qs -c axora-holo` via Super+D) is the only assistant surface now.
-    // The shared Ui + Api singleton stay: the window hosts them directly.
 
     // Super+W wallpaper/media selector (iNiR-style skew deck + grid, awww/mpvpaper)
     Shell.AxoraWallpaper { id: wallpaperWindow }

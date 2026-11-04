@@ -353,7 +353,7 @@ axora-dispatch, axora-doctor, axora-ds4-bt-test, axora-ds4-pegasus, axora-ds4-tv
 axora-emoji, axora-env, axora-fetch, axora-figlet, axora-fix, axora-focus,
 axora-gamemode, axora-gamesession, axora-gamesession-recover, axora-gen-icons,
 axora-gen-theme, axora-gpu, axora-gpu-ppwatch.sh, axora-gta-crashlog,
-axora-gtk-icons, axora-holo-window, axora-hub-check, axora-im, axora-jarvis-rollback,
+hydra-gtk-icons, axora-hub-check, axora-im,
 axora-jobs, axora-launch, axora-live-wallpaper, axora-local-brain, axora-lock,
 axora-lock-chip-sys, axora-lock-chip-weather, axora-lock-supervise, axora-logout,
 axora-logout-watchdog, axora-memory, axora-mic-gain, axora-notify,
@@ -418,9 +418,7 @@ axora-reveal, axora-site, axora-update, axora-welcome-report, axora-welcome
 - `AxoraPowerMenu.qml` — power menu (Super+X)
 - `AxoraLauncher.qml` — app launcher (Super+Space)
 - `AxoraDock.qml` — dock
-- `AxoraAssistantUi.qml` — assistant UI
 - `AxoraHoloPanel.qml` — holo panel
-- `AxoraJarvisHud.qml` — Jarvis HUD
 - `AxoraReactor.qml` — reactor
 - `TopHud.qml` — top HUD
 

@@ -100,9 +100,6 @@ hl.bind(mod .. " + CTRL + D",     hl.dsp.exec_cmd("$HOME/.local/bin/axora-holo-w
 hl.bind("Scroll_Lock",      hl.dsp.exec_cmd("axora-im toggle"))
 hl.bind("CTRL + Space",     hl.dsp.exec_cmd("axora-im toggle"))
 
--- push-to-talk for Axora Assistant (modifier-only binds never fire; needs a key)
-hl.bind("SUPER + CTRL + SPACE", hl.dsp.exec_cmd("axora-assistant ptt"))
-
 -- ---- window control ----
 hl.bind(mod .. " + Q",           hl.dsp.window.close())
 hl.bind("ALT + F4",              hl.dsp.window.close())
@@ -463,17 +460,6 @@ hl.window_rule({
     name  = "float-dialogs",
     match = { class = "^(pavucontrol|nm-connection-editor|blueman-manager)$" },
     float = true,
-})
-
--- AXORA assistant window mode (`axora-holo-window`): a real resizable
--- toplevel, so it floats centered instead of tiling fullscreen.
--- Class-only match: the shell creates no other toplevel windows.
-hl.window_rule({
-    name  = "axora-holo-window",
-    match = { class = "^(org%.quickshell)$" },
-    float = true,
-    center = true,
-    size  = "1200 690",
 })
 
 hl.window_rule({
