@@ -277,7 +277,10 @@ install_fonts() {
 deploy_dotfiles() {
     step "Phase 5 — Deploy Hydra dotfiles"
 
-    local repo_dir="/home/hydrasamo/repos/hydra-dotfiles"
+    # Resolve repo dir from script location (works from any clone path)
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local repo_dir="$script_dir"
     if [ ! -d "$repo_dir" ]; then
         warn "Dotfiles repo not found at $repo_dir — skipping dotfile deploy"
         return 0

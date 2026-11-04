@@ -3,7 +3,7 @@ Type=Application
 Name=HYDRA SAMO LABS
 Comment=Live local portfolio (standalone app window)
 Exec=/usr/bin/helium-browser --app=http://127.0.0.1:1717/ --class=HYDRAStudioSite --user-data-dir=$HOME/.local/share/hydra-studio/site-profile --no-first-run --no-default-browser-check
-Icon=$HOME/Projects HYDRA/HYDRA SAMO LABS/PORTFOLIO/public/hydra-mark.svg
+Icon=hydra-samo
 Terminal=false
 Categories=Development;
 StartupWMClass=HYDRAStudioSite
